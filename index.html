@@ -28,6 +28,8 @@ const TYPES={'Status':['Active','Inactive','Reserved','Completed','Extended','Du
 const REQUIRED_SCHEMAS=JSON.parse(JSON.stringify(SCHEMAS));
 // Backwards-compatible: older workbooks may not have the optional evening charge column.
 REQUIRED_SCHEMAS.Bookings=REQUIRED_SCHEMAS.Bookings.filter(h=>h!=='Evening / Night Charge NPR');
+// Older workbooks store the electric motor identifier under 'Engine Number'.
+REQUIRED_SCHEMAS.Vehicles=REQUIRED_SCHEMAS.Vehicles.filter(h=>h!=='Engine / Motor Number');
 let data={},zip=null,paths={},shared=[],page='Dashboard',token=null,etag=null,source='none',dirty=false,filter='';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'Rs. '+(Number(n)||0).toLocaleString('en-IN',{maximumFractionDigits:2});
@@ -186,7 +188,7 @@ async function loadBytes(bytes,where){let candidate=await JSZip.loadAsync(bytes)
  if(required.some(h=>!heads.includes(h)))throw Error('Sheet '+name+' is missing required fields. Restore original headers before opening.');
  if(heads.length!==indexes.length||required.some((h,i)=>heads.filter(x=>x!=='Evening / Night Charge NPR' || name!=='Bookings')[i]!==h))throw Error('Sheet '+name+' has moved or blank header columns. Keep original fields in their original order; append new fields at the end.');
  if(new Set(heads).size!==heads.length)throw Error('Duplicate column names in '+name);
- SCHEMAS[name]=name==='Bookings'&&!heads.includes('Evening / Night Charge NPR')?[...heads,'Evening / Night Charge NPR']:heads;if(name==='Vehicles'&&!SCHEMAS[name].includes('Engine / Motor Number'))SCHEMAS[name].push('Engine / Motor Number');if(name==='Bookings')for(const extra of ['Parent Booking ID','Period Number','Late Charges NPR','Other Deductions NPR','Deposit Applied NPR','Deposit Carry Forward NPR','Deposit Refund Due NPR','Settled AD','Period Invoice Date AD'])if(!SCHEMAS[name].includes(extra))SCHEMAS[name].push(extra);
+ SCHEMAS[name]=name==='Bookings'&&!heads.includes('Evening / Night Charge NPR')?[...heads,'Evening / Night Charge NPR']:heads;if(name==='Vehicles'&&!SCHEMAS[name].includes('Engine / Motor Number')&&!SCHEMAS[name].includes('Engine Number'))SCHEMAS[name].push('Engine / Motor Number');if(name==='Bookings')for(const extra of ['Parent Booking ID','Period Number','Late Charges NPR','Other Deductions NPR','Deposit Applied NPR','Deposit Carry Forward NPR','Deposit Refund Due NPR','Settled AD','Period Invoice Date AD'])if(!SCHEMAS[name].includes(extra))SCHEMAS[name].push(extra);
  let found=[];for(let row of rr){let ri=Number(row.getAttribute('r'));if(ri<2)continue;let o={};for(let c of [...row.getElementsByTagNameNS('*','c')]){let m=c.getAttribute('r')?.match(/^[A-Z]+/);if(!m)continue;let ix=0;for(let ch of m[0])ix=ix*26+ch.charCodeAt(0)-64;let h=heads[ix-1];if(h)o[h]=parseCell(c)}if(Object.values(o).some(v=>String(v).trim()))found.push(o)}parsed[name]=found
 }zip=candidate;paths=map;data=parsed;source=where;dirty=false;status('Loaded '+rows('Bookings').length+' bookings and '+rows('Vehicles').length+' vehicles · '+where);render()}
 function colName(i){let s='';for(i++;i;i=Math.floor((i-1)/26))s=String.fromCharCode(65+(i-1)%26)+s;return s}
