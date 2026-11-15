@@ -4,7 +4,7 @@
 .bs-picker{grid-column:1/-1;border:1px solid #cfe6e4;background:#f7fcfb;border-radius:14px;padding:15px}.bs-picker h3{margin:0 0 5px;font-size:15px}.bs-picker p{margin:0 0 12px;font-size:12px;color:#64758b}.bs-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.bs-tools select{width:auto;min-width:135px;padding:9px;border:1px solid #dce4ee;border-radius:9px;background:#fff}.bs-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.bs-days button{border:1px solid #dce4ee;border-radius:9px;padding:9px 0;background:white;color:#1b3652;font-weight:650}.bs-days button:hover,.bs-days button.selected{background:#119f92;color:white}.bs-days span{font-size:11px;text-align:center;color:#6b7c91;padding:6px 0}.bs-note{font-size:12px;color:#805b1a;margin-top:10px}.bs-result{font-size:12px;color:#176b63;margin-top:10px;font-weight:700}
 
 .calbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:16px}.calbar select,.calbar button{padding:10px;border:1px solid #d9e2ef;border-radius:9px;background:white;color:#24334c}.calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.calcell{min-height:85px;border:1px solid #e2e8f2;border-radius:10px;padding:7px;background:white;overflow:hidden}.calcell.off{background:#f4f6f9;opacity:.45}.calcell .daynum{font-weight:750;font-size:14px}.calcell .smallad{font-size:10px;color:#6b7d91}.calcell.busy{background:#fff0eb;border-color:#f1b4a2}.calcell.service{background:#fff6d8;border-color:#e8ce78}.calcell.mixed{background:#f5e9fa;border-color:#cba8d9}.calchip{font-size:10px;line-height:1.3;border-radius:5px;padding:3px 4px;margin-top:4px;background:#f8d0c3;color:#81321e;overflow-wrap:anywhere}.calchip.maintenance{background:#f5e2a3;color:#6c5112}.callegend{display:flex;flex-wrap:wrap;gap:15px;margin:12px 0;font-size:12px;color:#506177}.callegend span:before{content:'';display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:#fff0eb;border:1px solid #f1b4a2}.callegend span:nth-child(2):before{background:#fff6d8;border-color:#e8ce78}.callegend span:nth-child(3):before{background:white;border-color:#d9e2ef}.calhint{font-size:12px;color:#66778b;margin-top:12px}@media(max-width:600px){.calgrid{gap:3px}.calcell{min-height:68px;padding:4px;border-radius:6px}.calchip{font-size:9px;padding:2px}.calcell .daynum{font-size:12px}.calcell .smallad{font-size:9px}}
-</style></head><body><div class="shell"><aside class="sidebar"><div class="brand"><div class="logo">P</div><div>PRINCE<small>VEHICLE RENTAL · NEPAL</small></div></div><nav class="nav" id="nav"></nav></aside><main class="main"><header class="top"><div><div class="eyebrow">Operations workspace</div><h1 id="pageTitle">Dashboard</h1><div class="sub">Lagankhel, Lalitpur · BS 2083–2092 planning</div></div><div class="actions"><button class="btn" id="openLocal">Open workbook</button><button class="btn" id="download">Download workbook</button><button class="btn dark" id="login">Connect OneDrive</button><button class="btn primary" id="save">Save to OneDrive</button></div></header><div class="banner warn" id="notice">Open the matching expandable Excel workbook to begin. Local editing works without sign-in; download your edited copy to keep changes.</div><div id="content"></div><div class="footer">Prince Vehicle Rental · Phone 9851226425 · Dynamic rows and appended fields remain in your workbook. Verify imported historical financial figures.</div></main></div><input type="file" id="file" class="fileinput" accept=".xlsx"><div id="modalroot"></div><div id="toastroot"></div><script src="jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script><script>
+</style></head><body><div class="shell"><aside class="sidebar"><div class="brand"><div class="logo">P</div><div>PRINCE<small>VEHICLE RENTAL · NEPAL</small></div></div><nav class="nav" id="nav"></nav></aside><main class="main"><header class="top"><div><div class="eyebrow">Operations workspace</div><h1 id="pageTitle">Dashboard</h1><div class="sub">Lagankhel, Lalitpur · BS 2083–2092 planning</div></div><div class="actions"><button class="btn" id="branding">Invoice branding</button><button class="btn" id="openLocal">Open workbook</button><button class="btn" id="download">Download workbook</button><button class="btn dark" id="login">Connect OneDrive</button><button class="btn primary" id="save">Save to OneDrive</button></div></header><div class="banner warn" id="notice">Open the matching expandable Excel workbook to begin. Local editing works without sign-in; download your edited copy to keep changes.</div><div id="content"></div><div class="footer">Prince Vehicle Rental · Phone 9851226425 · Dynamic rows and appended fields remain in your workbook. Verify imported historical financial figures.</div></main></div><input type="file" id="file" class="fileinput" accept=".xlsx"><div id="modalroot"></div><div id="toastroot"></div><script src="jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script><script>
 'use strict';
 const CLIENT='6b50f04d-d35e-4da4-8b24-acd8632afbbb',FILE='Prince_Fleet_Management.xlsx',REDIRECT=location.origin+location.pathname;
 let cloudFile=FILE,cloudLoaded=false;
@@ -24,7 +24,7 @@ const SCHEMAS={
 'Rate Options':['Daily Rate NPR'],
 'Instructions':['Topic','Details']};
 const NAV=['Dashboard','Booking Calendar','Bookings','Vehicles','Owners','Agreements','Owner Payments','Staff','Payroll','Staff Advances','Electricity Bills','Maintenance','Tyres','Other Expenses'];
-const TYPES={'Status':['Active','Inactive','Reserved','Completed','Cancelled','Scheduled','In progress','Returned','Renewed','Paid','Pending','Partial','Unpaid'], 'Payment Status':['Paid','Unpaid','Partial'],'Paid By':['Prince Vehicle Rental','Vehicle owner','Insurance','Other'],'Type':['Regular servicing','Repair / breakdown','Tyres / brakes','Battery / electrical','Accident repair','Other'],'Reason':['Normal wear','Puncture / damage','Uneven wear','Accident damage','Premature wear','Other'],'Method':['Cash','Bank transfer','eSewa','Khalti','Other']};
+const TYPES={'Status':['Active','Inactive','Reserved','Completed','Extended','Due for return','Cancelled','Scheduled','In progress','Returned','Renewed','Paid','Pending','Partial','Unpaid'], 'Payment Status':['Paid','Unpaid','Partial'],'Paid By':['Prince Vehicle Rental','Vehicle owner','Insurance','Other'],'Type':['Regular servicing','Repair / breakdown','Tyres / brakes','Battery / electrical','Accident repair','Other'],'Reason':['Normal wear','Puncture / damage','Uneven wear','Accident damage','Premature wear','Other'],'Method':['Cash','Bank transfer','eSewa','Khalti','Other']};
 const REQUIRED_SCHEMAS=JSON.parse(JSON.stringify(SCHEMAS));
 // Backwards-compatible: older workbooks may not have the optional evening charge column.
 REQUIRED_SCHEMAS.Bookings=REQUIRED_SCHEMAS.Bookings.filter(h=>h!=='Evening / Night Charge NPR');
@@ -72,7 +72,7 @@ function addColumn(section){
  if(SCHEMAS[section].length>=150){alertUser('Maximum of 150 fields per sheet.',true);return}
  SCHEMAS[section].push(field);dirty=true;render();alertUser('Field added. Download or save workbook to keep the new column.');
 }
-function renderTable(){let heads=SCHEMAS[page]||[],arr=rows(page).map((x,i)=>({...x,__idx:i})).filter(x=>JSON.stringify(x).toLowerCase().includes(filter.toLowerCase()));$('tablearea').innerHTML=arr.length?`<table><thead><tr>${heads.map(h=>`<th>${esc(h)}</th>`).join('')}<th>Actions</th></tr></thead><tbody>${arr.slice(0,500).map(r=>`<tr>${heads.map(h=>`<td>${h==='Status'||h==='Payment Status'?`<span class="tag ${esc(r[h])}">${esc(r[h])}</span>`:esc(r[h])}</td>`).join('')}<td><button class="tablebtn" data-edit="${r.__idx}">Edit</button>${page==='Bookings'?` · <button class="tablebtn" data-agreement="${r.__idx}">Print agreement PDF</button>`:''}${page==='Vehicles'?` · <button class="tablebtn" data-toggle="${r.__idx}">${r.Status==='Active'?'Deactivate':'Reactivate'}</button>`:''}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">No matching records. Use “Add record” to begin.</div>`;document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>edit(page,Number(b.dataset.edit)));document.querySelectorAll('[data-agreement]').forEach(b=>b.onclick=()=>printAgreement(Number(b.dataset.agreement)));document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>toggleVehicle(Number(b.dataset.toggle)))}
+function renderTable(){let heads=SCHEMAS[page]||[],arr=rows(page).map((x,i)=>({...x,__idx:i})).filter(x=>JSON.stringify(x).toLowerCase().includes(filter.toLowerCase()));$('tablearea').innerHTML=arr.length?`<table><thead><tr>${heads.map(h=>`<th>${esc(h)}</th>`).join('')}<th>Actions</th></tr></thead><tbody>${arr.slice(0,500).map(r=>`<tr>${heads.map(h=>`<td>${h==='Status'||h==='Payment Status'?`<span class="tag ${esc(r[h])}">${esc(h==='Status'&&page==='Bookings'&&r[h]==='Active'&&r['End AD Exclusive']&&r['End AD Exclusive']<=localDate()?'Due for return':r[h])}</span>`:esc(r[h])}</td>`).join('')}<td><button class="tablebtn" data-edit="${r.__idx}">Edit</button>${page==='Bookings'?` · <button class="tablebtn" data-agreement="${r.__idx}">Print period invoice PDF</button> · <button class="tablebtn" data-extend="${r.__idx}">Extend</button> · <button class="tablebtn" data-settle="${r.__idx}">Return / settle</button>`:''}${page==='Vehicles'?` · <button class="tablebtn" data-toggle="${r.__idx}">${r.Status==='Active'?'Deactivate':'Reactivate'}</button>`:''}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">No matching records. Use “Add record” to begin.</div>`;document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>edit(page,Number(b.dataset.edit)));document.querySelectorAll('[data-agreement]').forEach(b=>b.onclick=()=>printBookingConfirmation(Number(b.dataset.agreement)));document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>toggleVehicle(Number(b.dataset.toggle)));document.querySelectorAll('[data-extend]').forEach(b=>b.onclick=()=>extendBooking(Number(b.dataset.extend)));document.querySelectorAll('[data-settle]').forEach(b=>b.onclick=()=>settleBooking(Number(b.dataset.settle)))}
 const idField=s=>SCHEMAS[s][0];
 function toggleVehicle(i){let v=rows('Vehicles')[i];if(!v)return;v.Status=v.Status==='Active'?'Inactive':'Active';dirty=true;render();alertUser(v['Vehicle Name']+' is now '+v.Status)}
 function optionsFor(field){if(field==='Vehicle ID')return rows('Vehicles').map(x=>({v:x['Vehicle ID'],label:x['Vehicle Name']+' · '+x['Vehicle ID']}));if(field==='Owner ID')return rows('Owners').map(x=>({v:x['Owner ID'],label:x['Owner Name']}));if(field==='Staff ID')return rows('Staff').map(x=>({v:x['Staff ID'],label:x.Name}));if(field==='Agreement ID')return rows('Agreements').map(x=>({v:x['Agreement ID'],label:x['Agreement ID']}));if(field==='Daily Rate NPR')return Array.from({length:211},(_,i)=>({v:String(4000+i*100),label:money(4000+i*100)}));if(field==='Status')return TYPES.Status.map(v=>({v,label:v}));if(TYPES[field])return TYPES[field].map(v=>({v,label:v}));return null}
@@ -116,10 +116,19 @@ function attachBSCalendar(){
  if(start.value&&bsFor(start.value)){let b=bsFor(start.value).split('/');y.value=b[0];m.value=String(Number(b[1])-1)}
  syncMode();recalc();
 }
-function edit(section,index=-1,inline=false){if(!zip){alertUser('Open the matching Excel workbook first.',true);return}let heads=SCHEMAS[section],existing=index>=0?rows(section)[index]:{},prefix=section.replace(/[^A-Z]/gi,'').slice(0,3).toUpperCase();let record={...existing};if(index<0)record[heads[0]]=uid(prefix);if(section==='Agreements'&&index<0)record.Status='Active';if(section==='Vehicles'&&index<0)record.Status='Active';if(section==='Bookings'&&index<0){record.Status='Active';record['Created AD']=today()}if(section==='Staff'&&index<0)record.Status='Active';let html=(section==='Bookings'?bsCalendarMarkup():'')+heads.map((h,i)=>{let v=record[h]??'',opts=i===0?null:optionsFor(h);let isDate=/ AD$|Start AD|End AD Exclusive|Paid AD|Join AD|Replacement AD|Bill AD|Created AD|Date AD/.test(h);let type=/NPR|Quantity|Days/.test(h)?'number':isDate?'date':h==='Month YYYY-MM'?'month':'text';let control=h==='Evening / Night Charge NPR'?`<input name="Evening / Night Charge NPR" type="number" inputmode="decimal" min="0" step="any" placeholder="Optional evening charge (Rs.)" value="${esc(v)}"><small>One-time extra charge per booking, not per day. Leave blank for zero.</small>`:h==='Daily Rate NPR'?`<select id="ratePreset" aria-label="Choose daily rate"><option value="">Select a standard rate</option>${opts.map(o=>`<option value="${esc(o.v)}" ${String(v)===o.v?'selected':''}>${esc(o.label)}</option>`).join('')}<option value="manual" ${v&&!opts.some(o=>o.v===String(v))?'selected':''}>✎ Enter custom rate</option></select><input id="dailyRateManual" name="Daily Rate NPR" type="number" inputmode="decimal" min="0.01" step="any" placeholder="Or enter any daily rate (Rs.)" value="${esc(v)}"><small>Choose a standard rate (Rs. 4,000–25,000, step 100) or type your own amount above.</small>`:opts?`<select name="${esc(h)}"><option value="">Choose…</option>${opts.map(o=>`<option value="${esc(o.v)}" ${String(v)===o.v?'selected':''}>${esc(o.label)}</option>`).join('')}</select>`:h==='Notes'||h==='Workshop / Notes'?`<textarea name="${esc(h)}">${esc(v)}</textarea>`:`<input name="${esc(h)}" type="${type}" value="${esc(v)}" ${i===0?'readonly':''} ${type==='number'?'min="0" step="any"':''}>`;return `<div class="field"><label>${esc(h)}</label>${control}</div>`}).join('');(inline?$('homeBookingForm'):$('modalroot')).innerHTML=`${inline?'':'<div class="modalbg"><div class="modal">'}<div class="modalhead"><h2>${index<0?'Add':'Edit'} ${esc(section)}</h2><button class="btn" id="closeModal">Close</button></div><form id="recordForm"><div class="fieldgrid">${html}</div><div class="foot"><button class="btn" type="button" id="cancelModal">Cancel</button><button class="btn primary" type="submit">Save record</button></div></form>${inline?'':'</div></div>'}`;$('closeModal').onclick=$('cancelModal').onclick=()=>{if(inline)edit('Bookings',-1,true);else $('modalroot').innerHTML=''};if(section==='Agreements'){const ownerSelect=$('recordForm').elements.namedItem('Owner ID');const vehicleSelect=$('recordForm').elements.namedItem('Vehicle ID');if(ownerSelect&&!rows('Owners').length){const msg=document.createElement('div');msg.className='callout';msg.style.marginBottom='12px';msg.textContent='No owners are saved in the loaded workbook. Add the owner in the Owners section first, then return to Agreements.';$('recordForm').prepend(msg)}if(vehicleSelect&&ownerSelect&&index<0){vehicleSelect.addEventListener('change',()=>{const vehicle=rows('Vehicles').find(v=>v['Vehicle ID']===vehicleSelect.value);const ownerId=vehicle?.['Owner ID'];if(ownerId&&rows('Owners').some(o=>o['Owner ID']===ownerId))ownerSelect.value=ownerId})}}if(section==='Bookings'){attachBSCalendar();const preset=$('ratePreset'),manual=$('dailyRateManual');if(preset&&manual){preset.addEventListener('change',()=>{if(preset.value&&preset.value!=='manual')manual.value=preset.value;else if(preset.value==='manual'){manual.focus();manual.select()}});manual.addEventListener('input',()=>{preset.value=Array.from(preset.options).some(o=>o.value===manual.value)?manual.value:'manual'})}}$('recordForm').onsubmit=e=>{e.preventDefault();let f=new FormData(e.target),r={};heads.forEach(h=>r[h]=String(f.get(h)||'').trim());try{validate(section,r,index);if(index<0)rows(section).push(r);else rows(section)[index]=r;dirty=true;$('modalroot').innerHTML='';render();alertUser('Record updated. Download or save the workbook to persist it.')}catch(err){alertUser(err.message,true)}}}
+function edit(section,index=-1,inline=false){if(!zip){alertUser('Open the matching Excel workbook first.',true);return}let heads=SCHEMAS[section],existing=index>=0?rows(section)[index]:{},prefix=section.replace(/[^A-Z]/gi,'').slice(0,3).toUpperCase();let record={...existing};if(index<0)record[heads[0]]=uid(prefix);if(section==='Agreements'&&index<0)record.Status='Active';if(section==='Vehicles'&&index<0)record.Status='Active';if(section==='Bookings'&&index<0){record.Status='Active';record['Created AD']=today()}if(section==='Staff'&&index<0)record.Status='Active';let html=(section==='Bookings'?bsCalendarMarkup():'')+heads.map((h,i)=>{let v=record[h]??'',opts=i===0?null:optionsFor(h);let isDate=/ AD$|Start AD|End AD Exclusive|Paid AD|Join AD|Replacement AD|Bill AD|Created AD|Date AD/.test(h);let type=/NPR|Quantity|Days/.test(h)?'number':isDate?'date':h==='Month YYYY-MM'?'month':'text';let control=h==='Evening / Night Charge NPR'?`<input name="Evening / Night Charge NPR" type="number" inputmode="decimal" min="0" step="any" placeholder="Optional evening charge (Rs.)" value="${esc(v)}"><small>One-time extra charge per booking, not per day. Leave blank for zero.</small>`:h==='Daily Rate NPR'?`<select id="ratePreset" aria-label="Choose daily rate"><option value="">Select a standard rate</option>${opts.map(o=>`<option value="${esc(o.v)}" ${String(v)===o.v?'selected':''}>${esc(o.label)}</option>`).join('')}<option value="manual" ${v&&!opts.some(o=>o.v===String(v))?'selected':''}>✎ Enter custom rate</option></select><input id="dailyRateManual" name="Daily Rate NPR" type="number" inputmode="decimal" min="0.01" step="any" placeholder="Or enter any daily rate (Rs.)" value="${esc(v)}"><small>Choose a standard rate (Rs. 4,000–25,000, step 100) or type your own amount above.</small>`:opts?`<select name="${esc(h)}"><option value="">Choose…</option>${opts.map(o=>`<option value="${esc(o.v)}" ${String(v)===o.v?'selected':''}>${esc(o.label)}</option>`).join('')}</select>`:h==='Notes'||h==='Workshop / Notes'?`<textarea name="${esc(h)}">${esc(v)}</textarea>`:`<input name="${esc(h)}" type="${type}" value="${esc(v)}" ${i===0?'readonly':''} ${type==='number'?'min="0" step="any"':''}>`;return `<div class="field"><label>${esc(h)}</label>${control}</div>`}).join('');(inline?$('homeBookingForm'):$('modalroot')).innerHTML=`${inline?'':'<div class="modalbg"><div class="modal">'}<div class="modalhead"><h2>${index<0?'Add':'Edit'} ${esc(section)}</h2><button class="btn" id="closeModal">Close</button></div><form id="recordForm"><div class="fieldgrid">${html}</div><div class="foot"><button class="btn" type="button" id="cancelModal">Cancel</button><button class="btn primary" type="submit">Save record</button></div></form>${inline?'':'</div></div>'}`;$('closeModal').onclick=$('cancelModal').onclick=()=>{if(inline)edit('Bookings',-1,true);else $('modalroot').innerHTML=''};if(section==='Agreements'){const ownerSelect=$('recordForm').elements.namedItem('Owner ID');const vehicleSelect=$('recordForm').elements.namedItem('Vehicle ID');if(ownerSelect&&!rows('Owners').length){const msg=document.createElement('div');msg.className='callout';msg.style.marginBottom='12px';msg.textContent='No owners are saved in the loaded workbook. Add the owner in the Owners section first, then return to Agreements.';$('recordForm').prepend(msg)}if(vehicleSelect&&ownerSelect&&index<0){vehicleSelect.addEventListener('change',()=>{const vehicle=rows('Vehicles').find(v=>v['Vehicle ID']===vehicleSelect.value);const ownerId=vehicle?.['Owner ID'];if(ownerId&&rows('Owners').some(o=>o['Owner ID']===ownerId))ownerSelect.value=ownerId})}}if(section==='Bookings'){attachBSCalendar();const preset=$('ratePreset'),manual=$('dailyRateManual');if(preset&&manual){preset.addEventListener('change',()=>{if(preset.value&&preset.value!=='manual')manual.value=preset.value;else if(preset.value==='manual'){manual.focus();manual.select()}});manual.addEventListener('input',()=>{preset.value=Array.from(preset.options).some(o=>o.value===manual.value)?manual.value:'manual'})}}$('recordForm').onsubmit=e=>{e.preventDefault();let f=new FormData(e.target),r={};heads.forEach(h=>r[h]=String(f.get(h)||'').trim());try{validate(section,r,index);if(index<0)rows(section).push(r);else rows(section)[index]=r;dirty=true;$('modalroot').innerHTML='';render();alertUser('Record updated. Download or save the workbook to persist it.')}catch(err){if(section==='Bookings'&&err.message.startsWith('OWNER AGREEMENT WARNING'))window.alert(err.message);else alertUser(err.message,true)}}}
 function intersects(a,b,c,d){return a&&b&&c&&d&&a<d&&c<b}
 function validate(section,r,index){if(section==='Bookings'){
- let vehicle=rows('Vehicles').find(v=>v['Vehicle ID']===r['Vehicle ID']);if(!vehicle)throw Error('Choose a valid vehicle.');if(vehicle.Status!=='Active')throw Error('Vehicle is inactive.');let a=r['Start AD'],b=r['End AD Exclusive'];if(!a||!b||b<=a)throw Error('Choose valid AD start and end dates; end must be later than start.');if(a<'2026-04-14'||a>='2036-04-14')throw Error('Start date must fall within the BS 2083–2092 planning window (approximate AD bounds).');let days=Math.round((Date.parse(b)-Date.parse(a))/86400000);if(days<1)throw Error('Invalid booking duration.');r.Days=String(days);if(!Number.isFinite(Number(r['Evening / Night Charge NPR']||0))||Number(r['Evening / Night Charge NPR']||0)<0)throw Error('Evening / night charge must be zero or greater.');if(!Number.isFinite(Number(r['Daily Rate NPR']))||Number(r['Daily Rate NPR'])<=0)throw Error('Enter a valid daily rate greater than zero.');if(rows('Bookings').some((x,i)=>i!==index&&x['Vehicle ID']===r['Vehicle ID']&&x.Status!=='Cancelled'&&intersects(a,b,x['Start AD'],x['End AD Exclusive'])))throw Error('Vehicle already booked for overlapping dates.');if(rows('Maintenance').some(x=>x['Vehicle ID']===r['Vehicle ID']&&x.Status!=='Completed'&&intersects(a,b,x['Start AD'],x['End AD Exclusive']||'9999-12-31')))throw Error('Vehicle is unavailable during maintenance.');let agreements=rows('Agreements').filter(x=>x['Vehicle ID']===r['Vehicle ID']&&x.Status==='Active');if(!agreements.some(x=>x['Start AD']<=a&&x['End AD Exclusive']>=b))throw Error('No active owner agreement covers the full booking. Add or renew the agreement first.');if(r['BS Date Reference']&&!/208[3-9]|209[0-2]/.test(r['BS Date Reference']))throw Error('BS reference year must be 2083–2092.');}
+ let vehicle=rows('Vehicles').find(v=>v['Vehicle ID']===r['Vehicle ID']);if(!vehicle)throw Error('Choose a valid vehicle.');if(vehicle.Status!=='Active')throw Error('Vehicle is inactive.');let a=r['Start AD'],b=r['End AD Exclusive'];if(!a||!b||b<=a)throw Error('Choose valid AD start and end dates; end must be later than start.');if(a<'2026-04-14'||a>='2036-04-14')throw Error('Start date must fall within the BS 2083–2092 planning window (approximate AD bounds).');let days=Math.round((Date.parse(b)-Date.parse(a))/86400000);if(days<1)throw Error('Invalid booking duration.');r.Days=String(days);if(!Number.isFinite(Number(r['Evening / Night Charge NPR']||0))||Number(r['Evening / Night Charge NPR']||0)<0)throw Error('Evening / night charge must be zero or greater.');if(!Number.isFinite(Number(r['Daily Rate NPR']))||Number(r['Daily Rate NPR'])<=0)throw Error('Enter a valid daily rate greater than zero.');if(rows('Bookings').some((x,i)=>i!==index&&x['Vehicle ID']===r['Vehicle ID']&&x.Status!=='Cancelled'&&intersects(a,b,x['Start AD'],x['End AD Exclusive'])))throw Error('Vehicle already booked for overlapping dates.');if(rows('Maintenance').some(x=>x['Vehicle ID']===r['Vehicle ID']&&x.Status!=='Completed'&&intersects(a,b,x['Start AD'],x['End AD Exclusive']||'9999-12-31')))throw Error('Vehicle is unavailable during maintenance.');let agreements=rows('Agreements').filter(x=>x['Vehicle ID']===r['Vehicle ID']&&x.Status==='Active');if(!agreements.some(x=>x['Start AD']<=a&&x['End AD Exclusive']>=b)){
+  const all=rows('Agreements').filter(x=>x['Vehicle ID']===r['Vehicle ID']);
+  const fmt=d=>d?new Date(d+'T00:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}):'not entered';
+  let reason;
+  if(!all.length)reason='No owner agreement is recorded for this vehicle.';
+  else if(!agreements.length)reason='An owner agreement exists, but none is marked Active.';
+  else {const nearest=agreements.find(x=>x['Start AD']<=a)||agreements[0];
+    reason='The active owner agreement does not cover the full rental period. Agreement: '+fmt(nearest['Start AD'])+' to '+fmt(nearest['End AD Exclusive'])+' (exclusive). Booking: '+fmt(a)+' to '+fmt(b)+' (exclusive).';}
+  throw Error('OWNER AGREEMENT WARNING\n\n'+reason+'\n\nOpen Agreements to check or renew it before saving.');
+ }if(r['BS Date Reference']&&!/208[3-9]|209[0-2]/.test(r['BS Date Reference']))throw Error('BS reference year must be 2083–2092.');}
  if(section==='Agreements'){if(!r['Vehicle ID']||!rows('Vehicles').some(v=>v['Vehicle ID']===r['Vehicle ID']))throw Error('Select a valid vehicle from Vehicles.');if(!r['Owner ID']||!rows('Owners').some(o=>o['Owner ID']===r['Owner ID']))throw Error('Select a valid owner. If the owner is missing, add them in Owners first.');if(!r['Agreement ID'])throw Error('Agreement ID is missing; close and reopen the form.');let a=r['Start AD'],b=r['End AD Exclusive'];if(!a||!b||b<=a)throw Error('Enter valid agreement dates.');let d=new Date(a+'T00:00:00');d.setMonth(d.getMonth()+6);if(b<d.toISOString().slice(0,10))throw Error('Owner agreement must be at least six calendar months.');}
  if(section==='Maintenance'){if(!r['Vehicle ID']||!r['Start AD'])throw Error('Vehicle and maintenance start date are required.');if(r['End AD Exclusive']&&r['End AD Exclusive']<=r['Start AD'])throw Error('Maintenance end must be after start.');if(r.Status!=='Completed'&&rows('Bookings').some(x=>x.Status!=='Cancelled'&&x['Vehicle ID']===r['Vehicle ID']&&intersects(r['Start AD'],r['End AD Exclusive']||'9999-12-31',x['Start AD'],x['End AD Exclusive'])))throw Error('Maintenance overlaps an existing booking. Resolve booking conflict first.');}
  if(section==='Vehicles'&&!r['Vehicle Name'])throw Error('Vehicle name is required.');if(section==='Tyres'&&(!r['Vehicle ID']||n(r['Total Cost NPR'])<0))throw Error('Choose vehicle and enter tyre cost.');}
@@ -135,7 +144,7 @@ async function loadBytes(bytes,where){let candidate=await JSZip.loadAsync(bytes)
  if(required.some(h=>!heads.includes(h)))throw Error('Sheet '+name+' is missing required fields. Restore original headers before opening.');
  if(heads.length!==indexes.length||required.some((h,i)=>heads.filter(x=>x!=='Evening / Night Charge NPR' || name!=='Bookings')[i]!==h))throw Error('Sheet '+name+' has moved or blank header columns. Keep original fields in their original order; append new fields at the end.');
  if(new Set(heads).size!==heads.length)throw Error('Duplicate column names in '+name);
- SCHEMAS[name]=name==='Bookings'&&!heads.includes('Evening / Night Charge NPR')?[...heads,'Evening / Night Charge NPR']:heads;
+ SCHEMAS[name]=name==='Bookings'&&!heads.includes('Evening / Night Charge NPR')?[...heads,'Evening / Night Charge NPR']:heads;if(name==='Bookings')for(const extra of ['Parent Booking ID','Period Number','Late Charges NPR','Other Deductions NPR','Deposit Applied NPR','Deposit Carry Forward NPR','Deposit Refund Due NPR','Settled AD','Period Invoice Date AD'])if(!SCHEMAS[name].includes(extra))SCHEMAS[name].push(extra);
  let found=[];for(let row of rr){let ri=Number(row.getAttribute('r'));if(ri<2)continue;let o={};for(let c of [...row.getElementsByTagNameNS('*','c')]){let m=c.getAttribute('r')?.match(/^[A-Z]+/);if(!m)continue;let ix=0;for(let ch of m[0])ix=ix*26+ch.charCodeAt(0)-64;let h=heads[ix-1];if(h)o[h]=parseCell(c)}if(Object.values(o).some(v=>String(v).trim()))found.push(o)}parsed[name]=found
 }zip=candidate;paths=map;data=parsed;source=where;dirty=false;status('Loaded '+rows('Bookings').length+' bookings and '+rows('Vehicles').length+' vehicles · '+where);render()}
 function colName(i){let s='';for(i++;i;i=Math.floor((i-1)/26))s=String.fromCharCode(65+(i-1)%26)+s;return s}
@@ -176,66 +185,118 @@ window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.return
 render();finishAuth().catch(e=>alertUser(e.message,true));
 
 
-// Agreement overlay on the user's original two-page PDF; keeps its wording and layout.
-async function printAgreement(index){
+// Invoice branding is stored on this browser/device; it is not written to the Excel workbook.
+const BRAND_KEY='pvr_invoice_brand_v1';
+function invoiceBrand(){try{return {...{name:'Prince Vehicle Rental',address:'Lagankhel, Lalitpur, Nepal',phone:'9851226425',registration:'',email:'',logo:''},...JSON.parse(localStorage.getItem(BRAND_KEY)||'{}')}}catch{return {name:'Prince Vehicle Rental',address:'Lagankhel, Lalitpur, Nepal',phone:'9851226425',registration:'',email:'',logo:''}}}
+$('branding').onclick=()=>{const c=invoiceBrand();$('modalroot').innerHTML=`<div class="modalbg"><div class="modal"><div class="modalhead"><h2>Invoice company details & logo</h2><button class="btn" id="brandClose">Close</button></div><form id="brandForm"><div class="fieldgrid">${[['name','Company name'],['address','Company address'],['phone','Phone number'],['registration','Registration / PAN number'],['email','Email address']].map(([k,label])=>`<div class="field"><label>${label}</label><input name="${k}" value="${esc(c[k])}"></div>`).join('')}<div class="field"><label>Company logo (PNG or JPEG, max 1 MB)</label><input type="file" name="logo" accept="image/png,image/jpeg"></div></div><p class="hint">Logo and company details are saved only on this device/browser. Re-enter them on other devices.</p><div class="foot"><button type="button" class="btn" id="brandRemove">Remove logo</button><button class="btn primary" type="submit">Save branding</button></div></form></div></div>`;$('brandClose').onclick=()=>{$('modalroot').innerHTML=''};$('brandRemove').onclick=()=>{let x=invoiceBrand();x.logo='';localStorage.setItem(BRAND_KEY,JSON.stringify(x));alertUser('Logo removed.');$('modalroot').innerHTML=''};$('brandForm').onsubmit=async e=>{e.preventDefault();try{let f=new FormData(e.target),x=invoiceBrand();for(let k of ['name','address','phone','registration','email'])x[k]=String(f.get(k)||'').trim();let file=f.get('logo');if(file&&file.size){if(!['image/png','image/jpeg'].includes(file.type)||file.size>1000000)throw Error('Use a PNG or JPEG smaller than 1 MB.');x.logo=await new Promise((resolve,reject)=>{let r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}localStorage.setItem(BRAND_KEY,JSON.stringify(x));$('modalroot').innerHTML='';alertUser('Invoice branding saved on this device.')}catch(err){alertUser(err.message,true)}}};
+// Each extension is a separate booking period and retains the original period's invoice.
+function localDate(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+function addDaysAD(day,count){const d=new Date(day+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+count);return d.toISOString().slice(0,10)}
+function bookingChain(b){let root=b['Parent Booking ID']||b['Booking ID'];return rows('Bookings').filter(x=>x['Booking ID']===root||x['Parent Booking ID']===root)}
+function periodAmount(b){return Math.max(0,n(b.Days)*n(b['Daily Rate NPR'])+n(b['Evening / Night Charge NPR'])-n(b['Discount NPR']))}
+function extendBooking(index){const b=rows('Bookings')[index];if(!b||!zip)return;
+ if(b.Status==='Cancelled'){alertUser('Cannot extend a cancelled booking.',true);return}
+ const chain=bookingChain(b);if(chain.some(x=>x!==b&&x['Start AD']===b['End AD Exclusive'])){alertUser('This period already has an extension. Extend the latest period instead.',true);return}
+ if(!b['End AD Exclusive']){alertUser('The current booking needs an end date.',true);return}
+ const daysRaw=prompt('Additional rental days (new period starts '+b['End AD Exclusive']+' AD):','1');if(daysRaw===null)return;
+ const days=Number(daysRaw);if(!Number.isInteger(days)||days<1||days>365){alertUser('Enter 1–365 whole days.',true);return}
+ const rateRaw=prompt('Daily rate for the NEW period (NPR):',b['Daily Rate NPR']||'5000');if(rateRaw===null)return;
+ const rate=Number(rateRaw);if(!Number.isFinite(rate)||rate<=0){alertUser('Enter a valid positive daily rate.',true);return}
+ const start=b['End AD Exclusive'],end=addDaysAD(start,days);
+ const root=b['Parent Booking ID']||b['Booking ID'];const next=Math.max(1,...chain.map(x=>Number(x['Period Number'])||1))+1;
+ const newId=uid('EXT');const rec={...Object.fromEntries(SCHEMAS.Bookings.map(h=>[h,''])),...b,
+ 'Booking ID':newId,'Parent Booking ID':root,'Period Number':String(next),
+ 'Start AD':start,'End AD Exclusive':end,'Days':String(days),'Daily Rate NPR':String(rate),
+ 'Advance NPR':'0','Discount NPR':'0','Evening / Night Charge NPR':'0',
+ 'Deposit Held NPR':'0','Deposit Refunded NPR':'0','Deposit Applied NPR':'0','Deposit Refund Due NPR':'0',
+ 'Deposit Carry Forward NPR':'0','Late Charges NPR':'0','Other Deductions NPR':'0',
+ 'Settled AD':'','Period Invoice Date AD':'','Created AD':localDate(),'BS Date Reference':'','Status':'Active',
+ 'Notes':('Extension of '+b['Booking ID']+'; period '+next+'. '+(b.Notes||'')).trim()};
+ try{validate('Bookings',rec,-1)}catch(e){alertUser('Extension blocked: '+e.message,true);return}
+ if(!confirm('Close original period '+b['Booking ID']+' for invoicing and create new period '+start+' to '+addDaysAD(end,-1)+' ('+days+' days)?'))return;
+ b.Status='Extended';b['Period Invoice Date AD']=b['End AD Exclusive'];
+ rows('Bookings').push(rec);dirty=true;page='Bookings';render();alertUser('New period created. Print the original period invoice, then save to OneDrive.');
+}
+function settleBooking(index){const b=rows('Bookings')[index];if(!b)return;
+ if(b.Status==='Cancelled'||b.Status==='Extended'){alertUser('Settle the latest active period, not a cancelled or extended period.',true);return}
+ const chain=bookingChain(b);if(chain.some(x=>x!==b&&x.Status==='Active')){alertUser('Another period in this rental is still active.',true);return}
+ const ask=(label,initial)=>{const raw=prompt(label,String(initial));if(raw===null)return null;const v=Number(raw);if(!Number.isFinite(v)||v<0)throw Error('Enter a valid non-negative amount.');return v};
+ try{const late=ask('Late charges for this period (NPR):',b['Late Charges NPR']||0);if(late===null)return;
+ const other=ask('Other approved deductions, e.g. damage (NPR):',b['Other Deductions NPR']||0);if(other===null)return;
+ const prior=chain.filter(x=>x!==b).reduce((s,x)=>s+periodAmount(x)-n(x['Advance NPR'])+n(x['Late Charges NPR'])+n(x['Other Deductions NPR']),0);
+ const totalUnpaid=Math.max(0,prior+periodAmount(b)-n(b['Advance NPR'])+late+other);
+ const deposit=chain.reduce((s,x)=>s+n(x['Deposit Held NPR'])-n(x['Deposit Refunded NPR']),0);
+ const applied=Math.min(deposit,totalUnpaid),refund=deposit-applied,balance=totalUnpaid-applied;
+ if(!confirm('FINAL SETTLEMENT\nUnpaid rental and charges: NPR '+totalUnpaid.toLocaleString()+'\nAvailable deposit: NPR '+deposit.toLocaleString()+'\nDeduct from deposit: NPR '+applied.toLocaleString()+'\nDeposit refund due: NPR '+refund.toLocaleString()+'\nAdditional customer balance due: NPR '+balance.toLocaleString()+'\n\nConfirm vehicle returned and record this settlement?'))return;
+ b['Late Charges NPR']=String(late);b['Other Deductions NPR']=String(other);b['Deposit Applied NPR']=String(applied);b['Deposit Refund Due NPR']=String(refund);b['Deposit Carry Forward NPR']='0';b['Settled AD']=localDate();b.Status='Completed';b['Period Invoice Date AD']=b['End AD Exclusive'];dirty=true;render();printBookingConfirmation(index);alertUser('Settlement recorded. Save workbook to OneDrive.');
+ }catch(e){alertUser(e.message,true)}
+}
+// Printable booking confirmation invoice. No external agreement template is required.
+async function printBookingConfirmation(index){
  const b=rows('Bookings')[index];if(!b)return;
- if(!window.PDFLib){alertUser('PDF library could not load. Connect to the internet and retry.',true);return}
- const vehicle=rows('Vehicles').find(v=>v['Vehicle ID']===b['Vehicle ID'])||{};
- const missing=[];
- if(!b['Customer Name'])missing.push('customer name');
- if(!vehicle.Registration)missing.push('registration');
- if(!b['Start AD']||!b['End AD Exclusive'])missing.push('rental dates');
- if(missing.length&&!confirm('Some agreement details are missing: '+missing.join(', ')+'. Generate a draft with blank fields?'))return;
+ if(!window.PDFLib){alertUser('PDF library unavailable. Connect to the internet and retry.',true);return}
+ const v=rows('Vehicles').find(x=>x['Vehicle ID']===b['Vehicle ID'])||{};
+ if(!b['Customer Name']||!b['Start AD']||!b['End AD Exclusive']){
+  alertUser('Customer name and rental dates are required to print confirmation.',true);return;
+ }
  try{
-  const response=await fetch('./agreement-template.pdf');if(!response.ok)throw Error('agreement-template.pdf is missing from GitHub.');
-  const pdf=await PDFLib.PDFDocument.load(await response.arrayBuffer());
-  const font=await pdf.embedFont(PDFLib.StandardFonts.Helvetica);
-  const pages=pdf.getPages();if(pages.length!==2)throw Error('Agreement template must have two pages.');
-  // PDF uses bottom-left coordinates. Overlays use short labels above the existing blank lines.
-  const put=(pg,x,top,value,max=30)=>{
-   if(value===undefined||value===null||String(value).trim()==='')return;
-   let s=String(value).trim();
-   // Helvetica cannot represent Nepali script; do not silently mangle customer names.
-   if(/[^\x20-\x7E]/.test(s)){s='[Enter Nepali text manually]'}
-   if(s.length>max)s=s.slice(0,max-1)+'…';
-   s=s.replace(/…/g,'...');
-   pg.drawText(s,{x,y:pg.getHeight()-top,size:8,font,color:PDFLib.rgb(0.05,0.24,0.53)});
-  };
-  const p=pages[0],p2=pages[1];
-  const rental=n(b.Days)*n(b['Daily Rate NPR'])+n(b['Evening / Night Charge NPR'])-n(b['Discount NPR']);
-  const moneyText=v=>v==null||v===''?'':String(Number(v).toLocaleString('en-IN'));
-  const end=b['End AD Exclusive']?new Date(Date.parse(b['End AD Exclusive']+'T00:00:00Z')-86400000).toISOString().slice(0,10):'';
-  // Agreement fields, matched to the original template's printed blank lines.
-  put(p,360,239,b['Customer Name'],25);
-  put(p,361,268,b['Customer Address'],27);
-  put(p,361,298,b.Phone,24);
-  put(p,385,315,b['Citizenship / Passport'],24);
-  put(p,365,332,b['Driving Licence'],24);
-  put(p,210,353,vehicle['Vehicle Type'],22);
-  put(p,423,353,vehicle.Manufacturer,20);
-  put(p,207,376,vehicle.Model||vehicle['Vehicle Name'],23);
-  put(p,427,376,vehicle.Seats,15);
-  put(p,199,398,vehicle.Colour,22);
-  put(p,431,398,vehicle['Manufacture Year'],16);
-  put(p,200,421,vehicle.Registration,24);
-  put(p,419,421,vehicle['Chassis Number'],21);
-  put(p,199,438,vehicle['Vehicle Condition'],26);
-  put(p,219,460,moneyText(b['Daily Rate NPR']),15);
-  put(p,445,460,b.Days,8);
-  put(p,190,481,b['BS Date Reference']||b['Start AD'],27);
-  put(p,435,481,end,18);
-  put(p,178,510,'NPR '+moneyText(rental),22);
-  put(p,178,532,'NPR '+moneyText(b['Deposit Held NPR']),22);
-  put(p,180,552,b['Deposit Cheque Number'],25);
-  put(p,430,611,moneyText(b['Late Fee Per Day NPR']),10);
-  put(p,510,627,moneyText(b['Late Fee Per Hour NPR']),8);
-  put(p2,135,222,moneyText(b['Deposit Held NPR']),18);
-  put(p2,345,270,b['Deposit Cheque Number'],22);
-  const out=await pdf.save();const blob=new Blob([out],{type:'application/pdf'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;
-  a.download='Rental_Agreement_'+String(b['Booking ID']||'booking').replace(/[^\w-]/g,'_')+'.pdf';
-  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-  alertUser('Agreement PDF generated. Review all fields and terms before signing.');
- }catch(err){alertUser('Agreement PDF: '+err.message,true)}
+  const pdf=await PDFLib.PDFDocument.create(),page=pdf.addPage([595.28,841.89]);
+  const regular=await pdf.embedFont(PDFLib.StandardFonts.Helvetica),bold=await pdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  const ink=PDFLib.rgb(.09,.18,.29),muted=PDFLib.rgb(.40,.47,.55),teal=PDFLib.rgb(.05,.55,.50);
+  const clean=x=>String(x??'').replace(/[^\x20-\x7E]/g,'?');
+  const draw=(x,y,value,size=10,font=regular,color=ink)=>page.drawText(clean(value),{x,y,size,font,color,maxWidth:510});
+  const line=(y)=>page.drawLine({start:{x:42,y},end:{x:553,y},thickness:.8,color:PDFLib.rgb(.83,.87,.90)});
+  const fmt=x=>'NPR '+(Number(x)||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+  const date=x=>x?String(x):'Not recorded';
+  const lastDay=b['End AD Exclusive']?new Date(Date.parse(b['End AD Exclusive']+'T00:00:00Z')-86400000).toISOString().slice(0,10):'';
+  const days=Number(b.Days)||Math.round((Date.parse(b['End AD Exclusive'])-Date.parse(b['Start AD']))/86400000);
+  const daily=Number(b['Daily Rate NPR'])||0,night=Number(b['Evening / Night Charge NPR'])||0,discount=Number(b['Discount NPR'])||0;
+  const rental=days*daily, total=rental+night-discount,advance=Number(b['Advance NPR'])||0,deposit=Number(b['Deposit Held NPR'])||0;
+  const brand=invoiceBrand();
+  page.drawRectangle({x:0,y:748,width:595.28,height:94,color:PDFLib.rgb(.055,.13,.22)});
+  if(brand.logo){try{const raw=Uint8Array.from(atob(brand.logo.split(',')[1]),c=>c.charCodeAt(0));const img=brand.logo.startsWith('data:image/png')?await pdf.embedPng(raw):await pdf.embedJpg(raw);const dim=img.scale(Math.min(66/img.width,66/img.height));page.drawImage(img,{x:485,y:764,width:dim.width,height:dim.height})}catch(e){alertUser('Logo could not be embedded; invoice will still print.',true)}}
+  draw(42,800,brand.name.toUpperCase(),Math.min(21,Math.max(12,430/Math.max(1,brand.name.length)*1.7)),bold,PDFLib.rgb(1,1,1));
+  draw(42,778,brand.address,10,regular,PDFLib.rgb(.79,.87,.91));
+  draw(42,761,'Phone: '+brand.phone+(brand.registration?'  |  Reg/PAN: '+brand.registration:''),9,regular,PDFLib.rgb(.79,.87,.91));
+  draw(42,712,'RENTAL PERIOD INVOICE',16,bold,teal);
+  draw(42,690,'Booking ID: '+(b['Booking ID']||'Not assigned')+(b['Period Number']?' | Period '+b['Period Number']:''),10,bold);
+  draw(365,690,'Status: '+(b.Status||'Not specified'),10,bold);
+  draw(42,672,'Invoice date AD: '+(b['Period Invoice Date AD']||b['End AD Exclusive']||localDate())+(brand.email?'  |  '+brand.email:''),9,regular,muted);
+  line(655);
+  draw(42,630,'CUSTOMER',11,bold,teal);
+  draw(42,609,'Name: '+(b['Customer Name']||''));
+  draw(42,591,'Phone: '+(b.Phone||'Not recorded'));
+  draw(42,573,'Address: '+(b['Customer Address']||'Not recorded'));
+  draw(42,542,'VEHICLE & RENTAL PERIOD',11,bold,teal);
+  draw(42,520,'Vehicle: '+(v['Vehicle Name']||b['Vehicle ID']||'Not recorded'));
+  draw(42,502,'Registration: '+(v.Registration||'Not recorded'));
+  draw(42,484,'Start AD: '+date(b['Start AD']));
+  draw(315,484,'Last rental day AD: '+date(lastDay));
+  draw(42,466,'Rental days: '+days);
+  draw(315,466,'BS start reference: '+(b['BS Date Reference']||'Not recorded'));
+  line(444);
+  draw(42,421,'CHARGES',11,bold,teal);
+  const charge=(y,label,amount,emphasis=false)=>{draw(42,y,label,10,emphasis?bold:regular);draw(400,y,fmt(amount),10,emphasis?bold:regular)};
+  charge(397,days+' day(s) x '+fmt(daily),rental);
+  charge(376,'Evening / night charge',night);
+  charge(355,'Discount (-)',-discount);
+  line(341);
+  charge(320,'TOTAL RENTAL CHARGE',total,true);
+  charge(297,'Advance recorded (-)',-advance);
+  charge(274,'RENTAL BALANCE',total-advance,true);
+  line(257);
+  charge(234,'Refundable deposit held (separate)',deposit);
+  draw(42,209,'Deposit is not included in the rental charge or rental balance.',9,regular,muted);
+  draw(42,175,'CONFIRMATION NOTES',10,bold,teal);
+  draw(42,156,'This document confirms the recorded booking details. It is not a payment receipt.',9);
+  draw(42,141,'Payment amounts reflect records entered in the booking system.',9);
+  draw(42,126,'Any refundable deposit is accounted for separately.',9);
+  line(103);
+  draw(42,83,brand.name+'  |  Booking confirmation generated from recorded details',8,regular,muted);
+  const bytes=await pdf.save(),url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+  const link=document.createElement('a');link.href=url;link.download='Booking_Confirmation_'+String(b['Booking ID']||'booking').replace(/[^\w-]/g,'_')+'.pdf';
+  document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  alertUser('Booking confirmation PDF generated. Check details before sending to the customer.');
+ }catch(err){alertUser('Booking confirmation PDF: '+err.message,true)}
 }
 </script></body></html>
