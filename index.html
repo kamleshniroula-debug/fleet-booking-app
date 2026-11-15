@@ -53,7 +53,7 @@ function bookingCalendar(){
  let maintenance=rows('Maintenance').filter(m=>(calendarVehicle==='all'||m['Vehicle ID']===calendarVehicle)&&m.Status!=='Completed'&&m['Start AD']&&m['Start AD']<=date&&date<(m['End AD Exclusive']||'9999-12-31'));
  let cls=bookings.length&&maintenance.length?'mixed':bookings.length?'busy':maintenance.length?'service':'';
  let label=bs?`${j}<div class="smallad">${date.slice(5)}</div>`:j;
- let chips=bookings.slice(0,3).map(b=>`<div class="calchip" title="${esc(b['Customer Name'])}">${esc(val('Vehicles','Vehicle ID',b['Vehicle ID'],'Registration')||b['Vehicle ID'])}: ${esc(b['Customer Name']||'Booked')}</div>`).join('')+maintenance.slice(0,2).map(m=>`<div class="calchip maintenance">${esc(m.Type||'Maintenance')}</div>`).join('');
+ let chips=bookings.slice(0,3).map(b=>`<div class="calchip" title="${esc(b['Customer Name'])}">${esc(b['Customer Name']||'Customer not recorded')}</div>`).join('')+maintenance.slice(0,2).map(m=>`<div class="calchip maintenance">${esc(m.Type||'Maintenance')}</div>`).join('');
  days.push(`<div class="calcell ${cls}" title="${esc(date)} AD"><div class="daynum">${label}</div>${chips}${bookings.length>3?`<div class="smallad">+${bookings.length-3} more</div>`:''}</div>`)
  }}
  let yearOptions=Array.from({length:10},(_,i)=>2083+i).map(y=>`<option value="${y}" ${y===calendarBSYear?'selected':''}>${y}${BS_LENGTHS[y]?'':' (pending)'}</option>`).join('');
