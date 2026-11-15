@@ -101,7 +101,7 @@ async function loadBytes(bytes,where){let candidate=await JSZip.loadAsync(bytes)
  let indexes=Object.keys(headerMap).map(Number).sort((a,b)=>a-b);
  let heads=indexes.map(i=>headerMap[i]).filter(Boolean);
  if(required.some(h=>!heads.includes(h)))throw Error('Sheet '+name+' is missing required fields. Restore original headers before opening.');
- if(heads.length!==indexes.length||required.some((h,i)=>heads[i]!==h))throw Error('Sheet '+name+' has moved or blank header columns. Keep original fields in their original order; append new fields at the end.');
+ if(heads.length!==indexes.length||required.some((h,i)=>heads.filter(x=>x!=='Evening / Night Charge NPR' || name!=='Bookings')[i]!==h))throw Error('Sheet '+name+' has moved or blank header columns. Keep original fields in their original order; append new fields at the end.');
  if(new Set(heads).size!==heads.length)throw Error('Duplicate column names in '+name);
  SCHEMAS[name]=name==='Bookings'&&!heads.includes('Evening / Night Charge NPR')?[...heads,'Evening / Night Charge NPR']:heads;
  let found=[];for(let row of rr){let ri=Number(row.getAttribute('r'));if(ri<2)continue;let o={};for(let c of [...row.getElementsByTagNameNS('*','c')]){let m=c.getAttribute('r')?.match(/^[A-Z]+/);if(!m)continue;let ix=0;for(let ch of m[0])ix=ix*26+ch.charCodeAt(0)-64;let h=heads[ix-1];if(h)o[h]=parseCell(c)}if(Object.values(o).some(v=>String(v).trim()))found.push(o)}parsed[name]=found
