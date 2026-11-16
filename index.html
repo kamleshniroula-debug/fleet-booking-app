@@ -956,7 +956,7 @@ async function printBookingConfirmation(index){
   }catch(e){notify('Google sign-in: '+e.message)}
  });
 
- // Secondary, versioned workbook snapshot. The original Excel remains the source
+ // Secondary workbook snapshot with read-back verification. The original Excel remains the source
  // for all workbook sheets; never overwrite existing normalized database tables.
  let pending=false;
  const syncLabel=document.getElementById('dualSyncState');
@@ -976,7 +976,12 @@ async function printBookingConfirmation(index){
    syncText('saving…');
    const {error}=await c.from('pvr_workbook_snapshots').upsert({user_id:session.user.id,payload:snapshot},{onConflict:'user_id'});
    if(error){pending=true;const hint=error.code==='42P10'?'Database needs the user_id unique index. Run fix_supabase_backup.sql.':error.code==='42703'?'Database needs the payload column. Run fix_supabase_backup.sql.':error.message;syncText('save failed ('+hint+')',true);return false}
-   pending=false;syncText('saved '+new Date().toLocaleTimeString());return true;
+   // Verify the exact snapshot is readable under the signed-in user's RLS policy.
+   const {data:verified,error:verifyError}=await c.from('pvr_workbook_snapshots')
+     .select('payload').eq('user_id',session.user.id).maybeSingle();
+   if(verifyError||!verified?.payload){pending=true;syncText('written, but read-back verification failed ('+(verifyError?.message||'no readable backup')+')',true);return false}
+   if(verified.payload.saved_at!==snapshot.saved_at){pending=true;syncText('backup changed during verification; retry',true);return false}
+   pending=false;syncText('saved and verified '+new Date().toLocaleTimeString());return true;
   }
  };
  // If a Supabase OAuth redirect returns to this page, initialize the client to recover its session.
