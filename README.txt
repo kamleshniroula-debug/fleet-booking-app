@@ -1,12 +1,17 @@
-PRINCE VEHICLE RENTAL — ANDROID PWA RELEASE CANDIDATE
+PRINCE VEHICLE RENTAL — EMAIL-BASED PARTNER ACCESS
 
-Upload ALL files and the icons folder together to your GitHub Pages repository (not just index.html).
-Open the HTTPS GitHub Pages URL on Android Chrome > menu > Install app / Add to Home screen.
+1. Back up your Supabase project and existing GitHub pages.
+2. Run setup.sql in Supabase SQL Editor once.
+3. In Supabase Edge Functions, create a function named partner-email-access.
+   Paste the contents of index.ts and deploy with Verify JWT enabled.
+   Ensure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are available as server-side secrets.
+   Never paste the service-role key into an HTML file.
+4. Upload prince-rental-admin-email-assignment.html as admin-access.html
+   (or the existing name used by your Rental Companies sidebar link).
+5. Upload prince-rental-partner-auto-assignment.html as rental-partner.html.
+6. In admin panel, enter company name, then partner email, then assign.
+7. Partner signs in using that exact Google account. The portal claims the preapproved email.
 
-A matching Excel workbook is REQUIRED; this package does not create or migrate one.
-OneDrive sign-in requires the exact GitHub Pages URL registered as an Azure redirect URI.
-The PDF library and extended BS calendar use internet-hosted dependencies, so those features need internet.
-Only BS 2083 has embedded calendar lengths; other years depend on the remote library loading successfully. Verify BS dates before agreements.
-Customer ID scans and documents are sensitive; test with dummy data and confirm OneDrive permissions and passphrase recovery procedures.
-No real OneDrive account, Azure login, or matching workbook was supplied for live integration testing.
-The app shell can install offline, but OneDrive sync and externally hosted libraries cannot run offline.
+Note: An email assignment is pending until the partner logs in; the function deliberately
+never exposes a list of Supabase Authentication users. Booking approval remains disabled.
+Test with a non-admin partner account before production use.
