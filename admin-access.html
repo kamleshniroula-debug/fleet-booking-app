@@ -1,185 +1,28 @@
-
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Prince Vehicle Rental | Admin Access</title>
-<style>
-body{font-family:system-ui;background:#f3f6fb;color:#19324c;margin:0}
-main{max-width:850px;margin:auto;padding:20px}
-header{background:#10243d;color:white;padding:22px;border-radius:15px}
-header a{color:#9ce6d9}
-section{background:white;padding:20px;border-radius:14px;margin-top:18px;border:1px solid #dce5ef}
-input,select,button{font:inherit;padding:11px;border-radius:9px;border:1px solid #ccd8e6}
-input{width:100%;box-sizing:border-box}
-button{background:#0c9387;color:white;border:0;cursor:pointer}
-button:disabled{opacity:.5}
-label{display:block;margin:12px 0 5px;font-weight:600}
-table{width:100%;border-collapse:collapse;font-size:12px}
-td,th{padding:9px 5px;text-align:left;border-bottom:1px solid #ddd;overflow-wrap:anywhere}
-td:first-child{word-break:break-all}
-#adminPanel{display:none}
-.note{font-size:13px;color:#607188}
-.error{color:#b42332}
-@media(max-width:600px){table{font-size:10px}}
-</style>
-</head>
-<body>
-<main>
-<header>
-<a href="index.html">← Dashboard</a>
-<h2>PRINCE VEHICLE RENTAL</h2>
-<p>Administrator · User Management</p>
-</header>
-
-<section>
-<h3>Administrator verification</h3>
-<p id="status">Checking login...</p>
-<button id="login">Sign in with Google</button>
-</section>
-
-<div id="adminPanel">
-<section>
-<h3>Add or update user</h3>
-<p class="note">Users must first sign in with Google. Find their UID under Supabase Authentication → Users.</p>
-<form id="userForm">
-<label>User UID</label>
-<input id="uid" required pattern="[a-fA-F0-9-]{36}" placeholder="Supabase user UID">
-<label>Access level</label>
-<select id="role">
-<option value="staff">Staff</option>
-<option value="viewer">Viewer</option>
-<option value="customer">Customer</option>
-<option value="admin">Administrator</option>
-</select>
-<label>Account status</label>
-<select id="active">
-<option value="true">Active</option>
-<option value="false">Inactive</option>
-</select>
-<p><button type="submit">Save user</button></p>
-</form>
-<p id="feedback"></p>
-</section>
-
-<section>
-<h3>Registered members</h3>
-<button id="refresh">Refresh</button>
-<div style="overflow:auto">
-<table>
-<thead><tr><th>UID</th><th>Role</th><th>Active</th><th>Edit</th></tr></thead>
-<tbody id="members"></tbody>
-</table>
-</div>
-</section>
-
-<section>
-<h3>Sharing status</h3>
-<p class="note">User roles are managed here. Do not share the internal booking dashboard yet. Secure Supabase booking tables and role-specific interfaces must be completed first.</p>
-</section>
-</div>
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prince Vehicle Rental | User Access</title><style>
+:root{font-family:system-ui,Arial,sans-serif;color:#1b3048;background:#f3f6fb}*{box-sizing:border-box}body{margin:0}.wrap{max-width:900px;margin:auto;padding:22px}.head{background:#10243d;color:#fff;padding:20px;border-radius:15px}.head a{color:#bcebe3}h1{margin:5px 0}section{background:white;border:1px solid #dce5ef;border-radius:14px;padding:20px;margin:18px 0}button,select,input{font:inherit;border:1px solid #ccd8e6;border-radius:9px;padding:10px}button{background:#0c9387;color:white;border:0;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}input{width:100%}label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}.grid{display:grid;grid-template-columns:1fr 180px 110px;gap:12px;align-items:end}.note{color:#536780;font-size:13px;line-height:1.6}.error{color:#a32835}.ok{color:#0d785d}table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-bottom:1px solid #e2e9f2;text-align:left;padding:12px 5px;overflow-wrap:anywhere}td:first-child{word-break:break-all}#panel{display:none}@media(max-width:650px){.grid{grid-template-columns:1fr}table{font-size:11px}td,th{padding:8px 3px}}
+</style></head><body><div class="wrap"><header class="head"><a href="index.html">← Back to Fleet Dashboard</a><h1>Prince Vehicle Rental</h1><div>Administrator · User access management</div></header><section><h2>Administrator verification</h2><p id="state">Checking Google session…</p><button id="signin">Sign in with Google</button><p class="note">This page checks your active administrator membership in Supabase. All changes also require database row-level security authorization.</p></section><div id="panel"><section><h2>Add or update a member</h2><p class="note">First, the person must sign in to the website with Google so they appear under Supabase → Authentication → Users. Copy their UID from there. Never use an email address in the UID field.</p><form id="form"><div class="grid"><div><label for="uid">Supabase Authentication User UID</label><input id="uid" type="text" required placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" pattern="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"></div><div><label for="role">Role</label><select id="role"><option value="staff">Staff</option><option value="viewer">Viewer</option><option value="customer">Customer</option><option value="admin">Administrator</option></select></div><div><label for="active">Status</label><select id="active"><option value="true">Active</option><option value="false">Inactive</option></select></div></div><p><button type="submit">Save membership</button></p></form><p id="feedback" aria-live="polite"></p></section><section><h2>Existing members</h2><p class="note">UIDs are shown instead of email addresses because the public member table does not expose Authentication emails. You cannot deactivate or demote your own admin membership here.</p><button id="refresh">Refresh list</button><div style="overflow:auto"><table><thead><tr><th>User UID</th><th>Role</th><th>Active</th><th>Action</th></tr></thead><tbody id="members"></tbody></table></div></section><section><h2>Sharing status</h2><p class="note">Role assignments are saved, but the existing workbook still uses OneDrive and local editing. Do not share the internal dashboard with customers, viewers, or staff yet. A separate secured Supabase booking backend and role-specific pages are required before production sharing.</p></section></div></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script>
 'use strict';
-const URL_BASE='https://biytfypqihcaibrgqmky.supabase.co';
+const PROJECT_URL='https://biytfypqihcaibrgqmky.supabase.co';
 const PUBLIC_KEY='sb_publishable_BFSBmvjvLMGGGOFqnW5-lw_TAWyT6gC';
-const SITE='https://kamleshniroula-debug.github.io/fleet-booking-app/';
+const SITE_URL='https://kamleshniroula-debug.github.io/fleet-booking-app/';
 const $=id=>document.getElementById(id);
-const db=window.supabase?.createClient(URL_BASE,PUBLIC_KEY);
-let adminId=null;
-
-async function verify(){
-  adminId=null;
-  $('adminPanel').style.display='none';
-  if(!db){
-    $('status').textContent='Supabase library unavailable';
-    return;
-  }
-  const {data:{session},error}=await db.auth.getSession();
-  if(error){$('status').textContent=error.message;return}
-  if(!session){
-    $('status').textContent='Sign in to verify administrator access';
-    $('login').textContent='Sign in with Google';
-    return;
-  }
-  $('login').textContent='Sign out';
-  const {data:member,error:e}=await db.from('pvr_members')
-    .select('role,active')
-    .eq('user_id',session.user.id).maybeSingle();
-  if(e||member?.role!=='admin'||member.active!==true){
-    $('status').textContent='Access denied: active administrator required';
-    return;
-  }
-  adminId=session.user.id;
-  $('status').textContent='Verified administrator';
-  $('adminPanel').style.display='block';
-  await loadMembers();
+const client=window.supabase?.createClient(PROJECT_URL,PUBLIC_KEY,{auth:{flowType:'implicit',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}});
+let me=null;
+function message(t,err=false){$('feedback').textContent=t;$('feedback').className=err?'error':'ok'}
+async function check(){
+ $('panel').style.display='none';me=null;
+ if(!client){$('state').textContent='Supabase library unavailable. Check internet connection.';return}
+ const {data:{session},error}=await client.auth.getSession();
+ if(error){$('state').textContent=error.message;return}
+ if(!session){$('state').textContent='Sign in with Google to verify administrator access.';$('signin').textContent='Sign in with Google';return}
+ $('signin').textContent='Sign out';
+ const {data:member,error:e}=await client.from('pvr_members').select('role,active').eq('user_id',session.user.id).maybeSingle();
+ if(e||!member||member.role!=='admin'||!member.active){$('state').textContent='Access denied: this Google account does not have an active admin membership.';return}
+ me=session.user.id;$('state').textContent='Verified active administrator: '+(session.user.email||session.user.id);$('panel').style.display='block';await load();
 }
-
-async function loadMembers(){
-  if(!adminId)return;
-  const {data,error}=await db.from('pvr_members')
-    .select('user_id,role,active')
-    .order('created_at',{ascending:false});
-  if(error){$('feedback').textContent=error.message;return}
-  const body=$('members');
-  body.replaceChildren();
-  for(const m of data||[]){
-    const tr=document.createElement('tr');
-    for(const value of [m.user_id,m.role,String(m.active)]){
-      const td=document.createElement('td');
-      td.textContent=value;
-      tr.append(td);
-    }
-    const td=document.createElement('td');
-    const btn=document.createElement('button');
-    btn.textContent='Edit';
-    btn.disabled=m.user_id===adminId;
-    btn.onclick=()=>{
-      $('uid').value=m.user_id;
-      $('role').value=m.role;
-      $('active').value=String(m.active);
-      $('uid').focus();
-    };
-    td.append(btn);tr.append(td);body.append(tr);
-  }
-}
-
-$('login').onclick=async()=>{
-  try{
-    const {data:{session}}=await db.auth.getSession();
-    if(session){await db.auth.signOut();await verify();return}
-    const {error}=await db.auth.signInWithOAuth({
-      provider:'google',
-      options:{redirectTo:SITE+'admin-access.html'}
-    });
-    if(error)throw error;
-  }catch(e){$('status').textContent=e.message}
-};
-
-$('userForm').onsubmit=async e=>{
-  e.preventDefault();
-  if(!adminId)return;
-  const uid=$('uid').value.trim().toLowerCase();
-  const role=$('role').value;
-  const active=$('active').value==='true';
-  if(uid===adminId){
-    $('feedback').textContent='Cannot modify your own administrator account here';
-    return;
-  }
-  if(!confirm('Save access for '+uid+'?'))return;
-  const {error}=await db.from('pvr_members')
-    .upsert({user_id:uid,role,active},{onConflict:'user_id'});
-  $('feedback').textContent=error?error.message:'User access saved';
-  if(!error){$('userForm').reset();await loadMembers()}
-};
-
-$('refresh').onclick=loadMembers;
-if(db)db.auth.onAuthStateChange(()=>setTimeout(verify,0));
-verify().catch(e=>$('status').textContent=e.message);
-</script>
-</body>
-</html>
+async function load(){if(!me)return;const {data,error}=await client.from('pvr_members').select('user_id,role,active').order('created_at',{ascending:false});if(error){message(error.message,true);return}const tbody=$('members');tbody.replaceChildren();for(const row of data||[]){const tr=document.createElement('tr');for(const value of [row.user_id,row.role,row.active?'Yes':'No']){const td=document.createElement('td');td.textContent=value;tr.append(td)}const td=document.createElement('td');const btn=document.createElement('button');btn.textContent='Edit';btn.disabled=row.user_id===me;btn.onclick=()=>{$('uid').value=row.user_id;$('role').value=row.role;$('active').value=String(row.active);$('uid').focus()};td.append(btn);tr.append(td);tbody.append(tr)}}
+$('signin').onclick=async()=>{try{if(!client)throw Error('Supabase unavailable');const {data:{session}}=await client.auth.getSession();if(session){await client.auth.signOut();await check();return}if(location.origin!==new URL(SITE_URL).origin)throw Error('Open the published GitHub Pages site to sign in');const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:SITE_URL+'admin-access.html'}});if(error)throw error}catch(e){$('state').textContent=e.message}};
+$('form').onsubmit=async e=>{e.preventDefault();if(!me)return;const uid=$('uid').value.trim().toLowerCase(),role=$('role').value,active=$('active').value==='true';if(uid===me){message('For safety, this page cannot modify your own admin membership.',true);return}if(!confirm('Save '+role+' ('+(active?'active':'inactive')+') for UID '+uid+'?'))return;const {error}=await client.from('pvr_members').upsert({user_id:uid,role,active},{onConflict:'user_id'});if(error){message('Could not save: '+error.message,true);return}message('Membership saved. The person must sign in with the matching Google account.');$('form').reset();await load()};
+$('refresh').onclick=load;
+if(client)client.auth.onAuthStateChange(()=>setTimeout(check,0));check().catch(e=>$('state').textContent=e.message);
+</script></body></html>
