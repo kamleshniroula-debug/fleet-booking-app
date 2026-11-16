@@ -1166,3 +1166,17 @@ async function printBookingConfirmation(index){
  }
 })();
 </script><script>if ('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')) { window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(err=>console.warn('PWA registration unavailable:',err))); }</script></body></html>
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+  const actions = document.querySelector('.top .actions');
+  if (!actions || document.getElementById('adminAccessLink')) return;
+
+  const link = document.createElement('a');
+  link.id = 'adminAccessLink';
+  link.href = 'admin-access.html';
+  link.className = 'btn';
+  link.textContent = 'User Access';
+  actions.appendChild(link);
+});
+</script>
+
