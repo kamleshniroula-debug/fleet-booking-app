@@ -1,13 +1,12 @@
-PRINCE VEHICLE RENTAL — DYNAMIC WORKBOOK UPDATE
+PRINCE VEHICLE RENTAL — ANDROID PWA RELEASE CANDIDATE
 
-Upload index.html and jszip.min.js to GitHub Pages.
-Upload Prince_Fleet_Management.xlsx to your OneDrive root, or open it locally.
+Upload ALL files and the icons folder together to your GitHub Pages repository (not just index.html).
+Open the HTTPS GitHub Pages URL on Android Chrome > menu > Install app / Add to Home screen.
 
-Every Add record creates a new row in the saved workbook.
-The + Add field button appends a new column to the selected sheet.
-Additional columns added manually at the end of Excel sheets are also recognized.
-Do not reorder, rename, or delete the original required columns.
-
-IMPORTANT: Back up your existing workbook before replacing anything.
-OneDrive save is not tested in your account. Verify saved changes by reopening a copy.
-This does not automatically add columns from Excel formulas or external processes.
+A matching Excel workbook is REQUIRED; this package does not create or migrate one.
+OneDrive sign-in requires the exact GitHub Pages URL registered as an Azure redirect URI.
+The PDF library and extended BS calendar use internet-hosted dependencies, so those features need internet.
+Only BS 2083 has embedded calendar lengths; other years depend on the remote library loading successfully. Verify BS dates before agreements.
+Customer ID scans and documents are sensitive; test with dummy data and confirm OneDrive permissions and passphrase recovery procedures.
+No real OneDrive account, Azure login, or matching workbook was supplied for live integration testing.
+The app shell can install offline, but OneDrive sync and externally hosted libraries cannot run offline.
