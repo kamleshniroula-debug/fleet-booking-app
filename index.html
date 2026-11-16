@@ -8,7 +8,7 @@
 /* Live rental progress dashboard */
 .rental-status-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.rental-status-controls label{font-size:12px;font-weight:750;color:#51647b}.rental-status-controls select{border:1px solid #cbd7e5;border-radius:9px;padding:9px 12px;background:white;color:#193450;min-width:145px}
 .rental-progress-list{display:grid;gap:13px}.rental-progress-item{padding:13px;border:1px solid #e2e9f2;border-radius:12px;background:#fbfcfe}.rental-progress-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.rental-progress-track{height:13px;background:#e7edf4;border-radius:99px;overflow:hidden;margin:11px 0 7px}.rental-progress-fill{height:100%;border-radius:99px;transition:width .5s ease,background .5s ease}.rental-progress-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:#65788e}.rental-progress-item.overdue{border-color:#efb0b0;background:#fff5f5}.rental-progress-item.overdue .rental-progress-meta{color:#a42c2c}
-</style></head><body><div class="shell"><aside class="sidebar"><div class="brand"><div class="logo">P</div><div>PRINCE<small>VEHICLE RENTAL · NEPAL</small></div></div><nav class="nav" id="nav"></nav></aside><main class="main"><header class="top"><div><div class="eyebrow">Operations workspace</div><h1 id="pageTitle">Dashboard</h1><div class="sub">Lagankhel, Lalitpur · BS 2081–2093 planning</div></div><div class="actions"><button class="btn" id="branding">Invoice branding</button><button class="btn" id="openLocal">Open workbook</button><button class="btn" id="download">Download workbook</button><button class="btn dark" id="login">Connect OneDrive</button><button class="btn primary" id="save">Save to OneDrive</button></div></header><div class="banner warn" id="notice">Open the matching expandable Excel workbook to begin. Local editing works without sign-in; download your edited copy to keep changes.</div><div id="content"></div><div class="footer">Prince Vehicle Rental · Phone 9851226425 · Dynamic rows and appended fields remain in your workbook. Verify imported historical financial figures.</div></main></div><input type="file" id="file" class="fileinput" accept=".xlsx"><div id="modalroot"></div><div id="toastroot"></div><script src="jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script><script>
+</style></head><body><div class="shell"><aside class="sidebar"><div class="brand"><div class="logo">P</div><div>PRINCE<small>VEHICLE RENTAL · NEPAL</small></div></div><nav class="nav" id="nav"></nav></aside><main class="main"><header class="top"><div><div class="eyebrow">Operations workspace</div><h1 id="pageTitle">Dashboard</h1><div class="sub">Lagankhel, Lalitpur · BS 2081–2093 planning</div></div><div class="actions"><button class="btn" id="branding">Invoice branding</button><button class="btn" id="openLocal">Open workbook</button><button class="btn" id="download">Download workbook</button><button class="btn" id="googleLogin" type="button">Sign in with Google</button><button class="btn dark" id="login">Connect OneDrive</button><button class="btn primary" id="save">Save to OneDrive</button></div></header><div class="banner warn" id="notice">Open the matching expandable Excel workbook to begin. Local editing works without sign-in; download your edited copy to keep changes.</div><div id="content"></div><div class="footer">Prince Vehicle Rental · Phone 9851226425 · Dynamic rows and appended fields remain in your workbook. Verify imported historical financial figures.</div></main></div><input type="file" id="file" class="fileinput" accept=".xlsx"><div id="modalroot"></div><div id="toastroot"></div><script src="jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script><script>
 'use strict';
 const CLIENT='6b50f04d-d35e-4da4-8b24-acd8632afbbb',FILE='Prince_Fleet_Management.xlsx',REDIRECT='https://kamleshniroula-debug.github.io/fleet-booking-app/';
 let cloudFile=FILE,cloudLoaded=false;
@@ -912,4 +912,52 @@ async function printBookingConfirmation(index){
  alertUser('Navy and orange A5 landscape invoice generated.');
  }catch(e){alertUser('Invoice error: '+e.message,true)}
 }
+</script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* Google login is separate from the legacy OneDrive workbook integration.
+   The Supabase publishable/anon key is public; NEVER put service_role or OAuth client secret here. */
+(function(){
+ const PROJECT_URL='https://biytfypqihcaibrgqmky.supabase.co';
+ const SITE_URL='https://kamleshniroula-debug.github.io/fleet-booking-app/';
+ const KEY_STORAGE='pvr_supabase_publishable_key';
+ let client=null;
+ const button=document.getElementById('googleLogin');
+ const notify=(message)=>{if(typeof alertUser==='function')alertUser(message);else alert(message)};
+ function getClient(){
+  if(client)return client;
+  if(!window.supabase?.createClient)throw Error('Supabase library did not load. Check your internet connection.');
+  let key=localStorage.getItem(KEY_STORAGE);
+  if(!key){
+   key=prompt('Enter the Supabase publishable key (sb_publishable_...) or legacy anon public key from Supabase → Project Settings → API Keys. Do NOT enter a service_role or secret key.');
+   if(!key)return null;
+   key=key.trim();
+   if(!(key.startsWith('sb_publishable_')||key.startsWith('eyJ')))throw Error('This does not look like a Supabase publishable/anon key. Never enter a secret key.');
+   localStorage.setItem(KEY_STORAGE,key);
+  }
+  client=window.supabase.createClient(PROJECT_URL,key,{auth:{flowType:'implicit',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}});
+  client.auth.onAuthStateChange((_event,session)=>update(session));
+  return client;
+ }
+ function update(session){
+  if(!button)return;
+  const email=session?.user?.email;
+  button.textContent=email?'Google: '+email+' · Sign out':'Sign in with Google';
+  button.title=email?'Tap to sign out of Google login':'Sign in with Google through Supabase';
+ }
+ button.addEventListener('click',async()=>{
+  try{
+   const c=getClient();if(!c)return;
+   const {data:{session},error}=await c.auth.getSession();if(error)throw error;
+   if(session){if(confirm('Sign out of Google login?')){const result=await c.auth.signOut();if(result.error)throw result.error;update(null)}return}
+   if(location.origin!==new URL(SITE_URL).origin)throw Error('Open your published GitHub Pages website to sign in.');
+   const result=await c.auth.signInWithOAuth({provider:'google',options:{redirectTo:SITE_URL}});
+   if(result.error)throw result.error;
+  }catch(e){notify('Google sign-in: '+e.message)}
+ });
+ // If a Supabase OAuth redirect returns to this page, initialize the client to recover its session.
+ if(location.hash.includes('access_token=')||localStorage.getItem(KEY_STORAGE)){
+  try{const c=getClient();if(c)c.auth.getSession().then(({data,error})=>{if(error)notify(error.message);else update(data.session)}).catch(e=>notify(e.message))}
+  catch(e){notify('Google login setup: '+e.message)}
+ }
+})();
 </script><script>if ('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')) { window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(err=>console.warn('PWA registration unavailable:',err))); }</script></body></html>
