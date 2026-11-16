@@ -797,7 +797,7 @@ async function autoSaveCloud(manual=false){
   if(etag)headers['If-Match']=etag;
   const res=await graph(path,{method:'PUT',headers,body:bytes});
   const meta=await res.json();etag=meta.eTag;
-  if(version===editVersion){dirty=false;status('OneDrive saved. Checking Supabase backup…',true);await window.pvrDualSync?.saveSnapshot();if(manual)alertUser('OneDrive saved; check the dual-sync status for Supabase.');}
+  if(version===editVersion){dirty=false;status('OneDrive saved. Checking Supabase backup…',true);const backedUp=await window.pvrDualSync?.saveSnapshot();status(backedUp?'OneDrive and Supabase backup saved.':'OneDrive saved; Supabase backup failed or is unavailable. See red Supabase status.',!backedUp);if(manual)alertUser(backedUp?'Saved to both OneDrive and Supabase.':'OneDrive saved, but Supabase backup did not succeed. Check the red status.',!backedUp);}
   else{dirty=true;status('More changes pending — saving again…',true)}
  }catch(err){dirty=true;status('Auto-save failed: '+err.message+'. Use Save to OneDrive to retry.',true);if(manual)alertUser(err.message,true)}
  finally{autoSaving=false;if(dirty&&version!==editVersion)scheduleAutoSave()}
@@ -975,7 +975,7 @@ async function printBookingConfirmation(index){
      sheets:Object.fromEntries(Object.keys(SCHEMAS).map(k=>[k,rows(k).map(r=>({...r}))]))};
    syncText('saving…');
    const {error}=await c.from('pvr_workbook_snapshots').upsert({user_id:session.user.id,payload:snapshot},{onConflict:'user_id'});
-   if(error){pending=true;syncText('save failed ('+error.message+')',true);return false}
+   if(error){pending=true;const hint=error.code==='42P10'?'Database needs the user_id unique index. Run fix_supabase_backup.sql.':error.code==='42703'?'Database needs the payload column. Run fix_supabase_backup.sql.':error.message;syncText('save failed ('+hint+')',true);return false}
    pending=false;syncText('saved '+new Date().toLocaleTimeString());return true;
   }
  };
