@@ -920,13 +920,14 @@ async function printBookingConfirmation(index){
  const PROJECT_URL='https://biytfypqihcaibrgqmky.supabase.co';
  const SITE_URL='https://kamleshniroula-debug.github.io/fleet-booking-app/';
  const KEY_STORAGE='pvr_supabase_publishable_key';
+ const DEFAULT_PUBLISHABLE_KEY='sb_publishable_BFSBmvjvLMGGGOFqnW5-lw_TAWyT6gC';
  let client=null;
  const button=document.getElementById('googleLogin');
  const notify=(message)=>{if(typeof alertUser==='function')alertUser(message);else alert(message)};
  function getClient(){
   if(client)return client;
   if(!window.supabase?.createClient)throw Error('Supabase library did not load. Check your internet connection.');
-  let key=localStorage.getItem(KEY_STORAGE);
+  let key=DEFAULT_PUBLISHABLE_KEY;
   if(!key){
    key=prompt('Enter the Supabase publishable key (sb_publishable_...) or legacy anon public key from Supabase → Project Settings → API Keys. Do NOT enter a service_role or secret key.');
    if(!key)return null;
@@ -955,7 +956,7 @@ async function printBookingConfirmation(index){
   }catch(e){notify('Google sign-in: '+e.message)}
  });
  // If a Supabase OAuth redirect returns to this page, initialize the client to recover its session.
- if(location.hash.includes('access_token=')||localStorage.getItem(KEY_STORAGE)){
+ if(location.hash.includes('access_token=')||DEFAULT_PUBLISHABLE_KEY){
   try{const c=getClient();if(c)c.auth.getSession().then(({data,error})=>{if(error)notify(error.message);else update(data.session)}).catch(e=>notify(e.message))}
   catch(e){notify('Google login setup: '+e.message)}
  }
