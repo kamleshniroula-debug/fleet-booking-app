@@ -442,9 +442,42 @@ function vehicleGalleryMarkup(){
   return {label:'Available',detail:next?'Next booking: '+next['Start AD']:'No upcoming booking',cls:'available'};
  };
  const feature=(label,val)=>val?`${label}: ${esc(val)}`:'';
- return `<div class="panel"><div class="panelhead"><div><h2>🚗 Vehicle gallery</h2><div class="hint">Active vehicles from your workbook · photos and features</div></div></div><p class="pvr-gallery-note">Upload a real vehicle photo to your connected OneDrive. Photos are separate from the Excel workbook and Supabase snapshot; sign in to OneDrive to view them on another device.</p><div class="pvr-vehicle-gallery">${list.map(v=>{const id=v['Vehicle ID']||'',avail=availability(v),details=[feature('Reg.',v.Registration),feature('Colour',v.Colour||v.Color),feature('Year',v['Manufacture Year']),feature('Seats',v.Seats),feature('Type',v['Vehicle Type']),feature('Model',v.Model)].filter(Boolean);return `<article class="pvr-vehicle-card"><div class="pvr-vehicle-thumb" data-photo-id="${esc(id)}">🚙</div><div class="pvr-vehicle-info"><strong>${esc(v['Vehicle Name']||'Unnamed vehicle')}</strong><div class="pvr-vehicle-features">${details.join(' · ')||'Features not entered yet'}</div><div class="pvr-gallery-availability"><span class="pvr-avail-tag ${avail.cls}">${esc(avail.label)}</span><small>${esc(avail.detail)}</small></div><span class="pvr-vehicle-status ${v.Status==='Active'?'':'inactive'}">${esc(v.Status||'Status not set')}</span><div class="pvr-vehicle-actions"><button type="button" data-gallery-edit="${v.__idx}">Edit features</button><button type="button" data-gallery-upload="${v.__idx}">Upload photo</button></div></div></article>`}).join('')||'<div class="hint">No active vehicles match this gallery view.</div>'}</div><input id="pvrVehiclePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden></div>`;
+ return `<div class="panel"><div class="panelhead"><div><h2>🚗 Vehicle gallery</h2><button type="button" class="btn" id="pvrExportVehiclePdf">Download vehicle list PDF</button><div class="hint">Active vehicles from your workbook · photos and features</div></div></div><p class="pvr-gallery-note">Upload a real vehicle photo to your connected OneDrive. Photos are separate from the Excel workbook and Supabase snapshot; sign in to OneDrive to view them on another device.</p><div class="pvr-vehicle-gallery">${list.map(v=>{const id=v['Vehicle ID']||'',avail=availability(v),details=[feature('Reg.',v.Registration),feature('Colour',v.Colour||v.Color),feature('Year',v['Manufacture Year']),feature('Seats',v.Seats),feature('Type',v['Vehicle Type']),feature('Model',v.Model)].filter(Boolean);return `<article class="pvr-vehicle-card"><div class="pvr-vehicle-thumb" data-photo-id="${esc(id)}">🚙</div><div class="pvr-vehicle-info"><strong>${esc(v['Vehicle Name']||'Unnamed vehicle')}</strong><div class="pvr-vehicle-features">${details.join(' · ')||'Features not entered yet'}</div><div class="pvr-gallery-availability"><span class="pvr-avail-tag ${avail.cls}">${esc(avail.label)}</span><small>${esc(avail.detail)}</small></div><span class="pvr-vehicle-status ${v.Status==='Active'?'':'inactive'}">${esc(v.Status||'Status not set')}</span><div class="pvr-vehicle-actions"><button type="button" data-gallery-edit="${v.__idx}">Edit features</button><button type="button" data-gallery-upload="${v.__idx}">Upload photo</button></div></div></article>`}).join('')||'<div class="hint">No active vehicles match this gallery view.</div>'}</div><input id="pvrVehiclePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden></div>`;
+}
+function printVehicleGalleryPdf(){
+ const gallery=document.querySelector('.pvr-vehicle-gallery');
+ if(!gallery){alertUser('Open the vehicle gallery first.',true);return}
+ const items=[...gallery.querySelectorAll('.pvr-vehicle-card')];
+ if(!items.length){alertUser('No active vehicles to export.',true);return}
+ const clean=x=>String(x||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+ const cards=items.map(card=>{
+  const title=card.querySelector('.pvr-vehicle-info strong')?.textContent||'Vehicle';
+  const features=card.querySelector('.pvr-vehicle-features')?.textContent||'';
+  const status=card.querySelector('.pvr-avail-tag')?.textContent||'';
+  const detail=card.querySelector('.pvr-gallery-availability small')?.textContent||'';
+  const img=card.querySelector('.pvr-vehicle-thumb img');
+  // Data URLs are portable into the printable document. Blob URLs are same-origin and remain valid while this page stays open.
+  const photo=img&&img.src?`<img src="${clean(img.src)}" alt="Vehicle photo">`:'<div class="placeholder">No photo</div>';
+  return `<section class="vehicle">${photo}<div><h2>${clean(title)}</h2><p>${clean(features)}</p><strong>${clean(status)}</strong><p>${clean(detail)}</p></div></section>`;
+ }).join('');
+ const html=`<!doctype html><html><head><meta charset="utf-8"><title>Prince Vehicle Rental - Vehicle List</title><style>
+ @page{size:A4;margin:14mm}body{font-family:Arial,sans-serif;color:#172033;margin:20px}
+ header{border-bottom:2px solid #183c65;padding-bottom:12px;margin-bottom:16px}
+ h1{font-size:21px;margin:0 0 5px}header p{margin:3px 0;font-size:12px}
+ .vehicle{display:flex;gap:15px;align-items:center;border:1px solid #d8e1e9;border-radius:10px;padding:12px;margin:10px 0;break-inside:avoid;page-break-inside:avoid}
+ .vehicle img,.placeholder{width:120px;height:90px;object-fit:cover;border-radius:8px;background:#e9eef4;flex-shrink:0}
+ .placeholder{display:flex;align-items:center;justify-content:center;font-size:11px;color:#64748b}
+ h2{font-size:15px;margin:0 0 8px}.vehicle p{font-size:12px;margin:4px 0;line-height:1.5}.vehicle strong{font-size:12px}
+ .hint{font-size:11px;color:#64748b} @media print{body{margin:0}}
+ </style></head><body><header><h1>PRINCE VEHICLE RENTAL</h1><p>Lagankhel, Lalitpur, Nepal</p><p><b>Active Vehicle List · Photos, Features & Availability</b></p><p class="hint">Generated: ${clean(new Date().toLocaleString())} · ${items.length} vehicles</p></header>${cards}<p class="hint">Availability is based on the currently loaded booking workbook and may change.</p><script>window.addEventListener('load',()=>setTimeout(()=>window.print(),650));<\/script></body></html>`;
+ const blob=new Blob([html],{type:'text/html'});
+ const url=URL.createObjectURL(blob);
+ const win=window.open(url,'_blank');
+ if(!win){URL.revokeObjectURL(url);alertUser('Allow pop-ups to save the vehicle list as PDF.',true);return}
+ setTimeout(()=>URL.revokeObjectURL(url),120000);
 }
 function bindVehicleGallery(){
+ const exportBtn=document.getElementById("pvrExportVehiclePdf");if(exportBtn)exportBtn.onclick=printVehicleGalleryPdf;
  document.querySelectorAll('[data-gallery-edit]').forEach(b=>b.onclick=()=>editVehicle(Number(b.dataset.galleryEdit)));
  document.querySelectorAll('[data-gallery-upload]').forEach(b=>b.onclick=()=>{
   if(!token||!cloudLoaded){alertUser('Connect OneDrive and load the cloud workbook before uploading a vehicle photo.',true);return}
