@@ -8,7 +8,7 @@
 /* Live rental progress dashboard */
 .rental-status-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.rental-status-controls label{font-size:12px;font-weight:750;color:#51647b}.rental-status-controls select{border:1px solid #cbd7e5;border-radius:9px;padding:9px 12px;background:white;color:#193450;min-width:145px}
 .rental-progress-list{display:grid;gap:13px}.rental-progress-item{padding:13px;border:1px solid #e2e9f2;border-radius:12px;background:#fbfcfe}.rental-progress-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.rental-progress-track{height:13px;background:#e7edf4;border-radius:99px;overflow:hidden;margin:11px 0 7px}.rental-progress-fill{height:100%;border-radius:99px;transition:width .5s ease,background .5s ease}.rental-progress-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:#65788e}.rental-progress-item.overdue{border-color:#efb0b0;background:#fff5f5}.rental-progress-item.overdue .rental-progress-meta{color:#a42c2c}
-</style></head><body><div class="shell"><aside class="sidebar"><div class="brand"><div class="logo">P</div><div>PRINCE<small>VEHICLE RENTAL · NEPAL</small></div></div><nav class="nav" id="nav"></nav></aside><main class="main"><header class="top"><div><div class="eyebrow">Operations workspace</div><h1 id="pageTitle">Dashboard</h1><div class="sub">Lagankhel, Lalitpur · BS 2081–2093 planning</div></div><div class="actions"><button class="btn" id="branding">Invoice branding</button><button class="btn" id="openLocal">Open workbook</button><button class="btn" id="download">Download workbook</button><button class="btn" id="googleLogin" type="button">Sign in with Google</button><button class="btn dark" id="login">Connect OneDrive</button><button class="btn primary" id="save">Save to OneDrive</button></div></header><div class="banner warn" id="notice">Open the matching expandable Excel workbook to begin. Local editing works without sign-in; download your edited copy to keep changes.</div><div id="content"></div><div class="footer">Prince Vehicle Rental · Phone 9851226425 · Dynamic rows and appended fields remain in your workbook. Verify imported historical financial figures.</div></main></div><input type="file" id="file" class="fileinput" accept=".xlsx"><div id="modalroot"></div><div id="toastroot"></div><script src="jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script><script>
+</style></head><body><div class="shell"><aside class="sidebar"><div class="brand"><div class="logo">P</div><div>PRINCE<small>VEHICLE RENTAL · NEPAL</small></div></div><nav class="nav" id="nav"></nav></aside><main class="main"><header class="top"><div><div class="eyebrow">Operations workspace</div><h1 id="pageTitle">Dashboard</h1><div class="sub">Lagankhel, Lalitpur · BS 2081–2093 planning</div></div><div class="actions"><button class="btn" id="branding">Invoice branding</button><button class="btn" id="openLocal">Open workbook</button><button class="btn" id="download">Download workbook</button><button class="btn" id="googleLogin" type="button">Sign in with Google</button><button class="btn dark" id="login">Connect OneDrive</button><button class="btn primary" id="save">Save to both</button><span id="dualSyncState" class="sub" aria-live="polite">Supabase: not checked</span></div></header><div class="banner warn" id="notice">Open the matching expandable Excel workbook to begin. Local editing works without sign-in; download your edited copy to keep changes.</div><div id="content"></div><div class="footer">Prince Vehicle Rental · Phone 9851226425 · Dynamic rows and appended fields remain in your workbook. Verify imported historical financial figures.</div></main></div><input type="file" id="file" class="fileinput" accept=".xlsx"><div id="modalroot"></div><div id="toastroot"></div><script src="jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script><script>
 'use strict';
 const CLIENT='6b50f04d-d35e-4da4-8b24-acd8632afbbb',FILE='Prince_Fleet_Management.xlsx',REDIRECT='https://kamleshniroula-debug.github.io/fleet-booking-app/';
 let cloudFile=FILE,cloudLoaded=false;
@@ -772,7 +772,7 @@ async function loadCloud(){
 }
 $('login').onclick=async()=>{try{if(token){if(dirty&&!confirm('Unsaved edits will be replaced by the OneDrive workbook. Continue?'))return;await loadCloud()}else await startAuth()}catch(err){alertUser(err.message,true)}};
 let autoSaveTimer=null,autoSaving=false,editVersion=0;
-function markDirty(){dirty=true;editVersion++;scheduleAutoSave()}
+function markDirty(){dirty=true;editVersion++;scheduleAutoSave();window.pvrDualSync?.markPending()}
 function scheduleAutoSave(){
  if(autoSaveTimer)clearTimeout(autoSaveTimer);
  if(!token||!cloudLoaded||!zip||source!=='OneDrive '+cloudFile){
@@ -797,13 +797,13 @@ async function autoSaveCloud(manual=false){
   if(etag)headers['If-Match']=etag;
   const res=await graph(path,{method:'PUT',headers,body:bytes});
   const meta=await res.json();etag=meta.eTag;
-  if(version===editVersion){dirty=false;status('All changes automatically saved to OneDrive: '+cloudFile);if(manual)alertUser('Saved to OneDrive.');}
+  if(version===editVersion){dirty=false;status('OneDrive saved. Checking Supabase backup…',true);await window.pvrDualSync?.saveSnapshot();if(manual)alertUser('OneDrive saved; check the dual-sync status for Supabase.');}
   else{dirty=true;status('More changes pending — saving again…',true)}
  }catch(err){dirty=true;status('Auto-save failed: '+err.message+'. Use Save to OneDrive to retry.',true);if(manual)alertUser(err.message,true)}
  finally{autoSaving=false;if(dirty&&version!==editVersion)scheduleAutoSave()}
 }
-$('save').textContent='Save / Retry OneDrive';
-$('save').onclick=()=>autoSaveCloud(true);
+$('save').textContent='Save / Retry both';
+$('save').onclick=async()=>{if(dirty||cloudLoaded)await autoSaveCloud(true);else await window.pvrDualSync?.saveSnapshot();};
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
 render();finishAuth().catch(e=>alertUser(e.message,true));
 
@@ -955,6 +955,30 @@ async function printBookingConfirmation(index){
    if(result.error)throw result.error;
   }catch(e){notify('Google sign-in: '+e.message)}
  });
+
+ // Secondary, versioned workbook snapshot. The original Excel remains the source
+ // for all workbook sheets; never overwrite existing normalized database tables.
+ let pending=false;
+ const syncLabel=document.getElementById('dualSyncState');
+ const syncText=(msg,bad=false)=>{if(syncLabel){syncLabel.textContent='Supabase: '+msg;syncLabel.style.color=bad?'#b2454d':'#147b58'}};
+ window.pvrDualSync={
+  markPending(){pending=true;syncText('changes pending',true)},
+  async saveSnapshot(){
+   if(!zip){syncText('open workbook first',true);return false}
+   let c;try{c=getClient()}catch(e){syncText(e.message,true);return false}
+   const {data:{session},error:authError}=await c.auth.getSession();
+   if(authError||!session){syncText('sign in with Google to enable',true);return false}
+   // A snapshot is written only after OneDrive succeeds. The database enforces
+   // a single row per user and requires authenticated ownership through RLS.
+   if(!cloudLoaded||!token){syncText('connect OneDrive before dual saving',true);return false}
+   const snapshot={schema_version:1,saved_at:new Date().toISOString(),workbook_name:cloudFile,
+     sheets:Object.fromEntries(Object.keys(SCHEMAS).map(k=>[k,rows(k).map(r=>({...r}))]))};
+   syncText('saving…');
+   const {error}=await c.from('pvr_workbook_snapshots').upsert({user_id:session.user.id,payload:snapshot},{onConflict:'user_id'});
+   if(error){pending=true;syncText('save failed ('+error.message+')',true);return false}
+   pending=false;syncText('saved '+new Date().toLocaleTimeString());return true;
+  }
+ };
  // If a Supabase OAuth redirect returns to this page, initialize the client to recover its session.
  if(location.hash.includes('access_token=')||DEFAULT_PUBLISHABLE_KEY){
   try{const c=getClient();if(c)c.auth.getSession().then(({data,error})=>{if(error)notify(error.message);else update(data.session)}).catch(e=>notify(e.message))}
