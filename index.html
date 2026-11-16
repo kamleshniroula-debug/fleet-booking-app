@@ -770,9 +770,9 @@ function extendBooking(index){const b=rows('Bookings')[index];if(!b||!zip)return
  'Settled AD':'','Period Invoice Date AD':'','Created AD':localDate(),'BS Date Reference':'','Status':'Active',
  'Notes':('Extension of '+b['Booking ID']+'; period '+next+'. '+(b.Notes||'')).trim()};
  try{validate('Bookings',rec,-1)}catch(e){alertUser('Extension blocked: '+e.message,true);return}
- if(!confirm('Close original period '+b['Booking ID']+' for invoicing and create new period '+start+' to '+addDaysAD(end,-1)+' ('+days+' days)?'))return;
+ if(!confirm('Extend rental for '+days+' day(s)?\nNew period: '+start+' to '+addDaysAD(end,-1)+'\nAdditional rental charge: NPR '+(days*rate).toLocaleString()+'\n\nThe original period and its invoice history will be preserved. The dashboard progress bar will follow the new end date. Changes will automatically sync to OneDrive when connected.'))return;
  b.Status='Extended';b['Period Invoice Date AD']=b['End AD Exclusive'];
- rows('Bookings').push(rec);markDirty();page='Bookings';render();alertUser('New period created. Print the original period invoice, then save to OneDrive.');
+ rows('Bookings').push(rec);markDirty();page='Dashboard';render();alertUser('Booking extended by '+days+' day(s). Additional rental charge: NPR '+(days*rate).toLocaleString()+'. Dashboard progress updated; OneDrive auto-save is pending.');
 }
 function settleBooking(index){const b=rows('Bookings')[index];if(!b)return;
  if(b.Status==='Cancelled'||b.Status==='Extended'){alertUser('Settle the latest active period, not a cancelled or extended period.',true);return}
