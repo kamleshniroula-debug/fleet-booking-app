@@ -8,11 +8,13 @@
 /* Live rental progress dashboard */
 .rental-status-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.rental-status-controls label{font-size:12px;font-weight:750;color:#51647b}.rental-status-controls select{border:1px solid #cbd7e5;border-radius:9px;padding:9px 12px;background:white;color:#193450;min-width:145px}
 .rental-progress-list{display:grid;gap:13px}.rental-progress-item{padding:13px;border:1px solid #e2e9f2;border-radius:12px;background:#fbfcfe}.rental-progress-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.rental-progress-track{height:13px;background:#e7edf4;border-radius:99px;overflow:hidden;margin:11px 0 7px}.rental-progress-fill{height:100%;border-radius:99px;transition:width .5s ease,background .5s ease}.rental-progress-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:#65788e}.rental-progress-item.overdue{border-color:#efb0b0;background:#fff5f5}.rental-progress-item.overdue .rental-progress-meta{color:#a42c2c}
-</style>
+.pvr-gallery-availability{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:7px 0;font-size:12px}.pvr-avail-tag{border-radius:20px;padding:3px 9px;font-weight:700}.pvr-avail-tag.available{background:#dcfce7;color:#166534}.pvr-avail-tag.booked{background:#fee2e2;color:#991b1b}.pvr-gallery-availability small{font-size:11px;color:var(--muted,#64748b)}</style>
 <style>
 .booking-period-cell{min-width:172px;max-width:225px}.booking-dates{font-size:12px;font-weight:800;letter-spacing:.01em;white-space:nowrap;color:#17283e}.booking-period-caption{font-size:10px;line-height:1.4;color:#718096;margin-top:3px}.booking-mini-track{height:6px;border-radius:999px;background:#e4eaf0;overflow:hidden;margin-top:6px}.booking-mini-track span{display:block;height:100%;border-radius:999px;transition:width .2s ease}
 </style>
-</head><body><div class="shell"><aside class="sidebar"><div class="brand"><div class="logo">P</div><div>PRINCE<small>VEHICLE RENTAL · NEPAL</small></div></div><nav class="nav" id="nav"></nav></aside><main class="main"><header class="top"><div><div class="eyebrow">Operations workspace</div><h1 id="pageTitle">Dashboard</h1><div class="sub">Lagankhel, Lalitpur · BS 2081–2093 planning</div></div><div class="actions"><button class="btn" id="branding">Invoice branding</button><button class="btn" id="openLocal">Open workbook</button><button class="btn" id="download">Download workbook</button><button class="btn" id="googleLogin" type="button">Sign in with Google</button><button class="btn dark" id="login">Connect OneDrive</button><button class="btn primary" id="save">Save to both</button><button class="btn" id="retrieveBackup" type="button">Download Supabase backup</button><span id="pvrRoleState" class="sub" aria-live="polite">Role: checking…</span><span id="dualSyncState" class="sub" aria-live="polite">Supabase: not checked</span></div></header><div class="banner warn" id="notice">Open the matching expandable Excel workbook to begin. Local editing works without sign-in; download your edited copy to keep changes.</div><div id="content"></div><div class="footer">Prince Vehicle Rental · Phone 9851226425 · Dynamic rows and appended fields remain in your workbook. Verify imported historical financial figures.</div></main></div><input type="file" id="file" class="fileinput" accept=".xlsx"><div id="modalroot"></div><div id="toastroot"></div><script src="jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script><script>
+<style>
+.pvr-vehicle-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:13px;margin-bottom:20px}.pvr-vehicle-card{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #dde5ef;background:white;border-radius:15px}.pvr-vehicle-thumb{width:100px;height:90px;flex:0 0 100px;border-radius:11px;background:#e9f2f5;display:grid;place-items:center;object-fit:cover;color:#65788d;font-size:30px}.pvr-vehicle-info{min-width:0;flex:1}.pvr-vehicle-info strong{font-size:15px;color:#182a40}.pvr-vehicle-features{font-size:12px;color:#607188;line-height:1.65;margin:5px 0}.pvr-vehicle-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.pvr-vehicle-actions button{font-size:12px;color:#168b82;background:none;border:0;padding:0;font-weight:700}.pvr-gallery-note{font-size:12px;color:#617188;margin:0 0 13px}.pvr-vehicle-card .pvr-vehicle-status{font-size:11px;font-weight:700;color:#168b82}.pvr-vehicle-card .pvr-vehicle-status.inactive{color:#a45450}
+</style></head><body><div class="shell"><aside class="sidebar"><div class="brand"><div class="logo">P</div><div>PRINCE<small>VEHICLE RENTAL · NEPAL</small></div></div><nav class="nav" id="nav"></nav></aside><main class="main"><header class="top"><div><div class="eyebrow">Operations workspace</div><h1 id="pageTitle">Dashboard</h1><div class="sub">Lagankhel, Lalitpur · BS 2081–2093 planning</div></div><div class="actions"><button class="btn" id="branding">Invoice branding</button><button class="btn" id="openLocal">Open workbook</button><button class="btn" id="download">Download workbook</button><button class="btn" id="googleLogin" type="button">Sign in with Google</button><button class="btn dark" id="login">Connect OneDrive</button><button class="btn primary" id="save">Save to both</button><button class="btn" id="retrieveBackup" type="button">Download Supabase backup</button><span id="pvrRoleState" class="sub" aria-live="polite">Role: checking…</span><span id="dualSyncState" class="sub" aria-live="polite">Supabase: not checked</span></div></header><div class="banner warn" id="notice">Open the matching expandable Excel workbook to begin. Local editing works without sign-in; download your edited copy to keep changes.</div><div id="content"></div><div class="footer">Prince Vehicle Rental · Phone 9851226425 · Dynamic rows and appended fields remain in your workbook. Verify imported historical financial figures.</div></main></div><input type="file" id="file" class="fileinput" accept=".xlsx"><div id="modalroot"></div><div id="toastroot"></div><script src="jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script><script>
 'use strict';
 const CLIENT='6b50f04d-d35e-4da4-8b24-acd8632afbbb',FILE='Prince_Fleet_Management.xlsx',REDIRECT='https://kamleshniroula-debug.github.io/fleet-booking-app/';
 let cloudFile=FILE,cloudLoaded=false;
@@ -46,7 +48,7 @@ const rows=s=>data[s]||[], val=(s,key,match,field)=>rows(s).find(r=>r[key]===mat
 function alertUser(msg,bad=false){$('toastroot').innerHTML=`<div class="toast ${bad?'bad':''}">${esc(msg)}</div>`;setTimeout(()=>$('toastroot').innerHTML='',5200)}
 function status(msg,warn=false){$('notice').className='banner'+(warn?' warn':'');$('notice').textContent=msg}
 function nav(){ $('nav').innerHTML=NAV.map(x=>`<button data-nav="${esc(x)}" class="${page===x?'active':''}">${esc(x==='Vehicles'?'Vehicle Registration':x)}</button>`).join('');document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{page=b.dataset.nav;filter='';render()}) }
-function render(){nav();$('pageTitle').textContent=page; $('content').innerHTML=page==='Dashboard'?dashboard():page==='Booking Calendar'?bookingCalendar():page==='Customers'?customersPage():page==='Staff'?staffPage():section();if(page==='Booking Calendar')bindBookingCalendar();if(page==='Customers')bindCustomers();if(page==='Staff')bindStaffPage();if(page==='Dashboard'&&zip)edit('Bookings',-1,true);if(page==='Dashboard'){bindBookingAlerts();bindRentalStatusActions();bindRentalExtendActions();} document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>edit(b.dataset.add));document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>edit(page,Number(b.dataset.edit)));document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>toggleVehicle(Number(b.dataset.toggle)));const q=$('search');if(q){q.value=filter;q.oninput=()=>{filter=q.value;renderTable()}}if(page!=='Dashboard'&&page!=='Customers'&&page!=='Staff')renderTable();const ac=$('addColumn');if(ac)ac.onclick=()=>addColumn(page)}
+function render(){nav();$('pageTitle').textContent=page; $('content').innerHTML=page==='Dashboard'?dashboard():page==='Booking Calendar'?bookingCalendar():page==='Customers'?customersPage():page==='Staff'?staffPage():section();if(page==='Booking Calendar')bindBookingCalendar();if(page==='Customers')bindCustomers();if(page==='Staff')bindStaffPage();if(page==='Dashboard'&&zip)edit('Bookings',-1,true);if(page==='Dashboard'){bindBookingAlerts();bindRentalStatusActions();bindRentalExtendActions();}if(page==='Vehicles')bindVehicleGallery(); document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>edit(b.dataset.add));document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>edit(page,Number(b.dataset.edit)));document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>toggleVehicle(Number(b.dataset.toggle)));const q=$('search');if(q){q.value=filter;q.oninput=()=>{filter=q.value;renderTable()}}if(page!=='Dashboard'&&page!=='Customers'&&page!=='Staff')renderTable();const ac=$('addColumn');if(ac)ac.onclick=()=>addColumn(page)}
 
 let calendarMode='AD',calendarAD=today().slice(0,7),calendarBSYear=2083,calendarBSMonth=0,calendarVehicle='all';
 function calendarVehicleOptions(){return '<option value="all">All vehicles</option>'+rows('Vehicles').map(v=>`<option value="${esc(v['Vehicle ID'])}" ${calendarVehicle===v['Vehicle ID']?'selected':''}>${esc(v['Vehicle Name']||v.Registration||v['Vehicle ID'])}</option>`).join('')}
@@ -413,7 +415,74 @@ function bindOwnerPaymentActions(){
  });
 }
 setInterval(()=>{if(page==='Owner Payments'){const el=document.getElementById('ownerPaymentProgress');if(el){el.outerHTML=ownerPaymentProgressPanel();bindOwnerPaymentActions()}}},60000);
-function section(){let arr=rows(page),heads=SCHEMAS[page]||[];return `${page==='Owner Payments'?ownerPaymentProgressPanel():''}<div class="panel"><div class="panelhead"><div><h2>${esc(page)}</h2><div class="hint">${arr.length} records · Rows and new fields expand when saved · Download or save to keep changes</div></div><div class="toolbar"><input id="search" class="search" placeholder="Search records"><button class="btn" id="addColumn">+ Add field</button><button class="btn primary" data-add="${esc(page)}">+ Add record</button></div></div><div class="tablewrap" id="tablearea"></div></div>${page==='Bookings'?'<div class="callout">Booking dates use AD (Gregorian) for reliable conflict checks. BS 2081–2093 can be entered as a reference. A verified multi-year BS conversion is not yet built in.</div>':''}`.replace('</div></div>${','</div></div>${')}
+
+// Vehicle pictures are stored separately in the signed-in OneDrive (not in Excel cells).
+// The vehicle ID is the stable filename key; all visible specifications come from workbook rows.
+const PVR_VEHICLE_PHOTO_FOLDER='PrinceVehicleRental_Photos';
+let pvrPhotoUrls=[];
+function pvrVehiclePhotoPath(id){return '/me/drive/root:/'+PVR_VEHICLE_PHOTO_FOLDER+'/'+encodeURIComponent(String(id).replace(/[^a-zA-Z0-9_-]/g,'_'))+'.jpg'}
+function vehicleGalleryMarkup(){
+ const retiredGalleryNames=new Set(['sonet','kia sonet','toyota','tata punch','deepal s05','s05','s05 white','white s05']);
+ const list=rows('Vehicles').map((v,i)=>({...v,__idx:i})).filter(v=>{
+  const name=String(v['Vehicle Name']||'').trim().toLowerCase().replace(/\s+/g,' ');
+  return !retiredGalleryNames.has(name) && !['inactive','deleted','retired','deactivated'].includes(String(v.Status||'').trim().toLowerCase()) && JSON.stringify(v).toLowerCase().includes(filter.toLowerCase());
+ });
+ const today=localDate();
+ const availability=v=>{
+  const booked=rows('Bookings').filter(b=>String(b['Vehicle ID']||'')===String(v['Vehicle ID']||'') &&
+   !['cancelled','canceled','completed','returned','deleted'].includes(String(b.Status||'').trim().toLowerCase()) &&
+   b['Start AD'] && b['End AD Exclusive']);
+  const current=booked.filter(b=>b['Start AD']<=today && today<b['End AD Exclusive'])
+    .sort((a,b)=>a['End AD Exclusive'].localeCompare(b['End AD Exclusive']));
+  if(current.length){
+   const latestEnd=current.reduce((end,b)=>b['End AD Exclusive']>end?b['End AD Exclusive']:end,current[0]['End AD Exclusive']);
+   return {label:'Booked',detail:'Booked until '+latestEnd+' (end date exclusive)',cls:'booked'};
+  }
+  const next=booked.filter(b=>b['Start AD']>today).sort((a,b)=>a['Start AD'].localeCompare(b['Start AD']))[0];
+  return {label:'Available',detail:next?'Next booking: '+next['Start AD']:'No upcoming booking',cls:'available'};
+ };
+ const feature=(label,val)=>val?`${label}: ${esc(val)}`:'';
+ return `<div class="panel"><div class="panelhead"><div><h2>🚗 Vehicle gallery</h2><div class="hint">Active vehicles from your workbook · photos and features</div></div></div><p class="pvr-gallery-note">Upload a real vehicle photo to your connected OneDrive. Photos are separate from the Excel workbook and Supabase snapshot; sign in to OneDrive to view them on another device.</p><div class="pvr-vehicle-gallery">${list.map(v=>{const id=v['Vehicle ID']||'',avail=availability(v),details=[feature('Reg.',v.Registration),feature('Colour',v.Colour||v.Color),feature('Year',v['Manufacture Year']),feature('Seats',v.Seats),feature('Type',v['Vehicle Type']),feature('Model',v.Model)].filter(Boolean);return `<article class="pvr-vehicle-card"><div class="pvr-vehicle-thumb" data-photo-id="${esc(id)}">🚙</div><div class="pvr-vehicle-info"><strong>${esc(v['Vehicle Name']||'Unnamed vehicle')}</strong><div class="pvr-vehicle-features">${details.join(' · ')||'Features not entered yet'}</div><div class="pvr-gallery-availability"><span class="pvr-avail-tag ${avail.cls}">${esc(avail.label)}</span><small>${esc(avail.detail)}</small></div><span class="pvr-vehicle-status ${v.Status==='Active'?'':'inactive'}">${esc(v.Status||'Status not set')}</span><div class="pvr-vehicle-actions"><button type="button" data-gallery-edit="${v.__idx}">Edit features</button><button type="button" data-gallery-upload="${v.__idx}">Upload photo</button></div></div></article>`}).join('')||'<div class="hint">No active vehicles match this gallery view.</div>'}</div><input id="pvrVehiclePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden></div>`;
+}
+function bindVehicleGallery(){
+ document.querySelectorAll('[data-gallery-edit]').forEach(b=>b.onclick=()=>editVehicle(Number(b.dataset.galleryEdit)));
+ document.querySelectorAll('[data-gallery-upload]').forEach(b=>b.onclick=()=>{
+  if(!token||!cloudLoaded){alertUser('Connect OneDrive and load the cloud workbook before uploading a vehicle photo.',true);return}
+  const input=$('pvrVehiclePhotoInput');input.value='';input.onchange=()=>uploadVehicleGalleryPhoto(Number(b.dataset.galleryUpload),input.files?.[0]);input.click();
+ });
+ loadVehicleGalleryPhotos();
+}
+async function uploadVehicleGalleryPhoto(index,file){
+ if(!file)return;
+ const v=rows('Vehicles')[index];if(!v||!v['Vehicle ID']){alertUser('Save this vehicle first, then upload its photo.',true);return}
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type)){alertUser('Choose a JPG, PNG or WebP photo.',true);return}
+ if(file.size>8*1024*1024){alertUser('Photo must be under 8 MB.',true);return}
+ try{
+  const image=await createImageBitmap(file);const scale=Math.min(1,1000/image.width,1000/image.height);const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);image.close();
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.78));if(!blob)throw Error('Could not process image');
+  const root='https://graph.microsoft.com/v1.0';const headers={Authorization:'Bearer '+token};
+  const folder=await fetch(root+'/me/drive/root/children',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({name:PVR_VEHICLE_PHOTO_FOLDER,folder:{},'@microsoft.graph.conflictBehavior':'fail'})});
+  if(!folder.ok&&folder.status!==409)throw Error('Cannot create OneDrive photo folder ('+folder.status+')');
+  const response=await fetch(root+pvrVehiclePhotoPath(v['Vehicle ID'])+':/content',{method:'PUT',headers:{...headers,'Content-Type':'image/jpeg'},body:blob});
+  if(!response.ok)throw Error('OneDrive photo upload failed ('+response.status+')');
+  alertUser('Vehicle photo uploaded to OneDrive.');loadVehicleGalleryPhotos();
+ }catch(e){alertUser(e.message,true)}
+}
+async function loadVehicleGalleryPhotos(){
+ if(!token||!cloudLoaded)return;
+ const cells=[...document.querySelectorAll('[data-photo-id]')];
+ await Promise.all(cells.map(async cell=>{
+  const id=cell.dataset.photoId;if(!id)return;
+  try{const r=await fetch('https://graph.microsoft.com/v1.0'+pvrVehiclePhotoPath(id)+':/content',{headers:{Authorization:'Bearer '+token}});if(!r.ok)return;
+   const blob=await r.blob();if(!blob.type.startsWith('image/'))return;
+   const url=URL.createObjectURL(blob);pvrPhotoUrls.push(url);
+   if(cell.isConnected){const img=document.createElement('img');img.className='pvr-vehicle-thumb';img.alt='Vehicle photo';img.src=url;cell.replaceWith(img)}
+  }catch(e){}
+ }));
+ if(pvrPhotoUrls.length>200){pvrPhotoUrls.slice(0,-100).forEach(u=>URL.revokeObjectURL(u));pvrPhotoUrls=pvrPhotoUrls.slice(-100)}
+}
+
+function section(){let arr=rows(page),heads=SCHEMAS[page]||[];return `${page==='Vehicles'?vehicleGalleryMarkup():''}${page==='Owner Payments'?ownerPaymentProgressPanel():''}<div class="panel"><div class="panelhead"><div><h2>${esc(page)}</h2><div class="hint">${arr.length} records · Rows and new fields expand when saved · Download or save to keep changes</div></div><div class="toolbar"><input id="search" class="search" placeholder="Search records"><button class="btn" id="addColumn">+ Add field</button><button class="btn primary" data-add="${esc(page)}">+ Add record</button></div></div><div class="tablewrap" id="tablearea"></div></div>${page==='Bookings'?'<div class="callout">Booking dates use AD (Gregorian) for reliable conflict checks. BS 2081–2093 can be entered as a reference. A verified multi-year BS conversion is not yet built in.</div>':''}`.replace('</div></div>${','</div></div>${')}
 function addColumn(section){
  if(!zip){alertUser('Open the workbook first.',true);return}
  if(section==='Rate Options'||section==='Instructions'){alertUser('These sheets have a fixed structure.',true);return}
