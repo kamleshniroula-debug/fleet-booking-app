@@ -1,0 +1,185 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prince Vehicle Rental | Admin Access</title>
+<style>
+body{font-family:system-ui;background:#f3f6fb;color:#19324c;margin:0}
+main{max-width:850px;margin:auto;padding:20px}
+header{background:#10243d;color:white;padding:22px;border-radius:15px}
+header a{color:#9ce6d9}
+section{background:white;padding:20px;border-radius:14px;margin-top:18px;border:1px solid #dce5ef}
+input,select,button{font:inherit;padding:11px;border-radius:9px;border:1px solid #ccd8e6}
+input{width:100%;box-sizing:border-box}
+button{background:#0c9387;color:white;border:0;cursor:pointer}
+button:disabled{opacity:.5}
+label{display:block;margin:12px 0 5px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12px}
+td,th{padding:9px 5px;text-align:left;border-bottom:1px solid #ddd;overflow-wrap:anywhere}
+td:first-child{word-break:break-all}
+#adminPanel{display:none}
+.note{font-size:13px;color:#607188}
+.error{color:#b42332}
+@media(max-width:600px){table{font-size:10px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<a href="index.html">← Dashboard</a>
+<h2>PRINCE VEHICLE RENTAL</h2>
+<p>Administrator · User Management</p>
+</header>
+
+<section>
+<h3>Administrator verification</h3>
+<p id="status">Checking login...</p>
+<button id="login">Sign in with Google</button>
+</section>
+
+<div id="adminPanel">
+<section>
+<h3>Add or update user</h3>
+<p class="note">Users must first sign in with Google. Find their UID under Supabase Authentication → Users.</p>
+<form id="userForm">
+<label>User UID</label>
+<input id="uid" required pattern="[a-fA-F0-9-]{36}" placeholder="Supabase user UID">
+<label>Access level</label>
+<select id="role">
+<option value="staff">Staff</option>
+<option value="viewer">Viewer</option>
+<option value="customer">Customer</option>
+<option value="admin">Administrator</option>
+</select>
+<label>Account status</label>
+<select id="active">
+<option value="true">Active</option>
+<option value="false">Inactive</option>
+</select>
+<p><button type="submit">Save user</button></p>
+</form>
+<p id="feedback"></p>
+</section>
+
+<section>
+<h3>Registered members</h3>
+<button id="refresh">Refresh</button>
+<div style="overflow:auto">
+<table>
+<thead><tr><th>UID</th><th>Role</th><th>Active</th><th>Edit</th></tr></thead>
+<tbody id="members"></tbody>
+</table>
+</div>
+</section>
+
+<section>
+<h3>Sharing status</h3>
+<p class="note">User roles are managed here. Do not share the internal booking dashboard yet. Secure Supabase booking tables and role-specific interfaces must be completed first.</p>
+</section>
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+'use strict';
+const URL_BASE='https://biytfypqihcaibrgqmky.supabase.co';
+const PUBLIC_KEY='sb_publishable_BFSBmvjvLMGGGOFqnW5-lw_TAWyT6gC';
+const SITE='https://kamleshniroula-debug.github.io/fleet-booking-app/';
+const $=id=>document.getElementById(id);
+const db=window.supabase?.createClient(URL_BASE,PUBLIC_KEY);
+let adminId=null;
+
+async function verify(){
+  adminId=null;
+  $('adminPanel').style.display='none';
+  if(!db){
+    $('status').textContent='Supabase library unavailable';
+    return;
+  }
+  const {data:{session},error}=await db.auth.getSession();
+  if(error){$('status').textContent=error.message;return}
+  if(!session){
+    $('status').textContent='Sign in to verify administrator access';
+    $('login').textContent='Sign in with Google';
+    return;
+  }
+  $('login').textContent='Sign out';
+  const {data:member,error:e}=await db.from('pvr_members')
+    .select('role,active')
+    .eq('user_id',session.user.id).maybeSingle();
+  if(e||member?.role!=='admin'||member.active!==true){
+    $('status').textContent='Access denied: active administrator required';
+    return;
+  }
+  adminId=session.user.id;
+  $('status').textContent='Verified administrator';
+  $('adminPanel').style.display='block';
+  await loadMembers();
+}
+
+async function loadMembers(){
+  if(!adminId)return;
+  const {data,error}=await db.from('pvr_members')
+    .select('user_id,role,active')
+    .order('created_at',{ascending:false});
+  if(error){$('feedback').textContent=error.message;return}
+  const body=$('members');
+  body.replaceChildren();
+  for(const m of data||[]){
+    const tr=document.createElement('tr');
+    for(const value of [m.user_id,m.role,String(m.active)]){
+      const td=document.createElement('td');
+      td.textContent=value;
+      tr.append(td);
+    }
+    const td=document.createElement('td');
+    const btn=document.createElement('button');
+    btn.textContent='Edit';
+    btn.disabled=m.user_id===adminId;
+    btn.onclick=()=>{
+      $('uid').value=m.user_id;
+      $('role').value=m.role;
+      $('active').value=String(m.active);
+      $('uid').focus();
+    };
+    td.append(btn);tr.append(td);body.append(tr);
+  }
+}
+
+$('login').onclick=async()=>{
+  try{
+    const {data:{session}}=await db.auth.getSession();
+    if(session){await db.auth.signOut();await verify();return}
+    const {error}=await db.auth.signInWithOAuth({
+      provider:'google',
+      options:{redirectTo:SITE+'admin-access.html'}
+    });
+    if(error)throw error;
+  }catch(e){$('status').textContent=e.message}
+};
+
+$('userForm').onsubmit=async e=>{
+  e.preventDefault();
+  if(!adminId)return;
+  const uid=$('uid').value.trim().toLowerCase();
+  const role=$('role').value;
+  const active=$('active').value==='true';
+  if(uid===adminId){
+    $('feedback').textContent='Cannot modify your own administrator account here';
+    return;
+  }
+  if(!confirm('Save access for '+uid+'?'))return;
+  const {error}=await db.from('pvr_members')
+    .upsert({user_id:uid,role,active},{onConflict:'user_id'});
+  $('feedback').textContent=error?error.message:'User access saved';
+  if(!error){$('userForm').reset();await loadMembers()}
+};
+
+$('refresh').onclick=loadMembers;
+if(db)db.auth.onAuthStateChange(()=>setTimeout(verify,0));
+verify().catch(e=>$('status').textContent=e.message);
+</script>
+</body>
+</html>
