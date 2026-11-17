@@ -757,6 +757,24 @@ function pvrVehicleList(){
  const catalogIds=new Set(pvrCatalog.map(v=>v.vehicle_id));
  return pvrAvail.vehicles.filter(v=>v.vehicle_id&&v.active!==false&&String(v.status||'').toLowerCase()!=='inactive'&&(catalogIds.size===0||catalogIds.has(String(v.vehicle_id)))&&pvrFilterKind(v.vehicle_id,range)==='available');
 }
+function pvrBlockedVehicleDetails(range){
+ if(!range||!pvrAvail?.verified||!Array.isArray(pvrAvail.vehicles))return '';
+ const catalogIds=new Set(pvrCatalog.map(v=>String(v.vehicle_id)));
+ return pvrAvail.vehicles.filter(v=>v.vehicle_id&&v.active!==false&&String(v.status||'').toLowerCase()!=='inactive').map(v=>{
+  const id=String(v.vehicle_id),name=v.vehicle_name||v.display_name||v.name||id;
+  if(catalogIds.size&&!catalogIds.has(id))return name+': not in partner vehicle catalog';
+  const kind=pvrFilterKind(id,range);
+  if(kind==='available')return '';
+  if(kind==='unknown')return name+': availability unverified';
+  const overlaps=(pvrAvail.periods||[]).filter(p=>String(p.vehicle_id)===id&&p.start_ad&&p.end_ad_exclusive&&p.start_ad<range.exclusive&&p.end_ad_exclusive>range.start);
+  if(!overlaps.length)return name+': '+kind+' (dates not provided)';
+  return name+': '+overlaps.map(p=>{
+   const endMs=dayms(p.end_ad_exclusive);
+   const inclusiveEnd=Number.isFinite(endMs)?iso(endMs-DAY):p.end_ad_exclusive;
+   return (String(p.kind||'booking').toLowerCase()==='maintenance'?'maintenance':'booking')+' '+p.start_ad+' to '+inclusiveEnd;
+  }).join('; ');
+ }).filter(Boolean).join(' | ');
+}
 function pvrSearchStatus(message,state=''){const el=$('pvrDateSearchStatus');if(el){el.textContent=window.pvrT(message);el.dataset.state=state}}
 function pvrDateChanged(){
  const range=pvrValidRange();
@@ -784,7 +802,7 @@ async function pvrFindAvailable(){
    const blocked=kinds.filter(k=>k==='booked'||k==='maintenance').length;
    if(unknown)pvrSearchStatus('Availability not verified for '+unknown+' vehicle(s). '+blocked+' vehicle(s) have recorded booking or maintenance blocks. Please ask Prince Vehicle Rental to refresh and verify the fleet snapshot.','error');
    else if(!fleet.length)pvrSearchStatus('No active vehicles in the published fleet. Please ask Prince Vehicle Rental to publish its active vehicle list.','error');
-   else pvrSearchStatus('No vehicles available for the entire selected period. '+blocked+' vehicle(s) have recorded booking or maintenance blocks.','error');
+   else pvrSearchStatus('No vehicles available for the entire selected period. '+blocked+' vehicle(s) have recorded booking or maintenance blocks. Details: '+(pvrBlockedVehicleDetails(range)||'No further block details in snapshot')+'.','error');
   }
   else pvrSearchStatus(options.length+' '+window.pvrT('available vehicle(s) for your selected dates (provisional).'),'ok');
   pvrRenderVehicles();pvrRenderMonth();
@@ -814,7 +832,7 @@ function pvrRenderVehicles(){
   count.textContent=!range?window.pvrT('Select dates to see available vehicles.'):
    pvrSearchBusy?window.pvrT('Checking available vehicles for your dates…'):
    !pvrAvail?.verified||!Array.isArray(pvrAvail.periods)?window.pvrT('Availability cannot be verified. Please ask Prince Vehicle Rental to update the fleet data.'):
-   !list.length?window.pvrT('No vehicles available for the entire selected period. Try different dates.'):
+   !list.length?window.pvrT('No vehicles available for the entire selected period. Try different dates.')+' '+(pvrBlockedVehicleDetails(range)||''):
    list.length+' '+window.pvrT('available vehicle(s) for your selected dates (provisional).');
  }
  for(const v of list){
