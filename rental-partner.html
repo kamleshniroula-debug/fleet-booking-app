@@ -392,7 +392,7 @@ html[lang="ne"] button,html[lang="ne"] input,html[lang="ne"] select{font-family:
 #pvrVehicleCards .pvr-vehicle-card{border:1px solid #a9d5c6;background:linear-gradient(155deg,#ffffff,#f2faf7)}
 #pvrVehicleCards .pvr-card-meta{color:#117b68;font-weight:800}
 @media(max-width:650px){.pvr-dates-first{padding:19px 14px!important;border-radius:17px!important}.pvr-date-first-heading{gap:10px}.pvr-step-number{flex-basis:34px;height:34px;border-radius:10px}.pvr-date-first-heading h3{font-size:19px}.pvr-date-actions{display:block}#pvrFindVehicles{width:100%;min-width:0}#pvrDateSearchStatus{display:block;margin-top:11px}#pvrVehicleSelectField{padding:15px}#pvrVehicleCards{margin-top:9px}}
-</style><meta content="2026-11-17-fleet-catalog-fix" name="pvr-partner-version"/><style id="pvr-top-quick-booking-design">
+</style><meta content="2026-11-17-auto-availability-refresh" name="pvr-partner-version"/><style id="pvr-top-quick-booking-design">
 /* Prince Vehicle Rental Partner — premium booking toolbar. Layout-only enhancement; no database or auth changes. */
 :root{--pvr-q-night:#0b1e31;--pvr-q-mid:#123d4b;--pvr-q-teal:#28d7b4;--pvr-q-edge:#447d84}
 html{scroll-behavior:smooth}
@@ -919,6 +919,21 @@ $('vehicle').addEventListener('change',()=>{pvrPickingEnd=false;pvrRenderVehicle
 for(const input of ['start','end','bsMonth','bsStart','bsEnd'])$(input).addEventListener('change',()=>{pvrPickingEnd=false;pvrDateChanged()});
 $('pvrPrevMonth').addEventListener('click',()=>{pvrMonthDate=new Date(pvrMonthDate.getFullYear(),pvrMonthDate.getMonth()-1,1);pvrRenderMonth()});
 $('pvrNextMonth').addEventListener('click',()=>{pvrMonthDate=new Date(pvrMonthDate.getFullYear(),pvrMonthDate.getMonth()+1,1);pvrRenderMonth()});
+// Automatically re-check the authenticated availability service while the portal is in use.
+// This refreshes the server's answer; it never manufactures a verified snapshot.
+let pvrAutoRefreshRunning=false;
+async function pvrAutoRefresh(){
+ if(pvrAutoRefreshRunning||pvrSearchBusy||document.hidden||!company||!user||!client)return;
+ pvrAutoRefreshRunning=true;
+ try{
+  if(pvrSearchActive&&pvrValidRange()?.key===pvrSearchRange)await pvrFindAvailable();
+  else await pvrLoadAvailability();
+ }catch(e){console.warn('Automatic availability refresh:',e)}
+ finally{pvrAutoRefreshRunning=false}
+}
+setInterval(pvrAutoRefresh,60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)pvrAutoRefresh()});
+window.addEventListener('focus',()=>pvrAutoRefresh());
 $('pvrAvailRefresh').addEventListener('click',()=>pvrFindAvailable());
 $('pvrFindVehicles').addEventListener('click',()=>pvrFindAvailable());
 document.addEventListener('pvr-language-change',()=>{summary();pvrRenderVehicles();pvrRenderMonth();if(company)history().catch(()=>{});});
