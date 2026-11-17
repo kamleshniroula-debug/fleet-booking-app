@@ -46,7 +46,7 @@ function fleetBookingProgress(v,first,last){
  candidates.sort((a,b)=>{const current=b=>b['Start AD']<=t&&(b['End AD Exclusive']>t||b['Handover AD']&&!b['Returned AD']);return Number(current(b))-Number(current(a))||a['Start AD'].localeCompare(b['Start AD'])||String(a['Booking ID']).localeCompare(String(b['Booking ID']))});
  const b=candidates[0];if(!b)return null;
  const total=day(b['End AD Exclusive'])-day(b['Start AD']),remaining=Math.max(0,Math.min(total,day(b['End AD Exclusive'])-day(t))),upcoming=b['Start AD']>t;
- return {total,remaining,percent:Math.round(remaining/total*100),upcoming,start:b['Start AD']};
+ return {total,remaining,elapsed:total-remaining,percent:Math.round((total-remaining)/total*100),upcoming,start:b['Start AD']};
 }
 function renderFleet(){
  if(!state)return;
@@ -59,7 +59,7 @@ function renderFleet(){
  $('fleetSummary').textContent=available+' available for '+first+' → '+last+' · '+visible.length+' vehicles shown.';
  $('fleetList').innerHTML=visible.map(v=>{
  const progress=fleetBookingProgress(v,first,last),available=!progress&&fleetAvailability(v,first,last)==='Available';
- return `<article class="card" style="${vehicleCardStyle(v)}">${progress?`<span class="tag booking-tag">${progress.upcoming?'Booking upcoming':'Booking in progress'}</span>`:available?'<span class="tag">Available</span>':''}<h3>${escapeHTML(v['Vehicle Name']||v['Vehicle ID'])}</h3><p class="hint">${escapeHTML(v.Registration||'Registration not recorded')}</p>${progress?`<div class="booking-progress"><div class="remaining-days">${progress.remaining} of ${progress.total} days remaining</div><progress max="${progress.total}" value="${progress.remaining}" aria-label="Remaining booking days">${progress.remaining} of ${progress.total}</progress>${progress.upcoming?`<p class="hint">Starts ${escapeHTML(progress.start)}</p>`:progress.remaining===0?'<p class="hint">Awaiting receipt</p>':''}</div>`:''}</article>`;
+ return `<article class="card" style="${vehicleCardStyle(v)}">${progress?`<span class="tag booking-tag">${progress.upcoming?'Booking upcoming':'Booking in progress'}</span>`:available?'<span class="tag">Available</span>':''}<h3>${escapeHTML(v['Vehicle Name']||v['Vehicle ID'])}</h3><p class="hint">${escapeHTML(v.Registration||'Registration not recorded')}</p>${progress?`<div class="booking-progress"><div class="remaining-days">${progress.elapsed} of ${progress.total} days elapsed</div><progress max="${progress.total}" value="${progress.elapsed}" aria-label="Elapsed booking days">${progress.elapsed} of ${progress.total}</progress>${progress.upcoming?`<p class="hint">Starts ${escapeHTML(progress.start)}</p>`:progress.remaining===0?'<p class="hint">Awaiting receipt</p>':''}</div>`:''}</article>`;
  }).join('')||'<p class="hint">No vehicles match your search.</p>';
 }
 

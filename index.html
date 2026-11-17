@@ -415,7 +415,7 @@ function pvrAdminFleetProgress(v){
  candidates.sort((a,b)=>{const current=b=>b['Start AD']<=t&&(b['End AD Exclusive']>t||b['Handover AD']&&!b['Returned AD']);return Number(current(b))-Number(current(a))||a['Start AD'].localeCompare(b['Start AD'])||String(a['Booking ID']).localeCompare(String(b['Booking ID']))});
  const b=candidates[0];if(!b)return null;
  const total=day(b['End AD Exclusive'])-day(b['Start AD']),remaining=Math.max(0,Math.min(total,day(b['End AD Exclusive'])-day(t))),upcoming=b['Start AD']>t;
- return {total,remaining,percent:Math.round(remaining/total*100),upcoming,start:b['Start AD']};
+ return {total,remaining,elapsed:total-remaining,percent:Math.round((total-remaining)/total*100),upcoming,start:b['Start AD']};
 }
 function pvrAdminVehicleCardStyle(v){
  const colours={white:'#ffffff',pearl:'#f5f1e8','pearl white':'#f5f1e8',black:'#455160',blue:'#639dde','sky blue':'#8dc5e8','navy blue':'#526f99',red:'#db7777',maroon:'#a96878',green:'#75ad91',silver:'#bbc5cf',grey:'#9faab5',gray:'#9faab5',yellow:'#e4cf7c',orange:'#dfa276',gold:'#c8b478',brown:'#b2927b',beige:'#d0c2a6',purple:'#af93cc',pink:'#dea4c2',teal:'#76b8b1'};
@@ -424,7 +424,7 @@ function pvrAdminVehicleCardStyle(v){
  return c?'background:color-mix(in srgb,'+c+' 12%,var(--paper,#fff));border-color:color-mix(in srgb,'+c+' 28%,var(--line,#dce5eb));border-top:3px solid color-mix(in srgb,'+c+' 45%,var(--line,#dce5eb))':'';
 }
 
-function pvrAdminProgressMarkup(p){return p?`<div class="pvr-fleet-progress"><div>${p.remaining} of ${p.total} days remaining</div><progress value="${p.remaining}" max="${p.total}" aria-label="Remaining booking days">${p.remaining} of ${p.total}</progress>${p.remaining===0?'<small>Awaiting receipt</small>':''}</div>`:''}
+function pvrAdminProgressMarkup(p){return p?`<div class="pvr-fleet-progress"><div>${p.elapsed} of ${p.total} days elapsed</div><progress value="${p.elapsed}" max="${p.total}" aria-label="Elapsed booking days">${p.elapsed} of ${p.total}</progress>${p.remaining===0?'<small>Awaiting receipt</small>':''}</div>`:''}
 function pvrAdminFleetAvailable(v){
  const t=localDate(),open=rows('Bookings').filter(b=>b['Vehicle ID']===v['Vehicle ID']&&!['Returned','Completed','Cancelled','Extended'].includes(b.Status));
  if(open.some(b=>!pvrFleetValidDate(b['Start AD'])||!pvrFleetValidDate(b['End AD Exclusive'])||b['End AD Exclusive']<=b['Start AD']||b['Start AD']<=t&&b['End AD Exclusive']>t||b['Handover AD']&&!b['Returned AD']&&b['End AD Exclusive']<=t))return false;
