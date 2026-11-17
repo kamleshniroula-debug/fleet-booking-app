@@ -1112,7 +1112,22 @@ async function loadCloud(){
 }
 $('login').onclick=async()=>{try{if(!token)await renewMicrosoftSession();if(token){if(dirty&&!confirm('Unsaved edits will be replaced by the OneDrive workbook. Continue?'))return;await loadCloud()}else await startAuth()}catch(err){alertUser(err.message,true)}};
 let autoSaveTimer=null,autoSaving=false,editVersion=0;
-function markDirty(){dirty=true;editVersion++;scheduleAutoSave();window.pvrDualSync?.markPending()}
+let pvrBackupRetryTimer=null,pvrBackupRetryCount=0;
+function pvrQueueBackupRetry(){
+ if(pvrBackupRetryTimer)clearTimeout(pvrBackupRetryTimer);
+ if(!cloudLoaded||!token||!zip||dirty)return;
+ const delay=Math.min(300000,15000*Math.pow(2,Math.min(pvrBackupRetryCount++,4)));
+ pvrBackupRetryTimer=setTimeout(async()=>{
+  pvrBackupRetryTimer=null;
+  if(dirty||autoSaving||!cloudLoaded||!token||!zip){if(!dirty)pvrQueueBackupRetry();return}
+  try{const ok=await window.pvrDualSync?.saveSnapshot();
+   if(ok){pvrBackupRetryCount=0;status('OneDrive and Supabase backup saved.')}
+   else{status('OneDrive saved; Supabase backup pending. Will retry automatically.',true);pvrQueueBackupRetry()}
+  }catch(e){status('Supabase backup retry failed: '+e.message,true);pvrQueueBackupRetry()}
+ },delay);
+}
+
+function markDirty(){dirty=true;editVersion++;if(pvrBackupRetryTimer){clearTimeout(pvrBackupRetryTimer);pvrBackupRetryTimer=null}scheduleAutoSave();window.pvrDualSync?.markPending()}
 function scheduleAutoSave(){
  if(autoSaveTimer)clearTimeout(autoSaveTimer);
  if(!token||!cloudLoaded||!zip||source!=='OneDrive '+cloudFile){
@@ -1138,10 +1153,10 @@ async function autoSaveCloud(manual=false){
   if(etag)headers['If-Match']=etag;
   const res=await graph(path,{method:'PUT',headers,body:bytes});
   const meta=await res.json();etag=meta.eTag;
-  if(version===editVersion){dirty=false;status('OneDrive saved. Checking Supabase backup…',true);const backedUp=await window.pvrDualSync?.saveSnapshot();status(backedUp?'OneDrive and Supabase backup saved.':'OneDrive saved; Supabase backup failed or is unavailable. See red Supabase status.',!backedUp);if(manual)alertUser(backedUp?'Saved to both OneDrive and Supabase.':'OneDrive saved, but Supabase backup did not succeed. Check the red status.',!backedUp);}
+  if(version===editVersion){dirty=false;status('OneDrive saved. Checking Supabase backup…',true);let backedUp=false;try{backedUp=!!(await window.pvrDualSync?.saveSnapshot())}catch(backupError){console.warn('Supabase backup failed:',backupError)}if(version!==editVersion){dirty=true;status('More changes pending — saving again…',true)}else{status(backedUp?'OneDrive and Supabase backup saved.':'OneDrive saved; Supabase backup pending, automatic retry scheduled.',!backedUp);if(backedUp){pvrBackupRetryCount=0;if(pvrBackupRetryTimer)clearTimeout(pvrBackupRetryTimer)}else pvrQueueBackupRetry();if(manual)alertUser(backedUp?'Saved to both OneDrive and Supabase.':'OneDrive saved. Supabase backup will retry automatically.',!backedUp)}}
   else{dirty=true;status('More changes pending — saving again…',true)}
  }catch(err){dirty=true;status('Auto-save failed: '+err.message+'. Use Save to OneDrive to retry.',true);if(manual)alertUser(err.message,true)}
- finally{autoSaving=false;if(dirty&&version!==editVersion)scheduleAutoSave()}
+ finally{autoSaving=false;if(dirty&&cloudLoaded&&token&&zip)scheduleAutoSave()}
 }
 $('save').textContent='Save / Retry both';
 $('save').onclick=async()=>{if(dirty||cloudLoaded)await autoSaveCloud(true);else await window.pvrDualSync?.saveSnapshot();};
