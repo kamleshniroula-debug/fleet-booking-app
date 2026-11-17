@@ -69,7 +69,9 @@ async function check(){
  if(!session){$('state').textContent='Sign in with Google to verify administrator access.';$('signin').textContent='Sign in with Google';return}
  $('signin').textContent='Sign out';
  const {data:member,error:e}=await client.from('pvr_members').select('role,active').eq('user_id',session.user.id).maybeSingle();
- if(e||!member||member.role!=='admin'||!member.active){$('state').textContent='Access denied: this Google account does not have an active admin membership.';return}
+ if(e){$('state').textContent='Administrator membership lookup failed: '+e.message+' (code '+(e.code||'unknown')+'). Check Supabase RLS SELECT policy for pvr_members.';return}
+ if(!member){$('state').textContent='No administrator membership was visible for '+(session.user.email||session.user.id)+'. Confirm the Google account and the pvr_members SELECT policy.';return}
+ if(String(member.role).toLowerCase()!=='admin'||member.active!==true){$('state').textContent='This account has membership role '+String(member.role)+' and active='+String(member.active)+'. Administrator access requires role admin and active true.';return}
  me=session.user.id;$('state').textContent='Verified active administrator: '+(session.user.email||session.user.id);$('panel').style.display='block';await Promise.all([load(),loadPartnerAdmin()]);
 }
 async function load(){if(!me)return;const {data,error}=await client.from('pvr_members').select('user_id,role,active').order('created_at',{ascending:false});if(error){message(error.message,true);return}const tbody=$('members');tbody.replaceChildren();for(const row of data||[]){const tr=document.createElement('tr');for(const value of [row.user_id,row.role,row.active?'Yes':'No']){const td=document.createElement('td');td.textContent=value;tr.append(td)}const td=document.createElement('td');const btn=document.createElement('button');btn.textContent='Edit';btn.disabled=row.user_id===me;btn.onclick=()=>{$('uid').value=row.user_id;$('role').value=row.role;$('active').value=String(row.active);$('uid').focus()};td.append(btn);tr.append(td);tbody.append(tr)}}
