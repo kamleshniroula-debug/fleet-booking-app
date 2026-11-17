@@ -866,7 +866,7 @@ function editVehicle(index=-1){
  $('existingOwner').onchange=()=>{const o=rows('Owners').find(x=>x['Owner ID']===$('existingOwner').value);if(o){const f=$('vehicleRegistration').elements;f.namedItem('ownerName').value=o['Owner Name']||'';f.namedItem('ownerAddress').value=o.Address||'';f.namedItem('ownerPhone').value=o.Phone||''}};
  const af=$('vehicleRegistration').elements,bsStart=$('agreementBSStart'),cal=$('agreementCalendar'),duration=$('agreementDuration'),adStart=af.namedItem('agreementStart'),adEnd=af.namedItem('agreementEnd'),preview=$('agreementDatePreview');
  function addAgreementMonths(iso,months){const [y,m,d]=iso.split('-').map(Number);const target=new Date(Date.UTC(y,m-1+months,1));const last=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();target.setUTCDate(Math.min(d,last));return target.toISOString().slice(0,10)}
- function agreementBSConvert(value){const m=String(value).trim().match(/^(\\d{4})[\\/\\-](\\d{1,2})[\\/\\-](\\d{1,2})$/);if(!m)return null;return bsToAd(Number(m[1]),Number(m[2])-1,Number(m[3]))}
+ function agreementBSConvert(value){const m=String(value).trim().match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);if(!m)return null;return bsToAd(Number(m[1]),Number(m[2])-1,Number(m[3]))}
  const bsYearSelect=$('agreementBSYear'),bsMonthSelect=$('agreementBSMonth'),bsDaySelect=$('agreementBSDay');
  bsYearSelect.innerHTML=Array.from({length:BS_MAX_YEAR-BS_MIN_YEAR+1},(_,i)=>{const y=BS_MIN_YEAR+i;return `<option value="${y}" ${BS_LENGTHS[y]?'':'disabled'}>${y} BS${BS_LENGTHS[y]?'':' · calendar pending'}</option>`}).join('');bsYearSelect.value='2083';
  bsMonthSelect.innerHTML=BS_MONTHS.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
