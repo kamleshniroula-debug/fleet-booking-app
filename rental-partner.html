@@ -392,7 +392,7 @@ html[lang="ne"] button,html[lang="ne"] input,html[lang="ne"] select{font-family:
 #pvrVehicleCards .pvr-vehicle-card{border:1px solid #a9d5c6;background:linear-gradient(155deg,#ffffff,#f2faf7)}
 #pvrVehicleCards .pvr-card-meta{color:#117b68;font-weight:800}
 @media(max-width:650px){.pvr-dates-first{padding:19px 14px!important;border-radius:17px!important}.pvr-date-first-heading{gap:10px}.pvr-step-number{flex-basis:34px;height:34px;border-radius:10px}.pvr-date-first-heading h3{font-size:19px}.pvr-date-actions{display:block}#pvrFindVehicles{width:100%;min-width:0}#pvrDateSearchStatus{display:block;margin-top:11px}#pvrVehicleSelectField{padding:15px}#pvrVehicleCards{margin-top:9px}}
-</style><meta content="2026-11-17-top-search-cards" name="pvr-partner-version"/><style id="pvr-top-quick-booking-design">
+</style><meta content="2026-11-17-fleet-catalog-fix" name="pvr-partner-version"/><style id="pvr-top-quick-booking-design">
 /* Prince Vehicle Rental Partner — premium booking toolbar. Layout-only enhancement; no database or auth changes. */
 :root{--pvr-q-night:#0b1e31;--pvr-q-mid:#123d4b;--pvr-q-teal:#28d7b4;--pvr-q-edge:#447d84}
 html{scroll-behavior:smooth}
@@ -753,9 +753,16 @@ function pvrFilterKind(id,range){
 }
 function pvrVehicleList(){
  const range=pvrValidRange();
- if(!pvrSearchActive||pvrSearchBusy||!range||pvrSearchRange!==range.key||!pvrAvail?.verified||!Array.isArray(pvrAvail.vehicles)||!Array.isArray(pvrAvail.periods))return [];
- const catalogIds=new Set(pvrCatalog.map(v=>v.vehicle_id));
- return pvrAvail.vehicles.filter(v=>v.vehicle_id&&v.active!==false&&String(v.status||'').toLowerCase()!=='inactive'&&(catalogIds.size===0||catalogIds.has(String(v.vehicle_id)))&&pvrFilterKind(v.vehicle_id,range)==='available');
+ if(!pvrSearchActive||pvrSearchBusy||!range||pvrSearchRange!==range.key)return [];
+ const catalog=pvrCatalog.filter(v=>v.vehicle_id);
+ // A missing/unverified snapshot must not hide the registered fleet. These are
+ // catalog entries only, NOT confirmed available vehicles.
+ if(!pvrAvail?.verified||!Array.isArray(pvrAvail.vehicles)||!Array.isArray(pvrAvail.periods))return catalog;
+ const snapshot=pvrAvail.vehicles.filter(v=>v.vehicle_id&&v.active!==false&&String(v.status||'').toLowerCase()!=='inactive');
+ const byId=new Map(snapshot.map(v=>[String(v.vehicle_id),v]));
+ const candidates=catalog.length?catalog.map(v=>({...v,...(byId.get(String(v.vehicle_id))||{}),vehicle_id:String(v.vehicle_id),vehicle_name:v.vehicle_name||byId.get(String(v.vehicle_id))?.vehicle_name||v.vehicle_id})):snapshot;
+ // A vehicle missing from a verified snapshot is unverified, not available.
+ return candidates.filter(v=>pvrFilterKind(v.vehicle_id,range)!=='booked'&&pvrFilterKind(v.vehicle_id,range)!=='maintenance');
 }
 function pvrBlockedVehicleDetails(range){
  if(!range||!pvrAvail?.verified||!Array.isArray(pvrAvail.vehicles))return '';
@@ -794,7 +801,7 @@ async function pvrFindAvailable(){
   pvrSearchBusy=false;
   if(pvrValidRange()?.key!==range.key){pvrDateChanged();return}
   const options=pvrVehicleList();
-  if(!pvrAvail?.verified||!Array.isArray(pvrAvail.periods))pvrSearchStatus('Availability cannot be verified. Please ask Prince Vehicle Rental to update the fleet data.','error');
+  if(!pvrAvail?.verified||!Array.isArray(pvrAvail.periods))pvrSearchStatus(options.length+' registered vehicle(s) shown. Availability cannot be verified; requests are disabled until the secure availability service is restored.','error');
   else if(!options.length){
    const fleet=(pvrAvail.vehicles||[]).filter(v=>v.vehicle_id&&v.active!==false&&String(v.status||'').toLowerCase()!=='inactive');
    const kinds=fleet.map(v=>pvrFilterKind(v.vehicle_id,range));
@@ -804,7 +811,8 @@ async function pvrFindAvailable(){
    else if(!fleet.length)pvrSearchStatus('No active vehicles in the published fleet. Please ask Prince Vehicle Rental to publish its active vehicle list.','error');
    else pvrSearchStatus('No vehicles available for the entire selected period. '+blocked+' vehicle(s) have recorded booking or maintenance blocks. Details: '+(pvrBlockedVehicleDetails(range)||'No further block details in snapshot')+'.','error');
   }
-  else pvrSearchStatus(options.length+' '+window.pvrT('available vehicle(s) for your selected dates (provisional).'),'ok');
+  else if(!pvrAvail?.verified)pvrSearchStatus(options.length+' registered vehicle(s) shown. Availability unverified; requests cannot be submitted until the secure availability service is working.','error');
+  else pvrSearchStatus(options.length+' vehicle(s) shown. Grey/unverified dates require verification before requesting.','ok');
   pvrRenderVehicles();pvrRenderMonth();
  }
 }
@@ -831,9 +839,9 @@ function pvrRenderVehicles(){
   count.dataset.state=list.length?'ok':'empty';
   count.textContent=!range?window.pvrT('Select dates to see available vehicles.'):
    pvrSearchBusy?window.pvrT('Checking available vehicles for your dates…'):
-   !pvrAvail?.verified||!Array.isArray(pvrAvail.periods)?window.pvrT('Availability cannot be verified. Please ask Prince Vehicle Rental to update the fleet data.'):
+   !pvrAvail?.verified||!Array.isArray(pvrAvail.periods)?list.length+' registered vehicle(s) listed. Availability is unverified; requests are disabled until verification is restored.':
    !list.length?window.pvrT('No vehicles available for the entire selected period. Try different dates.')+' '+(pvrBlockedVehicleDetails(range)||''):
-   list.length+' '+window.pvrT('available vehicle(s) for your selected dates (provisional).');
+   list.length+' vehicle(s) without a recorded block; unverified vehicles still require verification.';
  }
  for(const v of list){
   const button=document.createElement('button');button.type='button';button.className='pvr-vehicle-card';button.setAttribute('aria-pressed',String(v.vehicle_id===select.value));
@@ -940,7 +948,7 @@ if(!company){$('authStatus').textContent=invitationIssue?window.pvrT('Signed in,
 $('authStatus').textContent=window.pvrT('Signed in: '+(user.email||'Partner'));$('companyName').value=company.name;try{await loadVehicles()}catch(vehicleError){console.warn('Partner vehicle catalog:',vehicleError.message)}$('requestForm').hidden=false;$('historyPanel').hidden=false;await pvrLoadAvailability();await history()}
 $('authButton').onclick=async()=>{try{if(!client)throw Error('Supabase unavailable');if(user){await client.auth.signOut();company=null;await check();return}const redirect=location.origin+location.pathname;const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:redirect}});if(error)throw error}catch(e){feedback(e.message,true)}};
 $('refreshHistory').onclick=()=>history().catch(e=>feedback(e.message,true));
-$('requestForm').onsubmit=async e=>{e.preventDefault();if(!user||!company)return feedback('Sign in with an assigned company.',true);const {start,end}=dates();if(!start||!end||end<=start)return feedback('Return date must be later than pickup date.',true);if(dayms(end)-dayms(start)>365*DAY)return feedback('Requests may cover up to 365 days.',true);const vehicle=$('vehicle').value;if(!vehicle)return feedback('Choose a vehicle.',true);const chosenRange=pvrValidRange();if(!chosenRange||!pvrSearchActive||pvrSearchRange!==chosenRange.key||!pvrVehicleList().some(v=>String(v.vehicle_id)===vehicle))return feedback('Please choose an available vehicle from the date-filtered results.',true);if(start<pvrLocalISO(new Date()))return feedback('Pickup date cannot be in the past.',true);const busy=pvrRangeBlocked(vehicle,start,end);if(busy)return feedback(window.pvrT('Requested dates include a known booked or maintenance day:')+' '+busy+'. '+window.pvrT('Choose different dates.'),true);const btn=$('submitRequest');btn.disabled=true;try{await pvrLoadAvailability();if(!pvrAvail?.verified||!pvrVehicleList().some(v=>String(v.vehicle_id)===vehicle)||!pvrValidRange()||pvrValidRange().key!==chosenRange.key)throw Error('Cannot verify availability right now. Please refresh and try again.');
+$('requestForm').onsubmit=async e=>{e.preventDefault();if(!user||!company)return feedback('Sign in with an assigned company.',true);const {start,end}=dates();if(!start||!end||end<=start)return feedback('Return date must be later than pickup date.',true);if(dayms(end)-dayms(start)>365*DAY)return feedback('Requests may cover up to 365 days.',true);const vehicle=$('vehicle').value;if(!vehicle)return feedback('Choose a vehicle.',true);const chosenRange=pvrValidRange();if(!chosenRange||!pvrSearchActive||pvrSearchRange!==chosenRange.key||!pvrVehicleList().some(v=>String(v.vehicle_id)===vehicle))return feedback('Please choose an available vehicle from the date-filtered results.',true);if(!pvrAvail?.verified||pvrFilterKind(vehicle,chosenRange)!=='available')return feedback('This vehicle is listed, but its availability is not verified. Please ask Prince Vehicle Rental to refresh the secure fleet snapshot.',true);if(start<pvrLocalISO(new Date()))return feedback('Pickup date cannot be in the past.',true);const busy=pvrRangeBlocked(vehicle,start,end);if(busy)return feedback(window.pvrT('Requested dates include a known booked or maintenance day:')+' '+busy+'. '+window.pvrT('Choose different dates.'),true);const btn=$('submitRequest');btn.disabled=true;try{await pvrLoadAvailability();if(!pvrAvail?.verified||pvrFilterKind(vehicle,chosenRange)!=='available'||!pvrVehicleList().some(v=>String(v.vehicle_id)===vehicle)||!pvrValidRange()||pvrValidRange().key!==chosenRange.key)throw Error('Cannot verify availability right now. Please refresh and try again.');
 // Server-controlled request submission; company, user and status are NEVER accepted from the browser.
 const {data:requestId,error}=await client.rpc('pvr_submit_partner_request',{
   p_vehicle_id:vehicle,
