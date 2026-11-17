@@ -750,7 +750,7 @@ async function loadFullBSCalendar(){
   const yearSelect=document.getElementById('bsYear');
   if(yearSelect){const prev=yearSelect.value;yearSelect.innerHTML=Array.from({length:BS_MAX_YEAR-BS_MIN_YEAR+1},(_,i)=>`<option value="${BS_MIN_YEAR+i}">${BS_MIN_YEAR+i} BS</option>`).join('');yearSelect.value=prev;yearSelect.dispatchEvent(new Event('change'))}
   const agreementStart=document.getElementById('agreementBSStart');
-  if(agreementStart){const yr=document.getElementById('agreementBSYear');if(yr)yr.dispatchEvent(new Event('change'));else agreementStart.dispatchEvent(new Event('input'));}
+  if(agreementStart){const yr=document.getElementById('agreementBSYear');if(yr){for(const option of yr.options){option.disabled=!BS_LENGTHS[Number(option.value)];option.textContent=option.value+' BS'+(option.disabled?' · calendar pending':'')}yr.dispatchEvent(new Event('change'))}else agreementStart.dispatchEvent(new Event('input'));}
  }catch(error){
   bsCalendarError=String(error.message||error);
   console.warn('Extended BS calendar unavailable:',error);
@@ -868,7 +868,7 @@ function editVehicle(index=-1){
  function addAgreementMonths(iso,months){const [y,m,d]=iso.split('-').map(Number);const target=new Date(Date.UTC(y,m-1+months,1));const last=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();target.setUTCDate(Math.min(d,last));return target.toISOString().slice(0,10)}
  function agreementBSConvert(value){const m=String(value).trim().match(/^(\\d{4})[\\/\\-](\\d{1,2})[\\/\\-](\\d{1,2})$/);if(!m)return null;return bsToAd(Number(m[1]),Number(m[2])-1,Number(m[3]))}
  const bsYearSelect=$('agreementBSYear'),bsMonthSelect=$('agreementBSMonth'),bsDaySelect=$('agreementBSDay');
- bsYearSelect.innerHTML=Array.from({length:BS_MAX_YEAR-BS_MIN_YEAR+1},(_,i)=>{const y=BS_MIN_YEAR+i;return `<option value="${y}">${y} BS</option>`}).join('');
+ bsYearSelect.innerHTML=Array.from({length:BS_MAX_YEAR-BS_MIN_YEAR+1},(_,i)=>{const y=BS_MIN_YEAR+i;return `<option value="${y}" ${BS_LENGTHS[y]?'':'disabled'}>${y} BS${BS_LENGTHS[y]?'':' · calendar pending'}</option>`}).join('');bsYearSelect.value='2083';
  bsMonthSelect.innerHTML=BS_MONTHS.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
  function refreshAgreementBSDays(){const y=Number(bsYearSelect.value),m=Number(bsMonthSelect.value),len=BS_LENGTHS[y]?.[m]||0,old=Number(bsDaySelect.value)||1;bsDaySelect.innerHTML=len?Array.from({length:len},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join(''):'<option value="">Calendar unavailable</option>';if(len)bsDaySelect.value=String(Math.min(old,len));}
  function selectAgreementBS(){refreshAgreementBSDays();if(!bsDaySelect.value){preview.textContent='BS calendar data for this year is unavailable. Select AD or wait for calendar data.';return}bsStart.value=`${bsYearSelect.value}/${String(Number(bsMonthSelect.value)+1).padStart(2,'0')}/${String(bsDaySelect.value).padStart(2,'0')}`;recalcAgreement()}
@@ -887,7 +887,7 @@ function editVehicle(index=-1){
  cal.onchange=()=>{bsStart.closest('.field').style.display=cal.value==='BS'?'grid':'none';bsYearSelect.closest('.field').style.display=cal.value==='BS'?'grid':'none';adStart.closest('.field').style.display=cal.value==='AD'?'grid':'none';recalcAgreement()};
  bsStart.oninput=()=>{syncAgreementBSSelectors();recalcAgreement()};adStart.onchange=recalcAgreement;duration.onchange=()=>{adEnd.readOnly=duration.value!=='custom';recalcAgreement()};
  if(current['Start AD']){cal.value='AD';duration.value='custom'}else{cal.value='BS';duration.value='1'}
- refreshAgreementBSDays();if(!current['Start AD'])selectAgreementBS();else syncAgreementBSSelectors();duration.onchange();cal.onchange();
+ refreshAgreementBSDays();if(!current['Start AD']){const today=new Date();const todayISO=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');let chosen=null;for(let m=0;m<12&&!chosen;m++)for(let d=1;d<=BS_LENGTHS[2083][m];d++){if(bsToAd(2083,m,d)===todayISO){chosen=[m,d];break}}if(chosen){bsMonthSelect.value=String(chosen[0]);refreshAgreementBSDays();bsDaySelect.value=String(chosen[1])}selectAgreementBS()}else syncAgreementBSSelectors();duration.onchange();cal.onchange();
  const docInput=$('vehicleDocuments');docInput.onchange=()=>{const selected=[...docInput.files];$('vehicleFileSelection').textContent=selected.length+' selected (maximum 4, 10 MB per file)';if(selected.length>4){alertUser('Select no more than 4 vehicle files.',true);docInput.value=''}};
  if(vehicle['Vehicle ID'])refreshVehicleDocList(vehicle['Vehicle ID']);
  $('vehicleRegistration').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),v={...vehicle};for(const h of fields)v[h]=String(f.get(h)||'').trim();
