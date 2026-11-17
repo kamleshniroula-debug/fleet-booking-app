@@ -1102,7 +1102,7 @@ async function loadCloud(){
     const meta=await response.json();
     const bytes=await(await graph(path+':/content')).arrayBuffer();
     await loadBytes(bytes,'OneDrive '+name);
-    cloudFile=name;etag=meta.eTag;cloudLoaded=true;
+    cloudFile=name;etag=meta.eTag;cloudLoaded=true;window.dispatchEvent(new Event('pvr-cloud-loaded'));
     $('login').textContent='OneDrive workbook loaded';
     status('Connected to OneDrive workbook: '+name+'. Edits are local until you press Save to OneDrive.');
     return;
@@ -1369,6 +1369,28 @@ async function printBookingConfirmation(index){
    pending=false;syncText('saved and verified '+new Date().toLocaleTimeString());return true;
   }
  };
+ // Keep the partner-facing workbook snapshot fresh even when no new bookings are made.
+ // Never publish unsaved changes or an unconnected workbook.
+ let pvrPeriodicSyncBusy=false;
+ async function pvrPeriodicSnapshotRefresh(){
+  if(pvrPeriodicSyncBusy||document.hidden||!cloudLoaded||!token||!zip||dirty||autoSaving||source!=='OneDrive '+cloudFile)return;
+  pvrPeriodicSyncBusy=true;
+  try{
+   // Check OneDrive metadata first. An older open tab must not republish stale data.
+   const path='/me/drive/root:/'+encodeURIComponent(cloudFile);
+   const meta=await(await graph(path)).json();
+   if(etag&&meta.eTag&&meta.eTag!==etag){
+    syncText('OneDrive changed elsewhere — reload workbook before publishing',true);
+    return;
+   }
+   await window.pvrDualSync.saveSnapshot();
+  }catch(e){console.warn('Periodic Supabase snapshot refresh:',e);syncText('periodic refresh pending: '+e.message,true)}
+  finally{pvrPeriodicSyncBusy=false}
+ }
+ setInterval(pvrPeriodicSnapshotRefresh,4*60*1000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)pvrPeriodicSnapshotRefresh()});
+ window.addEventListener('pvr-cloud-loaded',()=>{setTimeout(pvrPeriodicSnapshotRefresh,2500)});
+
  // If a Supabase OAuth redirect returns to this page, initialize the client to recover its session.
  if(location.hash.includes('access_token=')||DEFAULT_PUBLISHABLE_KEY){
   try{const c=getClient();if(c)c.auth.getSession().then(({data,error})=>{if(error)notify(error.message);else update(data.session)}).catch(e=>notify(e.message))}
