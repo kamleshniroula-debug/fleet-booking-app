@@ -117,11 +117,11 @@ input,select,textarea{font-weight:550;letter-spacing:0}
 @media(max-width:720px){.sidebar .pvr-elegant-brand{padding:8px 7px 13px}.sidebar .pvr-elegant-brand .pvr-brand-mark{width:49px;height:51px;flex-basis:49px}.sidebar .pvr-elegant-brand .pvr-brand-name{font-size:21px}}
 </style><style id="pvr-split-sidebars">
 .shell{--pvr-left-width:clamp(210px,18vw,260px);--pvr-right-width:clamp(200px,16vw,230px)}
-.shell>.sidebar{height:100dvh;overflow-y:auto;overscroll-behavior:contain}
-.shell>.sidebar-left{width:var(--pvr-left-width);flex:0 0 var(--pvr-left-width)}
-.shell>.sidebar-right{width:var(--pvr-right-width);flex:0 0 var(--pvr-right-width);border-left:1px solid #caa56340!important;border-right:0!important}
+.shell>.sidebar{align-self:flex-start;height:auto;max-height:100dvh;overflow-y:auto;overscroll-behavior:contain}
+.shell>.sidebar-left{width:var(--pvr-left-width);flex:0 0 var(--pvr-left-width);border-radius:0 0 16px 0}
+.shell>.sidebar-right{width:var(--pvr-right-width);flex:0 0 var(--pvr-right-width);border-radius:0 0 0 16px;border-left:1px solid #caa56340!important;border-right:0!important}
 .sidebar-right .nav:before{content:'MANAGEMENT'}
-.pvr-side-handle{position:fixed;top:48%;transform:translateY(-50%);z-index:40;border:1px solid #52d6c8aa;background:#103448;color:#e9fffb;box-shadow:0 4px 14px #001b2b40;padding:12px 6px;min-width:28px;min-height:44px;cursor:pointer;touch-action:manipulation;transition:left .24s ease,right .24s ease}
+.pvr-side-handle{position:fixed;top:min(48dvh,260px);transform:translateY(-50%);z-index:40;border:1px solid #52d6c8aa;background:#103448;color:#e9fffb;box-shadow:0 4px 14px #001b2b40;padding:12px 6px;min-width:28px;min-height:44px;cursor:pointer;touch-action:manipulation;transition:left .24s ease,right .24s ease}
 #pvr-side-handle{left:var(--pvr-left-width);border-left:0;border-radius:0 12px 12px 0}
 #pvr-right-handle{right:var(--pvr-right-width);border-right:0;border-radius:12px 0 0 12px}
 .shell.pvr-left-closed #pvr-side-handle{left:0}
@@ -134,7 +134,7 @@ input,select,textarea{font-weight:550;letter-spacing:0}
 }
 @media(max-width:980px){
  .shell{display:block;--pvr-left-width:min(82vw,300px);--pvr-right-width:min(82vw,300px)}
- .shell>.sidebar{position:fixed;top:0;bottom:0;z-index:32;margin:0;transition:transform .24s ease,visibility .24s ease;box-shadow:0 0 32px #07132355}
+ .shell>.sidebar{position:fixed;top:0;bottom:auto;z-index:32;margin:0;transition:transform .24s ease,visibility .24s ease;box-shadow:0 0 32px #07132355}
  .shell>.sidebar-left{left:0;border-radius:0 16px 16px 0!important}
  .shell>.sidebar-right{right:0;border-radius:16px 0 0 16px!important}
  .shell.pvr-left-closed>.sidebar-left{transform:translateX(-105%);visibility:hidden}
