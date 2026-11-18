@@ -130,7 +130,7 @@ input,select,textarea{font-weight:550;letter-spacing:0}
 .shell>.sidebar-left[inert]{transform:translateX(-100%)}
 .shell>.sidebar-right[inert]{transform:translateX(100%)}
 .pvr-side-handle{
- position:fixed;top:50%;transform:translateY(-50%);z-index:40;
+ position:fixed;top:calc(12px + env(safe-area-inset-top,0px));z-index:40;
  width:var(--pvr-handle-width);min-height:48px;padding:0;border:1px solid #52d6c8aa;
  background:#103448;color:#e9fffb;box-shadow:0 4px 14px #001b2b40;font-size:20px;cursor:pointer;touch-action:pan-y;
  transition:left var(--pvr-drawer-duration) ease,right var(--pvr-drawer-duration) ease
