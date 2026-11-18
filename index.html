@@ -116,24 +116,31 @@ input,select,textarea{font-weight:550;letter-spacing:0}
 .sidebar .pvr-elegant-brand .pvr-brand-locale{font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;letter-spacing:.14em;color:#7aaeb4;margin-top:7px}
 @media(max-width:720px){.sidebar .pvr-elegant-brand{padding:8px 7px 13px}.sidebar .pvr-elegant-brand .pvr-brand-mark{width:49px;height:51px;flex-basis:49px}.sidebar .pvr-elegant-brand .pvr-brand-name{font-size:21px}}
 </style><style id="pvr-split-sidebars">
-.shell{display:block;--pvr-sidebar-height:min(32dvh,300px);--pvr-bottom-inset:env(safe-area-inset-bottom,0px)}
-.shell>.main{width:100%;max-width:none;padding-bottom:calc(48px + var(--pvr-bottom-inset) + 20px)}
-.shell:has(>.sidebar:not([hidden]))>.main{padding-bottom:calc(var(--pvr-sidebar-height) + var(--pvr-bottom-inset) + 20px)}
+.shell{display:block;--pvr-handle-width:36px;--pvr-drawer-width:min(280px,calc(50vw - var(--pvr-handle-width) - 4px));--pvr-drawer-duration:200ms}
+.shell>.main{width:100%;max-width:none}
 .shell>.sidebar{
- position:fixed;top:auto;bottom:0;z-index:32;width:50%;height:auto;max-height:calc(var(--pvr-sidebar-height) + var(--pvr-bottom-inset));
- margin:0;padding:48px 4px var(--pvr-bottom-inset);overflow:hidden
+ position:fixed;top:0;bottom:0;z-index:32;width:var(--pvr-drawer-width);height:auto;
+ margin:0;padding:calc(12px + env(safe-area-inset-top,0px)) 8px calc(12px + env(safe-area-inset-bottom,0px));
+ overflow:hidden;display:flex;flex-direction:column;border-radius:0;
+ transition:transform var(--pvr-drawer-duration) ease,visibility 0s
 }
-.shell>.sidebar-left{left:0;border-radius:0}
-.shell>.sidebar-right{right:0;border-radius:0}
+.shell>.sidebar-left{left:0}
+.shell>.sidebar-right{right:0}
+.shell>.sidebar[inert]{visibility:hidden;box-shadow:none;transition-delay:0s,var(--pvr-drawer-duration)}
+.shell>.sidebar-left[inert]{transform:translateX(-100%)}
+.shell>.sidebar-right[inert]{transform:translateX(100%)}
 .pvr-side-handle{
- position:fixed;bottom:var(--pvr-bottom-inset);z-index:40;
- width:36px;min-height:48px;padding:0;border:1px solid #52d6c8aa;
- background:#103448;color:#e9fffb;box-shadow:0 4px 14px #001b2b40;font-size:20px;cursor:pointer;touch-action:pan-y
+ position:fixed;top:calc(12px + env(safe-area-inset-top,0px));z-index:40;
+ width:var(--pvr-handle-width);min-height:48px;padding:0;border:1px solid #52d6c8aa;
+ background:#103448;color:#e9fffb;box-shadow:0 4px 14px #001b2b40;font-size:20px;cursor:pointer;touch-action:pan-y;
+ transition:left var(--pvr-drawer-duration) ease,right var(--pvr-drawer-duration) ease
 }
-.pvr-side-handle[aria-expanded="true"]{bottom:calc(var(--pvr-sidebar-height) + var(--pvr-bottom-inset) - 48px)}
 .pvr-side-handle[data-side="left"]{left:0;border-left:0;border-radius:0 12px 12px 0}
 .pvr-side-handle[data-side="right"]{right:0;border-right:0;border-radius:12px 0 0 12px}
-.pvr-sidebar-scroll{max-height:calc(var(--pvr-sidebar-height) - 48px);overflow:auto;overscroll-behavior:contain}
+.pvr-side-handle[data-side="left"][aria-expanded="true"]{left:var(--pvr-drawer-width)}
+.pvr-side-handle[data-side="right"][aria-expanded="true"]{right:var(--pvr-drawer-width)}
+.pvr-sidebar-scroll{min-height:0;overflow:auto;overscroll-behavior:contain}
+@media(prefers-reduced-motion:reduce){.shell{--pvr-drawer-duration:0ms}}
 .pvr-side-handle:focus-visible{outline:2px solid #45d9c8;outline-offset:-3px}
 .shell>.sidebar .nav{display:grid;overflow:visible;gap:4px}
 .shell>.sidebar .nav:before{display:block;margin:3px 5px 6px;font-family:Manrope,system-ui,sans-serif;font-size:11px;font-weight:800}
@@ -2546,12 +2553,12 @@ async function printBookingConfirmation(index){
   handle.dataset.side=key;
   handle.setAttribute('aria-controls',menu.id);
   function setExpanded(expanded){
-   menu.hidden=!expanded;
+   menu.inert=!expanded;
    handle.setAttribute('aria-expanded',String(expanded));
    handle.setAttribute('aria-label',(expanded?'Close ':'Open ')+name);
    handle.textContent=(key==='left')===expanded?'❮':'❯';
   }
-  handle.onclick=()=>setExpanded(menu.hidden);
+  handle.onclick=()=>setExpanded(menu.inert);
   let start=null;
   handle.addEventListener('pointerdown',event=>{
    if(event.pointerType==='mouse'||!event.isPrimary)return;
@@ -2573,6 +2580,7 @@ async function printBookingConfirmation(index){
   });
   shell.append(handle);
   setExpanded(false);
+  menu.hidden=false;
   menu.addEventListener('click',event=>{
    if(!event.target.closest('[data-nav]'))return;
    const title=document.getElementById('pageTitle');
