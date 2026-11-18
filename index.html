@@ -2594,12 +2594,21 @@ async function printBookingConfirmation(index){
   {key:'right',name:'Management',menu:document.getElementById('pvrSidebarRight')}
  ];
  const shell=document.querySelector('.shell');
- function driveAcross(handle,key){
-  if(typeof handle.animate!=='function'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ function driveAcross(handle,key,other){
+  if(typeof handle.animate!=='function'||matchMedia('(prefers-reduced-motion: reduce)').matches){
+   other?.close();
+   return;
+  }
   const bounds=handle.getBoundingClientRect();
   const x=bounds.left+bounds.width/2;
   const y=bounds.top+bounds.height/2;
-  const destination=key==='left'?document.documentElement.clientWidth+53:-53;
+  const edge=key==='left'?document.documentElement.clientWidth+53:-53;
+  let destination=edge;
+  if(other){
+   const inset=other.menu.getBoundingClientRect().width+other.handle.getBoundingClientRect().width/2;
+   destination=key==='left'?document.documentElement.clientWidth-inset:inset;
+  }
+  const otherRevision=other?.revision;
   const car=document.createElement('span');
   car.className='pvr-arrow-car';
   const image=document.createElement('img');
@@ -2611,11 +2620,17 @@ async function printBookingConfirmation(index){
   car.style.top=y+'px';
   const facing=key==='left'?1:-1;
   document.body.append(car);
-  const motion=car.animate([
-   {transform:'translate(-50%,-50%) scaleX('+facing+')'},
-   {transform:'translateX('+(destination-x)+'px) translate(-50%,-50%) scaleX('+facing+')'}
-  ],{duration:1200,easing:'linear'});
-  motion.onfinish=motion.oncancel=()=>car.remove();
+  const position=at=>({transform:'translateX('+(at-x)+'px) translate(-50%,-50%) scaleX('+facing+')'});
+  const motion=car.animate([position(x),position(destination)],{duration:1200,easing:'linear',fill:'forwards'});
+  motion.oncancel=()=>car.remove();
+  motion.onfinish=()=>{
+   if(!other){car.remove();return;}
+   if(other.revision===otherRevision&&handle.getAttribute('aria-expanded')==='true')other.close();
+   const finish=car.animate([position(destination),position(edge)],{duration:200,easing:'ease',fill:'forwards'});
+   motion.oncancel=null;
+   motion.cancel();
+   finish.onfinish=finish.oncancel=()=>car.remove();
+  };
  }
  const drawers=sides.map(({key,name,menu})=>{
   const scrollArea=document.createElement('div');
@@ -2627,7 +2642,9 @@ async function printBookingConfirmation(index){
   handle.className='pvr-side-handle';
   handle.dataset.side=key;
   handle.setAttribute('aria-controls',menu.id);
+  let revision=0;
   function setExpanded(expanded){
+   if(menu.inert===expanded)revision++;
    if(!expanded&&menu.contains(document.activeElement))handle.focus({preventScroll:true});
    menu.inert=!expanded;
    handle.setAttribute('aria-expanded',String(expanded));
@@ -2635,8 +2652,9 @@ async function printBookingConfirmation(index){
    handle.textContent=(key==='left')===expanded?'❮':'❯';
   }
   handle.onclick=()=>{
-   if(menu.inert)driveAcross(handle,key);
-   setExpanded(menu.inert);
+   const opening=menu.inert;
+   if(opening)driveAcross(handle,key,drawers.find(drawer=>drawer.key!==key&&!drawer.menu.inert));
+   setExpanded(opening);
   };
   let start=null;
   handle.addEventListener('pointerdown',event=>{
@@ -2666,7 +2684,7 @@ async function printBookingConfirmation(index){
    title.focus({preventScroll:true});
    title.scrollIntoView({block:'start'});
   });
-  return {key,menu,close:()=>setExpanded(false)};
+  return {key,menu,handle,get revision(){return revision},close:()=>setExpanded(false)};
  });
  let swipe=null;
  shell.addEventListener('touchstart',event=>{
