@@ -410,7 +410,9 @@ const REQUIRED_SCHEMAS=JSON.parse(JSON.stringify(SCHEMAS));
 REQUIRED_SCHEMAS.Bookings=REQUIRED_SCHEMAS.Bookings.filter(h=>h!=='Evening / Night Charge NPR');
 // Older workbooks store the electric motor identifier under 'Engine Number'.
 REQUIRED_SCHEMAS.Vehicles=REQUIRED_SCHEMAS.Vehicles.filter(h=>h!=='Engine / Motor Number');
-let data={},zip=null,paths={},shared=[],page='Dashboard',token=null,etag=null,source='none',dirty=false,filter='';
+const workspaceQuery=new URLSearchParams(location.search);
+const requestedPage=workspaceQuery.get('view');
+let data={},zip=null,paths={},shared=[],page=NAV.includes(requestedPage)&&requestedPage!=='Rental Companies'?requestedPage:'Dashboard',token=null,etag=null,source='none',dirty=false,filter='';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'Rs. '+(Number(n)||0).toLocaleString('en-IN',{maximumFractionDigits:2});
 const n=v=>Number(v)||0, today=()=>new Date().toISOString().slice(0,10), uid=prefix=>prefix+'-'+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase();
@@ -2408,6 +2410,10 @@ async function printBookingConfirmation(index){
     document.getElementById('pageTitle').focus({preventScroll:true});
    }
   });
+ }
+ if(workspaceQuery.get('settings')==='1'&&!embeddedPartnerReview){
+  toggle(sides[1],true);
+  document.getElementById('workspaceTools').open=true;
  }
  mobile.addEventListener('change',()=>sides.forEach(side=>setOpen(side,preference(side),false)));
  function dismiss(){
