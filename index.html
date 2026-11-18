@@ -116,7 +116,7 @@ input,select,textarea{font-weight:550;letter-spacing:0}
 .sidebar .pvr-elegant-brand .pvr-brand-locale{font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;letter-spacing:.14em;color:#7aaeb4;margin-top:7px}
 @media(max-width:720px){.sidebar .pvr-elegant-brand{padding:8px 7px 13px}.sidebar .pvr-elegant-brand .pvr-brand-mark{width:49px;height:51px;flex-basis:49px}.sidebar .pvr-elegant-brand .pvr-brand-name{font-size:21px}}
 </style><style id="pvr-split-sidebars">
-.shell{display:block;--pvr-handle-width:36px;--pvr-drawer-width:min(280px,calc(50vw - var(--pvr-handle-width) - 4px));--pvr-drawer-duration:200ms}
+.shell{display:block;--pvr-handle-width:36px;--pvr-drawer-width:min(280px,calc(50vw - var(--pvr-handle-width) - 4px));--pvr-drawer-duration:200ms;--pvr-drawer-close-duration:400ms}
 .shell>.main{width:100%;max-width:none}
 .shell>.sidebar{
  position:fixed;top:0;bottom:0;z-index:32;width:var(--pvr-drawer-width);height:auto;
@@ -126,7 +126,7 @@ input,select,textarea{font-weight:550;letter-spacing:0}
 }
 .shell>.sidebar-left{left:0}
 .shell>.sidebar-right{right:0}
-.shell>.sidebar[inert]{visibility:hidden;box-shadow:none;transition-delay:0s,var(--pvr-drawer-duration)}
+.shell>.sidebar[inert]{visibility:hidden;box-shadow:none;transition-duration:var(--pvr-drawer-close-duration),0s;transition-delay:0s,var(--pvr-drawer-close-duration)}
 .shell>.sidebar-left[inert]{transform:translateX(-100%)}
 .shell>.sidebar-right[inert]{transform:translateX(100%)}
 .pvr-side-handle{
@@ -135,6 +135,7 @@ input,select,textarea{font-weight:550;letter-spacing:0}
  background:#103448;color:#e9fffb;box-shadow:0 4px 14px #001b2b40;font-size:20px;cursor:pointer;touch-action:pan-y;
  transition:left var(--pvr-drawer-duration) ease,right var(--pvr-drawer-duration) ease
 }
+.pvr-side-handle[aria-expanded="false"]{transition-duration:var(--pvr-drawer-close-duration)}
 .pvr-side-handle[data-side="left"]{left:0;border-left:0;border-radius:0 12px 12px 0}
 .pvr-side-handle[data-side="right"]{right:0;border-right:0;border-radius:12px 0 0 12px}
 .pvr-side-handle[data-side="left"][aria-expanded="true"]{left:var(--pvr-drawer-width)}
@@ -151,7 +152,7 @@ input,select,textarea{font-weight:550;letter-spacing:0}
  animation:pvr-car-flame 130ms ease-in-out infinite alternate
 }
 @keyframes pvr-car-flame{to{transform:translateY(-50%) scale(.72,.78)}}
-@media(prefers-reduced-motion:reduce){.shell{--pvr-drawer-duration:0ms}}
+@media(prefers-reduced-motion:reduce){.shell{--pvr-drawer-duration:0ms;--pvr-drawer-close-duration:0ms}}
 .pvr-side-handle:focus-visible{outline:2px solid #45d9c8;outline-offset:-3px}
 .shell>.sidebar .nav{display:grid;overflow:visible;gap:4px}
 .shell>.sidebar .nav:before{display:block;margin:3px 5px 6px;font-family:Manrope,system-ui,sans-serif;font-size:11px;font-weight:800}
@@ -2626,7 +2627,8 @@ async function printBookingConfirmation(index){
   motion.onfinish=()=>{
    if(!other){car.remove();return;}
    if(other.revision===otherRevision&&handle.getAttribute('aria-expanded')==='true')other.close();
-   const finish=car.animate([position(destination),position(edge)],{duration:200,easing:'ease',fill:'forwards'});
+   const duration=parseFloat(getComputedStyle(shell).getPropertyValue('--pvr-drawer-close-duration'));
+   const finish=car.animate([position(destination),position(edge)],{duration,easing:'ease',fill:'forwards'});
    motion.oncancel=null;
    motion.cancel();
    finish.onfinish=finish.oncancel=()=>car.remove();
