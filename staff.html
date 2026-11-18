@@ -1,10 +1,33 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prince Vehicle Rental · Staff</title><style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prince Vehicle Rental · Staff</title><meta name="theme-color" content="#142d3d"><link rel="manifest" href="./staff.webmanifest"><style>
 :root{color-scheme:light dark;--page:light-dark(#edf2f6,#111e2b);--paper:light-dark(#fff,#192c3b);--ink:light-dark(#183347,#e4edf4);--muted:light-dark(#647b8a,#afc1ce);--line:light-dark(#dce5eb,#314a5a);--soft:light-dark(#e8f3f0,#213f40);--teal:light-dark(#176f65,#92d3c5);--button:light-dark(#176f65,#93d7c8);--button-ink:light-dark(#fff,#123b34);font:14px/1.5 system-ui,sans-serif;background:var(--page);color:var(--ink)}*{box-sizing:border-box}body{margin:0}header{background:#142d3d;color:#e2edf1;border-bottom:1px solid #a3926d;padding:30px max(22px,calc((100vw - 1108px)/2)) 25px}.brand{display:flex;align-items:center;gap:15px}.monogram{flex-shrink:0;width:49px;height:49px;border-radius:50%;border:1px solid #b3a078;color:#e8d7ae;display:grid;place-items:center;font:26px Georgia,serif}h1{font:23px/1.2 Georgia,serif;letter-spacing:1px;color:#f2f4f1;margin:0}header p{font-size:12px;color:#b4c7ce;letter-spacing:.4px;margin:7px 0 0}.staff-badge{display:inline-block;background:#294756;color:#e2edf1;border:1px solid #34505f;border-radius:20px;font-size:11px;padding:6px 12px;margin-top:20px}h2{font:29px/1.2 Georgia,serif;letter-spacing:-.6px;margin:0 0 16px}main{max-width:1160px;margin:auto;padding:26px}button,input,select{font:inherit}button{cursor:pointer;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:10px 13px;border-radius:8px;font-size:12px;min-height:40px;transition:border-color .15s ease}button:hover:not(:disabled){border-color:var(--teal)}button.primary{background:var(--button);color:var(--button-ink);border-color:var(--button)}button:disabled{opacity:.45;cursor:default}input,select{padding:11px;border:1px solid var(--line);border-radius:8px;width:100%;background:var(--paper);color:var(--ink);min-height:42px;font-size:13px}label{display:block;font-size:12px;font-weight:500;margin:11px 0 6px}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.toolbar input{width:min(100%,300px)}.panel{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:23px;margin-bottom:18px;box-shadow:0 5px 22px #142d3d05}.hint{color:var(--muted);font-size:12px}.banner{padding:11px 14px;background:var(--soft);color:var(--teal);white-space:pre-line;margin:16px 0;border-radius:8px;font-size:12px}.banner.error{background:light-dark(#fff0ee,#452728);color:light-dark(#9f3b31,#ffb7ad)}.tag{display:inline-block;padding:5px 10px;font-size:11px;border-radius:20px;background:var(--soft);color:var(--teal)}.bookings{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:16px}.card{border:1px solid var(--line);border-radius:13px;padding:21px 19px;background:var(--paper);box-shadow:0 5px 22px #142d3d05;min-width:0;overflow-wrap:anywhere}.card h3{font:24px/1.2 Georgia,serif;letter-spacing:-.4px;margin:16px 0 7px}.card p{margin:10px 0}.card b{font-weight:500}.dates{border-block:1px solid var(--line);margin:17px 0!important;padding:15px 0}.price{display:flex;justify-content:space-between;gap:9px;font-size:12px;color:var(--muted);margin:9px 0}.price b{color:var(--ink);font-variant-numeric:tabular-nums}.price.balance{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;font-size:14px;color:var(--ink)}.price.balance b{font-size:17px}.card .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px}.card button{font-size:11px;padding:8px 6px;min-height:38px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}.amount{font-size:19px;font-weight:500}.empty{padding:45px;text-align:center;color:var(--muted)}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:11px;border-bottom:1px solid var(--line);text-align:left}th{font-weight:500}dialog{border:1px solid var(--line);border-radius:16px;width:min(680px,95vw);max-height:92vh;padding:24px;color:var(--ink);background:var(--paper)}dialog::backdrop{background:#10263899}.modalhead{display:flex;justify-content:space-between;align-items:center;gap:14px}.modalhead h2{margin:0;font-size:25px}.actions{justify-content:flex-end;margin-top:24px}a{color:var(--teal)}#adminArea{border-top:2px solid #b3a078}[hidden]{display:none!important}@media(max-width:550px){.grid,.bookings{grid-template-columns:1fr}main{padding:17px 13px}.panel{padding:18px}.card{padding:22px}.card h3{font-size:26px}header{padding:25px 20px}h1{font-size:20px}h2{font-size:27px}}@media(pointer:coarse){button{min-height:44px!important}input,select{font-size:16px}}@media(prefers-reduced-motion:reduce){button{transition:none}}
 #fleetList{grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:10px}#fleetList .card{padding:13px 15px;border-radius:11px;box-shadow:0 3px 12px #142d3d04}#fleetList .card h3{font-size:18px;line-height:1.25;letter-spacing:-.2px;margin:9px 0 5px}#fleetList .card h3:first-child{margin-top:0}#fleetList .card p{font-size:11px;margin:0;letter-spacing:.3px}#fleetList .tag{font-size:10px;padding:3px 8px}#fleetList .card{align-self:stretch}@media(min-width:850px){#fleetList{grid-template-columns:repeat(auto-fill,minmax(175px,1fr))}}
 #fleetList .booking-progress{margin-top:10px}#fleetList .remaining-days{font-size:10px;color:var(--muted);margin-bottom:5px;font-variant-numeric:tabular-nums}#fleetList progress{display:block;appearance:none;border:0;width:100%;height:4px;border-radius:9px;overflow:hidden;background:var(--line);accent-color:var(--teal)}#fleetList progress::-webkit-progress-bar{background:var(--line);border-radius:9px}#fleetList progress::-webkit-progress-value{background:var(--teal);border-radius:9px}#fleetList progress::-moz-progress-bar{background:var(--teal);border-radius:9px}#fleetList .booking-tag{font-size:9px;letter-spacing:.1px;padding:3px 7px}
 #fleetList .remaining-days{font-size:12px;line-height:1.5}#fleetList .days-left{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-top:2px}
 .card .booking-progress{margin-top:10px}.card .remaining-days{font-size:12px;line-height:1.5;color:var(--muted)}.card .days-left{display:block;font-size:13px;font-weight:600;color:var(--ink)}.card progress{display:block;appearance:none;width:100%;height:4px;border:0;border-radius:9px;overflow:hidden;accent-color:var(--teal);margin-top:5px}
-</style></head><body><header><div class="brand"><span class="monogram" aria-hidden="true">P</span><div><h1>PRINCE VEHICLE RENTAL</h1><p>Staff workspace · Lagankhel, Lalitpur</p></div></div><span class="staff-badge">Staff booking access</span></header><main><section class="panel"><div class="toolbar"><button class="primary" id="login">Sign in with Google</button><button id="refresh" hidden>Refresh bookings</button><a href="./index.html" id="adminLink" hidden>Administrator dashboard</a></div><div id="message" class="banner" role="status">Sign in with your own Google account. Your administrator must activate staff access before bookings are visible.</div><p class="hint" id="syncInfo"></p></section><div id="workspace" hidden><div class="toolbar"><button type="button" id="staffBlacklist">Customer Blacklist</button></div><section class="panel" id="fleetPanel"><div class="toolbar"><h2 style="margin:0 auto 0 0">Vehicle availability</h2><span class="tag" id="fleetCount"></span></div><p class="hint">Select dates to check vehicle availability.</p><div class="grid"><div><label for="fleetStart">First date (AD)</label><input id="fleetStart" type="date" required></div><div><label for="fleetEnd">Last date (AD, inclusive)</label><input id="fleetEnd" type="date" required></div></div><label for="fleetSearch">Find a vehicle</label><input id="fleetSearch" placeholder="Vehicle name or registration"><p id="fleetSummary" class="hint" role="status"></p><div id="fleetList" class="bookings"></div></section><section class="panel"><div class="toolbar"><h2 style="margin:0 auto 0 0">Bookings</h2><button class="primary" id="newBooking">+ New booking</button><button id="showActivity">Booking activity</button></div><p class="hint">View bookings and mark vehicles Delivered, Received, or Completed. Existing booking details are read-only for staff. Payments and all amounts are administrator-only.</p><div class="toolbar"><input id="search" placeholder="Customer, phone, vehicle…" aria-label="Search bookings"><select id="range" style="width:auto" aria-label="Booking date range"><option value="current">Current & upcoming</option><option value="1">Last 1 month</option><option value="3">Last 3 months</option><option value="6">Last 6 months</option><option value="12">Last 12 months</option><option value="all">All bookings</option></select></div></section><div id="bookings" class="bookings"></div><section id="activityPanel" class="panel" hidden><h2>Booking activity</h2><p class="hint">Latest 250 actions. A received vehicle can still have a balance or refundable deposit awaiting administrator settlement.</p><div class="tablewrap" id="activity"></div></section><section class="panel" id="adminArea" hidden><h2>Staff access</h2><p class="hint">Ask staff to sign in here once. Then activate their email below. Deactivation blocks their next read or action. All active staff have the booking permissions shown above.</p><form id="accessForm"><div class="grid"><div><label for="staffName">Staff full name</label><input id="staffName" required maxlength="120"></div><div><label for="staffEmail">Google email</label><input id="staffEmail" type="email" required></div></div><button class="primary" style="margin-top:16px">Activate staff access</button></form><div class="tablewrap" id="accounts"></div></section></div></main><dialog id="dialog"><div class="modalhead"><h2 id="dialogTitle"></h2><button id="closeDialog" type="button">Close</button></div><div id="dialogBody"></div></dialog><script src="staff-brand.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script>
+.staff-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:6px;margin:0 0 18px;border:1px solid #34505f;border-radius:15px;background:linear-gradient(125deg,#142d3d,#102433);box-shadow:0 8px 24px #10243326}
+.staff-tabs button{display:flex;align-items:center;justify-content:center;gap:9px;min-height:49px;padding:8px;border:1px solid transparent;border-radius:10px;background:transparent;color:#d5e3ea;font-size:clamp(12px,3vw,14px);font-weight:650}
+.staff-tabs button[aria-selected=true]{border-color:#6c9b92;background:#254746;color:#f2fbf8;box-shadow:inset 0 -2px #a6cfbf}
+.staff-tabs button:hover{border-color:#a6cfbf}
+.staff-tabs button:focus-visible{outline:2px solid #e8d7ae;outline-offset:2px}
+.staff-tab-icon{color:#e8d7ae;font-size:16px;line-height:1}
+.blacklist-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.blacklist-hero h2,.blacklist-hero p{margin:0}
+.blacklist-hero p{margin-top:7px}
+.blacklist-body{margin-top:17px}
+.blacklist-status{margin:0;padding:20px;border:1px dashed var(--line);border-radius:12px;background:var(--soft);color:var(--teal)}
+.blacklist-list{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.blacklist-list li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:5px 16px;padding:12px 15px;border:1px solid var(--line);border-radius:10px;overflow-wrap:anywhere}
+.blacklist-list span{color:var(--muted);font-variant-numeric:tabular-nums}
+</style></head><body><header><div class="brand"><span class="monogram" aria-hidden="true">P</span><div><h1>PRINCE VEHICLE RENTAL</h1><p>Staff workspace · Lagankhel, Lalitpur</p></div></div><span class="staff-badge">Staff booking access</span></header><main><section class="panel"><div class="toolbar"><button class="primary" id="login">Sign in with Google</button><button id="refresh" hidden>Refresh bookings</button><button type="button" id="installStaffApp">Install Staff App</button><a href="./index.html" id="adminLink" hidden>Administrator dashboard</a></div><div id="message" class="banner" role="status">Sign in with your own Google account. Your administrator must activate staff access before bookings are visible.</div><p class="hint" id="syncInfo"></p></section><div id="workspace" hidden>
+ <div class="staff-tabs" role="tablist" aria-label="Staff workspace sections">
+  <button type="button" role="tab" id="staffOperations" aria-selected="true" aria-controls="staffOperationsPanel"><span class="staff-tab-icon" aria-hidden="true">◈</span>Bookings &amp; Fleet</button>
+  <button type="button" role="tab" id="staffBlacklist" aria-selected="false" aria-controls="staffBlacklistPanel" tabindex="-1"><span class="staff-tab-icon" aria-hidden="true">⚑</span>Customer Blacklist</button>
+ </div>
+ <div id="staffOperationsPanel" role="tabpanel" aria-labelledby="staffOperations" tabindex="0"><section class="panel" id="fleetPanel"><div class="toolbar"><h2 style="margin:0 auto 0 0">Vehicle availability</h2><span class="tag" id="fleetCount"></span></div><p class="hint">Select dates to check vehicle availability.</p><div class="grid"><div><label for="fleetStart">First date (AD)</label><input id="fleetStart" type="date" required></div><div><label for="fleetEnd">Last date (AD, inclusive)</label><input id="fleetEnd" type="date" required></div></div><label for="fleetSearch">Find a vehicle</label><input id="fleetSearch" placeholder="Vehicle name or registration"><p id="fleetSummary" class="hint" role="status"></p><div id="fleetList" class="bookings"></div></section><section class="panel"><div class="toolbar"><h2 style="margin:0 auto 0 0">Bookings</h2><button class="primary" id="newBooking">+ New booking</button><button id="showActivity">Booking activity</button></div><p class="hint">View bookings and mark vehicles Delivered, Received, or Completed. Existing booking details are read-only for staff. Payments and all amounts are administrator-only.</p><div class="toolbar"><input id="search" placeholder="Customer, phone, vehicle…" aria-label="Search bookings"><select id="range" style="width:auto" aria-label="Booking date range"><option value="current">Current & upcoming</option><option value="1">Last 1 month</option><option value="3">Last 3 months</option><option value="6">Last 6 months</option><option value="12">Last 12 months</option><option value="all">All bookings</option></select></div></section><div id="bookings" class="bookings"></div><section id="activityPanel" class="panel" hidden><h2>Booking activity</h2><p class="hint">Latest 250 actions. A received vehicle can still have a balance or refundable deposit awaiting administrator settlement.</p><div class="tablewrap" id="activity"></div></section><section class="panel" id="adminArea" hidden><h2>Staff access</h2><p class="hint">Ask staff to sign in here once. Then activate their email below. Deactivation blocks their next read or action. All active staff have the booking permissions shown above.</p><form id="accessForm"><div class="grid"><div><label for="staffName">Staff full name</label><input id="staffName" required maxlength="120"></div><div><label for="staffEmail">Google email</label><input id="staffEmail" type="email" required></div></div><button class="primary" style="margin-top:16px">Activate staff access</button></form><div class="tablewrap" id="accounts"></div></section></div>
+ <section id="staffBlacklistPanel" class="panel" role="tabpanel" aria-labelledby="staffBlacklist" tabindex="0" hidden>
+  <div class="blacklist-hero"><div><h2>Customer Blacklist</h2><p class="hint">Check customer names and the last four digits of their phone numbers.</p></div><button type="button" id="refreshBlacklist">Refresh list</button></div>
+  <div class="blacklist-body" id="staffBlacklistResults" aria-live="polite"></div>
+ </section></div></main><dialog id="dialog"><div class="modalhead"><h2 id="dialogTitle"></h2><button id="closeDialog" type="button">Close</button></div><div id="dialogBody"></div></dialog><script src="staff-brand.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script>
 'use strict';
 const PROJECT='https://biytfypqihcaibrgqmky.supabase.co',KEY='sb_publishable_BFSBmvjvLMGGGOFqnW5-lw_TAWyT6gC';
 const $=id=>document.getElementById(id),escapeHTML=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -13,7 +36,7 @@ const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kathmandu',year:
 const addDays=(v,n)=>{const d=new Date(v+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
 let client=null,state=null,user=null,loading=false,submitting=false,sessionGeneration=0;
 function message(text,bad=false){$('message').textContent=text;$('message').classList.toggle('error',bad)}
-function clear(){state=null;$('workspace').hidden=true;$('refresh').hidden=true;$('adminLink').hidden=true;$('bookings').innerHTML='';$('fleetList').innerHTML='';$('fleetCount').textContent='';$('fleetSummary').textContent='';$('activity').innerHTML='';$('accounts').innerHTML='';$('syncInfo').textContent='';$('dialog').close();$('dialogBody').replaceChildren()}
+function clear(){state=null;selectStaffTab('staffOperations');$('staffBlacklistResults').replaceChildren();$('workspace').hidden=true;$('refresh').hidden=true;$('adminLink').hidden=true;$('bookings').innerHTML='';$('fleetList').innerHTML='';$('fleetCount').textContent='';$('fleetSummary').textContent='';$('activity').innerHTML='';$('accounts').innerHTML='';$('syncInfo').textContent='';$('dialog').close();$('dialogBody').replaceChildren()}
 async function rpc(name,args={}){const {data,error}=await client.rpc(name,args);if(error)throw Error(error.code==='PGRST202'?'Staff setup is not installed yet. Ask the administrator to run enable-staff-access.sql.':staffMessage(error.message));return data}
 function vehicle(id){return state?.vehicles.find(x=>x['Vehicle ID']===id)||{}}
 function bookingStatusLabel(b){return b.Status==='Returned'?'Received':b.Status==='Active'&&b['Handover AD']?'Delivered':b.Status||'Recorded'}
@@ -72,25 +95,73 @@ function renderFleet(){
 }
 
 function renderActivity(){$('activity').innerHTML=`<table><thead><tr><th>Date / time</th><th>Booking</th><th>Action</th><th>Details</th><th>Excel</th></tr></thead><tbody>${state.activity.map(a=>`<tr><td>${escapeHTML(new Date(a.created_at).toLocaleString())}</td><td>${escapeHTML(a.booking_id)}</td><td>${escapeHTML(actionLabel(a.action))}</td><td>${a.action==='payment'?escapeHTML(money(a.details.amount)+' · '+a.details.method+' · '+a.details.date+' · '+(a.details.reference||'')):escapeHTML(staffMessage(a.details.note||'Recorded'))}</td><td>${a.applied_at?'Synced':'Pending'}</td></tr>`).join('')}</tbody></table>`}
-$('staffBlacklist').onclick=async()=>{
+const staffTabIds=['staffOperations','staffBlacklist'];
+function selectStaffTab(id){
+ for(const key of staffTabIds){
+  const selected=key===id;
+  $(key).setAttribute('aria-selected',String(selected));
+  $(key).tabIndex=selected?0:-1;
+  $(key+'Panel').hidden=!selected;
+ }
+}
+function openStaffTab(id){
+ selectStaffTab(id);
+ if(id==='staffBlacklist')refreshBlacklist();
+}
+for(const id of staffTabIds){
+ const tab=$(id);
+ tab.onclick=()=>openStaffTab(id);
+ tab.onkeydown=event=>{
+  const targets={ArrowLeft:staffTabIds.find(key=>key!==id),ArrowRight:staffTabIds.find(key=>key!==id),Home:staffTabIds[0],End:staffTabIds.at(-1)};
+  if(!Object.hasOwn(targets,event.key))return;
+  event.preventDefault();
+  $(targets[event.key]).focus();
+  openStaffTab(targets[event.key]);
+ };
+}
+$('refreshBlacklist').onclick=refreshBlacklist;
+async function refreshBlacklist(){
  const gen=sessionGeneration;
- show('Customer Blacklist','<p id="staffBlacklistResults" role="status">Loading…</p>');
- const results=$('staffBlacklistResults');
+ const root=$('staffBlacklistResults');
+ const status=document.createElement('p');
+ status.className='blacklist-status';
+ status.textContent='Loading customer blacklist…';
+ root.replaceChildren(status);
  try{
   const list=await rpc('pvr_staff_blacklist');
-  if(gen!==sessionGeneration||!results.isConnected)return;
-  if(!list.published){results.textContent='The administrator needs to save the latest workbook before this list is available.';return}
-  if(!list.entries.length){results.textContent='No customers on the blacklist.';return}
+  if(gen!==sessionGeneration||!status.isConnected)return;
+  if(!list.published){status.textContent='The administrator needs to sync the workbook before this list is available.';return}
+  if(!list.entries.length){status.textContent='No customers on the blacklist.';return}
   const entries=document.createElement('ul');
+  entries.className='blacklist-list';
   for(const entry of list.entries){
-   const item=document.createElement('li');
-   item.textContent=entry.name+' · Phone ending '+entry.phone_last4;
+   const item=document.createElement('li'),name=document.createElement('strong'),phone=document.createElement('span');
+   name.textContent=entry.name;
+   phone.textContent='Phone ending '+entry.phone_last4;
+   item.append(name,phone);
    entries.append(item);
   }
-  results.replaceWith(entries);
+  status.replaceWith(entries);
  }catch(error){
-  if(gen===sessionGeneration&&results.isConnected)results.textContent='Customer blacklist unavailable. Ask your administrator to check setup.';
+  if(gen===sessionGeneration&&status.isConnected)status.textContent='Customer blacklist unavailable. Ask your administrator to check setup.';
  }
+}
+let staffInstallPrompt=null;
+const installStaffApp=$('installStaffApp');
+installStaffApp.hidden=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+window.addEventListener('beforeinstallprompt',event=>{
+ event.preventDefault();
+ staffInstallPrompt=event;
+});
+window.addEventListener('appinstalled',()=>{installStaffApp.hidden=true;staffInstallPrompt=null});
+installStaffApp.onclick=async()=>{
+ if(staffInstallPrompt){
+  const prompt=staffInstallPrompt;
+  staffInstallPrompt=null;
+  await prompt.prompt();
+  return;
+ }
+ show('Install Staff App','<p>Open this page in Chrome on Android. Tap the three-dot menu and choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p><p>On iPhone, open in Safari and choose <strong>Share → Add to Home Screen</strong>.</p>');
 };
 function show(title,html){$('dialogTitle').textContent=title;$('dialogBody').innerHTML=html;$('dialog').showModal()}
 const field=(name,label,value='',type='text',extra='')=>`<div><label>${escapeHTML(label)}<input name="${escapeHTML(name)}" type="${type}" value="${escapeHTML(value)}" ${extra}></div>`;
