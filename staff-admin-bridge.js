@@ -1,7 +1,6 @@
 /* Imports authenticated staff operations before the workbook is serialized.
    Only acknowledgments verified against the saved Supabase snapshot clear operations. */
 (()=>{
- const gateButton=document.getElementById('pvrAdminSignIn');if(gateButton)gateButton.onclick=()=>document.getElementById('googleLogin')?.click();
  let client=null,ids=[],chargingIds=[],chargingSaveIds=[],pulling=null,paused=false,lease=null,roleGeneration=0;
  const equal=(a,b)=>JSON.stringify(Object.entries(a||{}).filter(([,v])=>v!==''&&v!=null).map(([k,v])=>[k,String(v)]).sort(([a],[b])=>a.localeCompare(b)))===JSON.stringify(Object.entries(b||{}).filter(([,v])=>v!==''&&v!=null).map(([k,v])=>[k,String(v)]).sort(([a],[b])=>a.localeCompare(b)));
  const label=(text,bad=false)=>{let el=document.getElementById('pvrStaffSync');if(!el){el=document.createElement('div');el.id='pvrStaffSync';el.className='hint';el.style.padding='10px';document.getElementById('dualSyncState')?.parentNode.appendChild(el)}el.textContent='Staff: '+text;el.style.color=bad?'#b2454d':'#147b58'};
@@ -56,12 +55,14 @@
   const result=await client.rpc('pvr_staff_admin_pending');
   if(result.error){const text=result.error.code==='PGRST202'||result.error.code==='42883'?'Install enable-staff-access.sql in Supabase first, then sign in as administrator.':'Administrator access is required. Staff should use the staff workspace.';gate(false,text);throw Error(text)}
   const current=await client.auth.getSession();if(current.data.session?.user?.id!==data.session.user.id){gate(false,'Account changed. Sign in as administrator.');throw Error('Account changed during verification.')}
+  const email=current.data.session.user.email;
+  if(email){try{localStorage.setItem('pvr_verified_admin_email',email)}catch{}}
   gate(true,'Administrator verified');return true;
  }
  window.pvrStaffBridge={
   requireAdmin,
   async sessionChanged(session){let staffDestination=false;try{staffDestination=sessionStorage.getItem('pvr_oauth_destination')==='staff'}catch{}if(session&&staffDestination){try{sessionStorage.removeItem('pvr_oauth_destination')}catch{}window.location.replace(new URL('staff.html',window.location.href).href);return}const signIn=document.getElementById('pvrAdminSignIn');if(signIn)signIn.textContent=session?'Change Google account':'Sign in with Google';const generation=++roleGeneration;if(!session){gate(false,'Sign in with your administrator Google account to open the dashboard.');return}try{await requireAdmin()}catch(e){if(generation===roleGeneration)label(e.message,true)}},
-  connect(c){if(client===c)return;client=c;const signIn=document.getElementById('pvrAdminSignIn');if(signIn)signIn.onclick=()=>document.getElementById('googleLogin')?.click();window.dispatchEvent(new Event('pvr-staff-ready'));const button=document.createElement('a');button.href='staff.html';button.className='btn';button.textContent='Staff access & booking portal';button.style.display='inline-block';button.style.margin='8px';document.getElementById('googleLogin')?.parentNode.appendChild(button);label('checking setup…')},
+  connect(c){if(client===c)return;client=c;window.dispatchEvent(new Event('pvr-staff-ready'));const button=document.createElement('a');button.href='staff.html';button.className='btn';button.textContent='Staff access & booking portal';button.style.display='inline-block';button.style.margin='8px';document.getElementById('googleLogin')?.parentNode.appendChild(button);label('checking setup…')},
   async beforeSave(){
    chargingSaveIds=[];
    if(!client)return;

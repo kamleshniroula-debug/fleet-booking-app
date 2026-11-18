@@ -2298,14 +2298,33 @@ async function printBookingConfirmation(index){
   setTimeout(()=>window.pvrStaffBridge?.sessionChanged(session),0);
   if(session)showRole(session).catch(()=>{});else{const r=document.getElementById('pvrRoleState');if(r)r.textContent='Role: sign in required';}
  }
+ const adminSignIn=document.getElementById('pvrAdminSignIn');
+ async function signInWithGoogle(c,queryParams={}){
+  if(location.origin!==new URL(SITE_URL).origin)throw Error('Open your published GitHub Pages website to sign in.');
+  const result=await c.auth.signInWithOAuth({provider:'google',options:{redirectTo:SITE_URL,queryParams}});
+  if(result.error)throw result.error;
+ }
+ adminSignIn?.addEventListener('click',async()=>{
+  adminSignIn.disabled=true;
+  try{
+   const c=getClient();if(!c)return;
+   sessionStorage.removeItem('pvr_login_destination');
+   sessionStorage.removeItem('pvr_oauth_destination');
+   const {data:{session},error}=await c.auth.getSession();
+   if(error)throw error;
+   let adminEmail;
+   try{adminEmail=localStorage.getItem('pvr_verified_admin_email')}catch{}
+   await signInWithGoogle(c,!session&&adminEmail?{login_hint:adminEmail}:{prompt:'select_account'});
+  }catch(e){
+   document.getElementById('pvrAdminGateMessage').textContent='Google sign-in: '+e.message;
+  }finally{adminSignIn.disabled=false}
+ });
  button.addEventListener('click',async()=>{
   try{
    const c=getClient();if(!c)return;
    const {data:{session},error}=await c.auth.getSession();if(error)throw error;
    if(session){if(confirm('Sign out of Google login?')){const result=await c.auth.signOut();if(result.error)throw result.error;update(null)}return}
-   if(location.origin!==new URL(SITE_URL).origin)throw Error('Open your published GitHub Pages website to sign in.');
-   const result=await c.auth.signInWithOAuth({provider:'google',options:{redirectTo:SITE_URL}});
-   if(result.error)throw result.error;
+   await signInWithGoogle(c);
   }catch(e){notify('Google sign-in: '+e.message)}
  });
 
