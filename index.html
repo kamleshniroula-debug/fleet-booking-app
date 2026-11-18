@@ -141,7 +141,7 @@ input,select,textarea{font-weight:550;letter-spacing:0}
 .pvr-side-handle[data-side="right"][aria-expanded="true"]{right:var(--pvr-drawer-width)}
 @media(pointer:coarse){.pvr-side-handle{top:66%}}
 .pvr-sidebar-scroll{min-height:0;overflow:auto;overscroll-behavior:contain}
-.pvr-arrow-car{position:fixed;z-index:41;width:32px;height:32px;display:grid;place-items:center;pointer-events:none;font-size:26px;line-height:1;transform:translate(-50%,-50%);filter:drop-shadow(0 2px 3px #061a3273)}
+.pvr-arrow-car{position:fixed;z-index:41;width:32px;height:32px;display:grid;place-items:center;pointer-events:none;font-size:28.6px;line-height:1;transform:translate(-50%,-50%);filter:drop-shadow(0 2px 3px #061a3273)}
 @media(prefers-reduced-motion:reduce){.shell{--pvr-drawer-duration:0ms}}
 .pvr-side-handle:focus-visible{outline:2px solid #45d9c8;outline-offset:-3px}
 .shell>.sidebar .nav{display:grid;overflow:visible;gap:4px}
@@ -2602,7 +2602,7 @@ async function printBookingConfirmation(index){
   const motion=car.animate([
    {transform:'translate(-50%,-50%) scaleX('+facing+')'},
    {transform:'translateX('+(destination-x)+'px) translate(-50%,-50%) scaleX('+facing+')'}
-  ],{duration:650,easing:'linear'});
+  ],{duration:1200,easing:'linear'});
   motion.onfinish=motion.oncancel=()=>car.remove();
  }
  const drawers=sides.map(({key,name,menu})=>{
