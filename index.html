@@ -400,24 +400,24 @@ if(window.parent!==window&&new URLSearchParams(location.search).get('embeddedRev
 </style>
 <style id="pvr-mobile-launch-animation">
 .pvr-launch-car-track{display:none}
-@media (max-width:900px) and (pointer:coarse) and (prefers-reduced-motion:no-preference){
- @supports (offset-path:inset(0 round 22px)){
-  .pvr-launch-car-track{
-   position:fixed;
-   inset:calc(15px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(15px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px));
-   display:block;z-index:100001;pointer-events:none
-  }
-  .pvr-embedded-review .pvr-launch-car-track{display:none}
-  .pvr-launch-car{
-   position:absolute;top:0;left:0;display:grid;place-items:center;width:30px;height:30px;font-size:24px;line-height:1;
-   filter:drop-shadow(0 2px 3px #061a3273);offset-path:inset(0 round 22px);offset-rotate:auto 180deg;
-   animation:pvr-launch-car-lap 2.8s linear both
-  }
-  @keyframes pvr-launch-car-lap{
-   0%{offset-distance:0%;opacity:0}
-   5%,91%{opacity:1}
-   100%{offset-distance:100%;opacity:0}
-  }
+@media (max-width:900px) and (prefers-reduced-motion:no-preference){
+ .pvr-launch-car-track.pvr-launch-running{
+  position:fixed;
+  inset:calc(18px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) calc(18px + env(safe-area-inset-left,0px));
+  display:block;z-index:100001;pointer-events:none
+ }
+ .pvr-embedded-review .pvr-launch-car-track{display:none}
+ .pvr-launch-car{
+  position:absolute;display:grid;place-items:center;width:34px;height:34px;font-size:28px;line-height:1;
+  filter:drop-shadow(0 2px 3px #061a3273);transform:translate(-50%,-50%);
+  animation:pvr-launch-car-lap 3.6s linear both
+ }
+ @keyframes pvr-launch-car-lap{
+  0%{top:0;left:0;transform:translate(-50%,-50%) scaleX(-1)}
+  18%{top:0;left:100%;transform:translate(-50%,-50%) scaleX(-1)}
+  50%{top:100%;left:100%;transform:translate(-50%,-50%)}
+  68%{top:100%;left:0;transform:translate(-50%,-50%)}
+  100%{top:0;left:0;transform:translate(-50%,-50%) scaleX(-1)}
  }
 }
 </style></head><body class="pvr-admin-locked"><div class="pvr-launch-car-track" aria-hidden="true"><span class="pvr-launch-car">🚗</span></div><div id="pvrAdminGate">
@@ -2681,6 +2681,30 @@ async function printBookingConfirmation(index){
   tools.open=true;
   shell.querySelector('.pvr-side-handle[data-side="right"]').focus();
  }
+})();
+</script><script id="pvr-mobile-launch-start">
+(()=>{
+ const track=document.querySelector('.pvr-launch-car-track');
+ const car=track.firstElementChild;
+ const mobileMotion=matchMedia('(max-width:900px) and (prefers-reduced-motion:no-preference)');
+ let started=false;
+ function play(){
+  if(started||document.visibilityState!=='visible'||!mobileMotion.matches)return;
+  if(document.body.classList.contains('pvr-embedded-review'))return;
+  started=true;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+   if(document.visibilityState==='visible')track.classList.add('pvr-launch-running');
+   else started=false;
+  }));
+ }
+ window.addEventListener('pageshow',event=>{
+  if(event.persisted){track.classList.remove('pvr-launch-running');started=false;}
+  play();
+ });
+ document.addEventListener('visibilitychange',()=>{
+  if(document.readyState==='complete')play();
+ });
+ car.addEventListener('animationend',()=>track.classList.remove('pvr-launch-running'));
 })();
 </script></body></html>
 
