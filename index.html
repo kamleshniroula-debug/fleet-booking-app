@@ -126,7 +126,8 @@ input,select,textarea{font-weight:550;letter-spacing:0}
 }
 .shell>.sidebar-left{left:0}
 .shell>.sidebar-right{right:0}
-.shell>.sidebar[inert]{visibility:hidden;box-shadow:none;transition-duration:var(--pvr-drawer-close-duration),0s;transition-delay:0s,var(--pvr-drawer-close-duration)}
+.shell>.sidebar[inert]{visibility:hidden;box-shadow:none;transition-delay:0s,var(--pvr-drawer-duration)}
+.shell>.sidebar.pvr-car-closing[inert]{transition-duration:var(--pvr-drawer-close-duration),0s;transition-delay:0s,var(--pvr-drawer-close-duration)}
 .shell>.sidebar-left[inert]{transform:translateX(-100%)}
 .shell>.sidebar-right[inert]{transform:translateX(100%)}
 .pvr-side-handle{
@@ -135,7 +136,7 @@ input,select,textarea{font-weight:550;letter-spacing:0}
  background:#103448;color:#e9fffb;box-shadow:0 4px 14px #001b2b40;font-size:20px;cursor:pointer;touch-action:pan-y;
  transition:left var(--pvr-drawer-duration) ease,right var(--pvr-drawer-duration) ease
 }
-.pvr-side-handle[aria-expanded="false"]{transition-duration:var(--pvr-drawer-close-duration)}
+.pvr-side-handle.pvr-car-closing[aria-expanded="false"]{transition-duration:var(--pvr-drawer-close-duration)}
 .pvr-side-handle[data-side="left"]{left:0;border-left:0;border-radius:0 12px 12px 0}
 .pvr-side-handle[data-side="right"]{right:0;border-right:0;border-radius:12px 0 0 12px}
 .pvr-side-handle[data-side="left"][aria-expanded="true"]{left:var(--pvr-drawer-width)}
@@ -2626,7 +2627,7 @@ async function printBookingConfirmation(index){
   motion.oncancel=()=>car.remove();
   motion.onfinish=()=>{
    if(!other){car.remove();return;}
-   if(other.revision===otherRevision&&handle.getAttribute('aria-expanded')==='true')other.close();
+   if(other.revision===otherRevision&&handle.getAttribute('aria-expanded')==='true')other.close(true);
    const duration=parseFloat(getComputedStyle(shell).getPropertyValue('--pvr-drawer-close-duration'));
    const finish=car.animate([position(destination),position(edge)],{duration,easing:'ease',fill:'forwards'});
    motion.oncancel=null;
@@ -2645,7 +2646,9 @@ async function printBookingConfirmation(index){
   handle.dataset.side=key;
   handle.setAttribute('aria-controls',menu.id);
   let revision=0;
-  function setExpanded(expanded){
+  function setExpanded(expanded,withCar=false){
+   menu.classList.toggle('pvr-car-closing',withCar);
+   handle.classList.toggle('pvr-car-closing',withCar);
    if(menu.inert===expanded)revision++;
    if(!expanded&&menu.contains(document.activeElement))handle.focus({preventScroll:true});
    menu.inert=!expanded;
@@ -2686,7 +2689,7 @@ async function printBookingConfirmation(index){
    title.focus({preventScroll:true});
    title.scrollIntoView({block:'start'});
   });
-  return {key,menu,handle,get revision(){return revision},close:()=>setExpanded(false)};
+  return {key,menu,handle,get revision(){return revision},close:(withCar)=>setExpanded(false,withCar)};
  });
  let swipe=null;
  shell.addEventListener('touchstart',event=>{
