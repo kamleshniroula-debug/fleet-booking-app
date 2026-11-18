@@ -363,7 +363,7 @@ const SCHEMAS={
 'Other Expenses':['Expense ID','Date AD','Category','Vehicle ID','Amount NPR','Paid By','Notes'],
 'Rate Options':['Daily Rate NPR'],
 'Instructions':['Topic','Details']};
-const NAV=['Dashboard','Booking Calendar','Bookings','Vehicles','Owners','Owner Payments','Staff','Staff Access','Electricity Bills','Maintenance','Tyres','Other Expenses','Customers','Customer Blacklist','Rental Companies'];
+const NAV=['Dashboard','Booking Calendar','Bookings','Vehicles','Owners','Owner Payments','Staff','Staff Access','Electricity Bills','Maintenance','Tyres','Other Expenses','Customers','Customer Blacklist'];
 const TYPES={'Status':['Active','Inactive','Reserved','Completed','Extended','Due for return','Cancelled','Scheduled','In progress','Returned','Renewed','Paid','Pending','Partial','Unpaid'], 'Payment Status':['Paid','Unpaid','Partial'],'Paid By':['Prince Vehicle Rental','Vehicle owner','Insurance','Other'],'Type':['Regular servicing','Repair / breakdown','Tyres / brakes','Battery / electrical','Accident repair','Other'],'Reason':['Normal wear','Puncture / damage','Uneven wear','Accident damage','Premature wear','Other'],'Method':['Cash','Bank transfer','eSewa','Khalti','Other']};
 const REQUIRED_SCHEMAS=JSON.parse(JSON.stringify(SCHEMAS));
 // Backwards-compatible: older workbooks may not have the optional evening charge column.
@@ -377,12 +377,12 @@ const n=v=>Number(v)||0, today=()=>new Date().toISOString().slice(0,10), uid=pre
 const rows=s=>data[s]||[], val=(s,key,match,field)=>rows(s).find(r=>r[key]===match)?.[field]||'';
 function alertUser(msg,bad=false){$('toastroot').innerHTML=`<div class="toast ${bad?'bad':''}">${esc(msg)}</div>`;setTimeout(()=>$('toastroot').innerHTML='',5200)}
 function status(msg,warn=false){$('notice').className='banner'+(warn?' warn':'');$('notice').textContent=msg}
-const managementPages=new Set(['Owners','Owner Payments','Staff','Staff Access','Electricity Bills','Other Expenses','Rental Companies']);
+const managementPages=new Set(['Owners','Owner Payments','Staff','Staff Access','Electricity Bills','Other Expenses']);
 function nav(){
- const buttons=pages=>pages.map(x=>`<button data-nav="${esc(x)}" class="${page===x?'active':''}"><span class="nav-icon" aria-hidden="true">${({Dashboard:'◈','Booking Calendar':'▦',Bookings:'▤',Vehicles:'🚘',Owners:'♙','Owner Payments':'◉',Staff:'♟','Staff Access':'♜','Electricity Bills':'ϟ',Maintenance:'⚙',Tyres:'◎','Other Expenses':'▧',Customers:'♧','Customer Blacklist':'⚑','Rental Companies':'▣'})[x]||'•'}</span><span>${esc(x==='Vehicles'?'Vehicle Registration':x)}</span></button>`).join('');
+ const buttons=pages=>pages.map(x=>`<button data-nav="${esc(x)}" class="${page===x?'active':''}"><span class="nav-icon" aria-hidden="true">${({Dashboard:'◈','Booking Calendar':'▦',Bookings:'▤',Vehicles:'🚘',Owners:'♙','Owner Payments':'◉',Staff:'♟','Staff Access':'♜','Electricity Bills':'ϟ',Maintenance:'⚙',Tyres:'◎','Other Expenses':'▧',Customers:'♧','Customer Blacklist':'⚑'})[x]||'•'}</span><span>${esc(x==='Vehicles'?'Vehicle Registration':x)}</span></button>`).join('');
  $('nav').innerHTML=buttons(NAV.filter(pageName=>!managementPages.has(pageName)));
  $('managementNav').innerHTML=buttons(NAV.filter(pageName=>managementPages.has(pageName)));
- document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{if(b.dataset.nav==='Rental Companies'){window.location.assign(new URL('admin-access.html',document.baseURI).href);return}page=b.dataset.nav;filter='';render()}) }
+ document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{page=b.dataset.nav;filter='';render()}) }
 function render(){nav();$('pageTitle').textContent=page; $('content').innerHTML=page==='Dashboard'?dashboard():page==='Booking Calendar'?bookingCalendar():page==='Customers'?customersPage():page==='Customer Blacklist'?customerBlacklistMarkup():page==='Staff'?staffPage():page==='Staff Access'?staffAccessPage():section();if(page==='Booking Calendar')bindBookingCalendar();if(page==='Customers')bindCustomers();if(page==='Customer Blacklist'&&zip)bindCustomerBlacklist();if(page==='Staff')bindStaffPage();if(page==='Staff Access')bindStaffAccess();if(page==='Dashboard'&&zip)edit('Bookings',-1,true);if(page==='Dashboard'){bindBookingAlerts();bindRentalStatusActions();bindRentalExtendActions();bindAdminFleetActions();
  const dashboardRange=$('dashboardBookingRange');
  if(dashboardRange)dashboardRange.onchange=()=>{
@@ -1644,9 +1644,17 @@ function bookingPaymentDetails(saved,values){
  }
  return updated;
 }
-function editBookingSimple(index=-1,inline=false,vehicleId=''){
+function editBookingSimple(index=-1,inline=false,vehicleId='',partnerReview=null){
  if(!zip){alertUser('Open the matching Excel workbook first.',true);return}
  const existing=index>=0?rows('Bookings')[index]:{},r={...existing};if(index<0){r['Booking ID']=uid('BKG');r.Status='Reserved';r['Created AD']=today();r['Start AD']=localDate();r['Vehicle ID']=vehicleId}
+ if(partnerReview){
+  r['Booking ID']='BKG-PARTNER-'+partnerReview.request_id;
+  r['Start AD']=partnerReview.start_ad;
+  r['End AD Exclusive']=partnerReview.end_ad_exclusive;
+  r['Customer Name']=partnerReview.companyName;
+  r.Notes=partnerReview.notes||'';
+  r.Status='Active';
+ }
  const mode=r.Status||'Active';
  // Overlaps are always rechecked in validate() before saving.
 
@@ -1669,10 +1677,17 @@ function editBookingSimple(index=-1,inline=false,vehicleId=''){
  return `<div class="field"><label>${esc(label)}</label>${control}</div>`};
  const advanceBox=`<div class="field" style="border:2px solid #0d9488;background:#edfaf7;border-radius:12px;padding:14px;grid-column:1/-1"><label style="font-size:15px;color:#075e56">Advance payment received (NPR)</label><input name="Advance NPR" type="number" min="0" step="any" inputmode="decimal" value="${esc(r['Advance NPR']??'0')}" placeholder="Enter advance received" style="font-size:18px;font-weight:700"><small>Advance is deducted from rental charges automatically. The refundable deposit is separate.</small></div>`;
  const form=`${bsCalendarMarkup()}<div class="field"><label>Reservation type</label><select id="bookingMode"><option value="Reserved" ${mode==='Reserved'?'selected':''}>Pre-Booking</option><option value="Active" ${mode==='Active'?'selected':''}>Booking (confirmed)</option>${['Reserved','Active'].includes(mode)?'':`<option value="${esc(mode)}" selected>${esc(mode)}</option>`}</select><small>Pre-bookings reserve vehicle dates. Convert later by editing and choosing Booking.</small></div><div class="fieldgrid">${advanceBox}${fields.map(field).join('')}</div><p class="callout" id="bookingBlacklistNotice" role="status" hidden></p><div class="callout" id="bookingTotalPreview">Enter rental details to calculate the balance.</div>`;
- const root=inline?$('homeBookingForm'):$('modalroot');root.innerHTML=`${inline?'':'<div class="modalbg"><div class="modal">'}<div class="modalhead"><h2>${index>=0?'Edit':'New'} Pre-Booking / Booking</h2><button class="btn" id="closeModal">Close</button></div><form id="recordForm">${form}<div class="foot"><button class="btn" type="button" id="cancelModal">Cancel</button>${index>=0?'<button class="btn" type="button" id="deleteBookingInEdit" style="color:#b2454d">Delete booking</button><button class="btn" type="button" id="saveBookingPayments" title="Saves pricing, advance, discount, deposit and evening charge using the original booking dates">Save payment details only</button>':''}<button class="btn primary" type="submit">Save ${index>=0?'changes':'reservation'}</button></div></form>${inline?'':'</div></div>'}`;
+ const reviewNotice=partnerReview?'<p class="callout">Confirm the booking details below. The requested vehicle and dates are fixed. <a href="admin-access.html#partnerRequestsSection">Back to requests</a></p>':'';
+ const root=inline?$('homeBookingForm'):$('modalroot');root.innerHTML=`${inline?'':'<div class="modalbg"><div class="modal">'}<div class="modalhead"><h2>${partnerReview?'Approve partner request':(index>=0?'Edit':'New')+' Pre-Booking / Booking'}</h2><button class="btn" id="closeModal">Close</button></div><form id="recordForm">${reviewNotice}${form}<div class="foot"><button class="btn" type="button" id="cancelModal">Cancel</button>${index>=0?'<button class="btn" type="button" id="deleteBookingInEdit" style="color:#b2454d">Delete booking</button><button class="btn" type="button" id="saveBookingPayments" title="Saves pricing, advance, discount, deposit and evening charge using the original booking dates">Save payment details only</button>':''}<button class="btn primary" type="submit">${partnerReview?'Save and approve':'Save '+(index>=0?'changes':'reservation')}</button></div></form>${inline?'':'</div></div>'}`;
  $('closeModal').onclick=$('cancelModal').onclick=()=>{if(inline)editBookingSimple(-1,true);else $('modalroot').innerHTML=''};
  attachBSCalendar(index<0);
  const f=$('recordForm'),preset=$('ratePreset'),manual=$('dailyRateManual'),effective=$('effectiveRate');
+ if(partnerReview){
+  f.elements.namedItem('Vehicle ID').disabled=true;
+  for(const name of ['Start AD','Booking End AD','Days'])f.elements.namedItem(name).readOnly=true;
+  f.querySelector('.bs-picker').hidden=true;
+  $('bookingMode').closest('.field').hidden=true;
+ }
  const blacklistFields=['Customer Name','Phone','Citizenship / Passport'];
  const blacklistNotice=$('bookingBlacklistNotice');
  function updateBlacklistNotice(){
@@ -1723,7 +1738,16 @@ function editBookingSimple(index=-1,inline=false,vehicleId=''){
    alertUser('Payment details saved. The original vehicle, dates and booking status were kept.');
   }catch(error){alertUser(error.message,true);window.alert(error.message)}
  };
- f.onsubmit=async e=>{e.preventDefault();update();const fd=new FormData(f),out={...r};fields.filter(h=>h!=='Booking End AD').forEach(h=>out[h]=String(fd.get(h)??'').trim());out['Advance NPR']=String(fd.get('Advance NPR')??'0').trim();out['Daily Rate NPR']=pricingPlan.value==='Daily'?effective.value:'';out['Package Amount NPR']=pricingPlan.value==='Daily'?'':out['Package Amount NPR'];out.Status=$('bookingMode').value;out['Booking ID']=r['Booking ID'];out['Created AD']=r['Created AD'];try{validate('Bookings',out,index);if(!checkCustomerFlagBeforeBooking(out))return;if(index<0)rows('Bookings').push(out);else rows('Bookings')[index]=out;markDirty();$('modalroot').innerHTML='';render();alertUser('Reservation saved. Save to OneDrive to persist changes.')}catch(err){alertUser(err.message,true);window.alert(err.message)}};
+ f.onsubmit=async e=>{e.preventDefault();update();const fd=new FormData(f),out={...r};fields.filter(h=>h!=='Booking End AD').forEach(h=>out[h]=String(fd.get(h)??'').trim());out['Advance NPR']=String(fd.get('Advance NPR')??'0').trim();out['Daily Rate NPR']=pricingPlan.value==='Daily'?effective.value:'';out['Package Amount NPR']=pricingPlan.value==='Daily'?'':out['Package Amount NPR'];out.Status=$('bookingMode').value;out['Booking ID']=r['Booking ID'];out['Created AD']=r['Created AD'];try{
+ if(partnerReview){
+  if(!cloudLoaded||!token||!etag||autoSaving||source!=='OneDrive '+cloudFile)throw Error('Wait for the connected OneDrive workbook before approving.');
+  out['Vehicle ID']=partnerReview.vehicle_id;
+  if(out['Start AD']!==partnerReview.start_ad||out['End AD Exclusive']!==partnerReview.end_ad_exclusive||out.Status!=='Active')throw Error('Reopen the partner request to restore its vehicle and dates.');
+ }
+ validate('Bookings',out,index);if(!checkCustomerFlagBeforeBooking(out))return;if(index<0)rows('Bookings').push(out);else rows('Bookings')[index]=out;markDirty();$('modalroot').innerHTML='';render();
+ if(partnerReview){await autoSaveCloud();await window.pvrApproveSavedPartnerRequest(partnerReview);}
+ else alertUser('Reservation saved. Save to OneDrive to persist changes.');
+ }catch(err){alertUser(err.message,true);window.alert(err.message)}};
 }
 function edit(section,index=-1,inline=false){if(section==='Vehicles')return editVehicle(index);if(section==='Bookings')return editBookingSimple(index,inline);if(!zip){alertUser('Open the matching Excel workbook first.',true);return}let heads=SCHEMAS[section],existing=index>=0?rows(section)[index]:{},prefix=section.replace(/[^A-Z]/gi,'').slice(0,3).toUpperCase();let record={...existing};if(index<0)record[heads[0]]=uid(prefix);if(section==='Agreements'&&index<0)record.Status='Active';if(section==='Vehicles'&&index<0)record.Status='Active';if(section==='Bookings'&&index<0){record.Status='Active';record['Created AD']=today()}if(section==='Staff'&&index<0)record.Status='Active';let html=(section==='Bookings'?bsCalendarMarkup():'')+heads.map((h,i)=>{let v=record[h]??'',opts=i===0?null:optionsFor(h);let isDate=/ AD$|Start AD|End AD Exclusive|Paid AD|Join AD|Replacement AD|Bill AD|Created AD|Date AD/.test(h);let type=/NPR|Quantity|Days/.test(h)?'number':isDate?'date':h==='Month YYYY-MM'?'month':'text';let control=h==='Evening / Night Charge NPR'?`<input name="Evening / Night Charge NPR" type="number" inputmode="decimal" min="0" step="any" placeholder="Optional evening charge (Rs.)" value="${esc(v)}"><small>One-time extra charge per booking, not per day. Leave blank for zero.</small>`:h==='Daily Rate NPR'?`<select id="ratePreset" aria-label="Choose daily rate"><option value="">Select a standard rate</option>${opts.map(o=>`<option value="${esc(o.v)}" ${String(v)===o.v?'selected':''}>${esc(o.label)}</option>`).join('')}<option value="manual" ${v&&!opts.some(o=>o.v===String(v))?'selected':''}>✎ Enter custom rate</option></select><input id="dailyRateManual" name="Daily Rate NPR" type="number" inputmode="decimal" min="0.01" step="any" placeholder="Or enter any daily rate (Rs.)" value="${esc(v)}"><small>Choose a standard rate (Rs. 4,000–25,000, step 500) or type your own amount above.</small>`:opts?`<select name="${esc(h)}"><option value="">Choose…</option>${opts.map(o=>`<option value="${esc(o.v)}" ${String(v)===o.v?'selected':''}>${esc(o.label)}</option>`).join('')}</select>`:h==='Notes'||h==='Workshop / Notes'?`<textarea name="${esc(h)}">${esc(v)}</textarea>`:`<input name="${esc(h)}" type="${type}" value="${esc(v)}" ${i===0?'readonly':''} ${type==='number'?'min="0" step="any"':''}>`;return `<div class="field"><label>${esc(h)}</label>${control}</div>`}).join('');(inline?$('homeBookingForm'):$('modalroot')).innerHTML=`${inline?'':'<div class="modalbg"><div class="modal">'}<div class="modalhead"><h2>${index<0?'Add':'Edit'} ${esc(section)}</h2><button class="btn" id="closeModal">Close</button></div><form id="recordForm"><div class="fieldgrid">${html}</div><div class="foot"><button class="btn" type="button" id="cancelModal">Cancel</button><button class="btn primary" type="submit">Save record</button></div></form>${inline?'':'</div></div>'}`;$('closeModal').onclick=$('cancelModal').onclick=()=>{if(inline)edit('Bookings',-1,true);else $('modalroot').innerHTML=''};if(section==='Agreements'){const ownerSelect=$('recordForm').elements.namedItem('Owner ID');const vehicleSelect=$('recordForm').elements.namedItem('Vehicle ID');if(ownerSelect&&!rows('Owners').length){const msg=document.createElement('div');msg.className='callout';msg.style.marginBottom='12px';msg.textContent='No owners are saved in the loaded workbook. Add the owner in the Owners section first, then return to Agreements.';$('recordForm').prepend(msg)}if(vehicleSelect&&ownerSelect&&index<0){vehicleSelect.addEventListener('change',()=>{const vehicle=rows('Vehicles').find(v=>v['Vehicle ID']===vehicleSelect.value);const ownerId=vehicle?.['Owner ID'];if(ownerId&&rows('Owners').some(o=>o['Owner ID']===ownerId))ownerSelect.value=ownerId})}}if(section==='Bookings'){attachBSCalendar();const preset=$('ratePreset'),manual=$('dailyRateManual');if(preset&&manual){preset.addEventListener('change',()=>{if(preset.value&&preset.value!=='manual')manual.value=preset.value;else if(preset.value==='manual'){manual.focus();manual.select()}});manual.addEventListener('input',()=>{preset.value=Array.from(preset.options).some(o=>o.value===manual.value)?manual.value:'manual'})}}$('recordForm').onsubmit=e=>{e.preventDefault();let f=new FormData(e.target),r={};heads.forEach(h=>r[h]=String(f.get(h)||'').trim());try{validate(section,r,index);if(index<0)rows(section).push(r);else rows(section)[index]=r;markDirty();$('modalroot').innerHTML='';render();alertUser('Record updated. Download or save the workbook to persist it.');if(section==='Owner Payments'&&n(r['Amount NPR'])>0&&r['Paid AD'])printOwnerPaymentReceipt(index<0?rows(section).length-1:index)}catch(err){if(section==='Bookings'&&err.message.startsWith('OWNER AGREEMENT WARNING'))window.alert(err.message);else alertUser(err.message,true)}}}
 function previousBookingMonthStart(){const [y,m]=localDate().slice(0,7).split('-').map(Number);return new Date(Date.UTC(y,m-2,1)).toISOString().slice(0,10)}
@@ -2113,6 +2137,64 @@ async function printBookingConfirmation(index){
    pending=false;syncText('saved and verified '+new Date().toLocaleTimeString());await window.pvrStaffBridge?.afterSnapshot();return true;
   }
  };
+ const partnerReviewKey='pvr_partner_review_request';
+ const partnerInbox='admin-access.html#partnerRequestsSection';
+ const reviewUrl=new URL(location.href);
+ const reviewId=reviewUrl.searchParams.get('partnerRequest');
+ if(reviewId&&/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(reviewId)){
+  sessionStorage.setItem(partnerReviewKey,reviewId);
+  reviewUrl.searchParams.delete('partnerRequest');
+  history.replaceState(history.state,'',reviewUrl);
+  if(!cloudLoaded)status('Connect OneDrive to review the partner request.');
+ }
+ window.pvrApproveSavedPartnerRequest=async request=>{
+  if(dirty||autoSaving||!cloudLoaded||!etag)throw Error('Booking approval is pending. Save the workbook to OneDrive, then reopen the request from the inbox.');
+  await window.pvrRequireAdmin();
+  const workbook=cloudFile,version=editVersion;
+  const booking=rows('Bookings').find(row=>row['Booking ID']==='BKG-PARTNER-'+request.request_id);
+  if(booking?.Status!=='Active'||booking['Vehicle ID']!==request.vehicle_id||booking['Start AD']!==request.start_ad||booking['End AD Exclusive']!==request.end_ad_exclusive)throw Error('The saved booking does not match the pending request. Review the booking before approving.');
+  const metadata=await(await graph('/me/drive/root:/'+encodeURIComponent(workbook))).json();
+  if(metadata.eTag!==etag)throw Error('OneDrive changed in another session. Reload the workbook and reopen the request.');
+  if(dirty||autoSaving||version!==editVersion||workbook!==cloudFile)throw Error('Wait for the latest OneDrive changes to save, then reopen the request.');
+  const c=getClient();
+  const approve=()=>c.from('pvr_partner_requests').update({status:'approved'}).eq('request_id',request.request_id).eq('status','pending').select('status').maybeSingle();
+  let result=await approve();
+  if(result.error?.code==='42501'){
+   if(!await window.pvrDualSync.saveSnapshot())throw Error('The booking was saved to OneDrive. Retry the request after the backup is available.');
+   if(dirty||autoSaving||version!==editVersion||workbook!==cloudFile)throw Error('Wait for the latest OneDrive changes to save, then reopen the request.');
+   result=await approve();
+  }
+  if(result.error)throw Error('The booking is saved. Approval is still pending: '+result.error.message);
+  if(!result.data){
+   const latest=await c.from('pvr_partner_requests').select('status').eq('request_id',request.request_id).single();
+   if(latest.data?.status!=='approved')throw Error('The request is no longer pending. Review its status in the inbox.');
+  }
+  location.assign(partnerInbox);
+ };
+ async function openPartnerReview(){
+  const id=sessionStorage.getItem(partnerReviewKey);
+  if(!id||!cloudLoaded)return;
+  sessionStorage.removeItem(partnerReviewKey);
+  try{
+   await window.pvrRequireAdmin();
+   const c=getClient();
+   const {data:request,error}=await c.from('pvr_partner_requests').select('request_id,company_id,vehicle_id,start_ad,end_ad_exclusive,status,notes').eq('request_id',id).single();
+   if(error)throw Error('Could not open the partner request: '+error.message);
+   if(request.status!=='pending'){location.assign(partnerInbox);return;}
+   const existing=rows('Bookings').find(row=>row['Booking ID']==='BKG-PARTNER-'+id);
+   if(existing){
+    if(confirm('This request already has a booking in OneDrive. Finish approving the request?'))await window.pvrApproveSavedPartnerRequest(request);
+    return;
+   }
+   const {data:company,error:companyError}=await c.from('pvr_rental_companies').select('company_name').eq('company_id',request.company_id).single();
+   if(companyError)throw Error('Could not load the rental company: '+companyError.message);
+   page='Bookings';filter='';render();
+   editBookingSimple(-1,false,request.vehicle_id,{...request,companyName:company.company_name});
+  }catch(error){status(error.message,true);alertUser(error.message,true)}
+ }
+ window.addEventListener('pvr-cloud-loaded',openPartnerReview);
+ if(cloudLoaded)openPartnerReview();
+
  // Keep the partner-facing workbook snapshot fresh even when no new bookings are made.
  // Never publish unsaved changes or an unconnected workbook.
  let pvrPeriodicSyncBusy=false;
