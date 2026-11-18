@@ -317,6 +317,8 @@ body{background:radial-gradient(ellipse 95% 60% at 95% 0%,#c9dce9 0%,transparent
 .pvr-fleet-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
 .pvr-fleet-actions .btn{min-height:44px;margin:0;padding:6px 10px;font-size:12px;white-space:normal}
 .pvr-fleet-actions .pvr-fleet-cancel{color:#a02f47}
+.pvr-fleet-actions .pvr-fleet-complete{color:#14694f;border-color:#a4c9ba;background:#edf8f2}
+.pvr-fleet-actions .pvr-fleet-complete:hover{background:#dcefe5}
 .pvr-fleet-card .pvr-fleet-upcoming{margin-top:10px}
 .pvr-fleet-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr));gap:10px}.pvr-fleet-card{padding:13px 15px;border:1px solid var(--line,#dce5eb);border-radius:11px;background:var(--paper,#fff)}.pvr-fleet-card h3{font:18px/1.25 Georgia,serif;margin:9px 0 5px;letter-spacing:-.2px}.pvr-fleet-card h3:first-child{margin-top:0}.pvr-fleet-card p{font-size:11px;margin:0;color:var(--muted,#64748b);letter-spacing:.3px}.pvr-fleet-tag{display:inline-block;font-size:9px;padding:3px 7px;border-radius:20px;background:color-mix(in srgb,#79b6ad 17%,transparent);color:var(--ink,#23434a)}.pvr-fleet-progress{font-size:10px;color:var(--muted,#64748b);margin-top:10px;font-variant-numeric:tabular-nums}.pvr-fleet-progress progress{display:block;appearance:none;width:100%;height:4px;border:0;border-radius:9px;overflow:hidden;background:var(--line,#dce5eb);accent-color:#69a99f;margin-top:5px}.pvr-fleet-progress progress::-webkit-progress-bar{background:var(--line,#dce5eb);border-radius:9px}.pvr-fleet-progress progress::-webkit-progress-value{background:#69a99f;border-radius:9px}.pvr-fleet-progress progress::-moz-progress-bar{background:#69a99f;border-radius:9px}</style><style>.pvr-fleet-progress{font-size:12px;line-height:1.5}.pvr-days-left{display:block;font-size:13px;font-weight:600;color:inherit;margin-top:2px}</style></head><body class="pvr-admin-locked"><div id="pvrAdminGate">
   <section class="pvr-gate-card" aria-labelledby="pvrAdminGateTitle">
@@ -582,6 +584,9 @@ function pvrAdminFleetAvailable(v){
  if(open.some(b=>!pvrFleetValidDate(b['Start AD'])||!pvrFleetValidDate(b['End AD Exclusive'])||b['End AD Exclusive']<=b['Start AD']||b['Start AD']<=t&&b['End AD Exclusive']>t||b['Handover AD']&&!b['Returned AD']&&b['End AD Exclusive']<=t))return false;
  return !rows('Maintenance').some(m=>m['Vehicle ID']===v['Vehicle ID']&&m.Status!=='Completed'&&(!pvrFleetValidDate(m['Start AD'])||m['Start AD']<=t)&&(!pvrFleetValidDate(m['End AD Exclusive'])||m['End AD Exclusive']>t));
 }
+function canCompleteFleetBooking(booking){
+ return pvrFleetBookingOpen(booking)&&pvrFleetValidDate(booking['Start AD'])&&booking['Start AD']<=localDate();
+}
 function pvrAdminFleetActions(vehicle,progress,available){
  if(!zip)return '';
  const vehicleId=vehicle['Vehicle ID'];
@@ -596,7 +601,9 @@ function pvrAdminFleetActions(vehicle,progress,available){
  return `${upcoming?'<p class="pvr-fleet-upcoming">Next booking · '+esc(upcoming['Start AD'])+'</p>':''}
   <div class="pvr-fleet-actions">
    ${available?'<button type="button" class="btn primary" data-fleet-new="'+esc(vehicleId)+'">New booking</button>':''}
-   ${id?'<button type="button" class="btn" data-fleet-extend="'+esc(id)+'">Extend</button><button type="button" class="btn pvr-fleet-cancel" data-fleet-cancel="'+esc(id)+'">Cancel booking</button>':''}
+   ${id?'<button type="button" class="btn" data-fleet-extend="'+esc(id)+'">Extend</button>':''}
+   ${id&&progress&&canCompleteFleetBooking(booking)?'<button type="button" class="btn pvr-fleet-complete" data-fleet-complete="'+esc(id)+'">Complete</button>':''}
+   ${id?'<button type="button" class="btn pvr-fleet-cancel" data-fleet-cancel="'+esc(id)+'">Cancel booking</button>':''}
   </div>`;
 }
 function bindAdminFleetActions(){
@@ -618,7 +625,7 @@ function bindAdminFleetActions(){
    form.querySelector('[name="Customer Name"]')?.focus({preventScroll:true});
    return;
   }
-  const id=button.dataset.fleetExtend||button.dataset.fleetCancel;
+  const id=button.dataset.fleetExtend||button.dataset.fleetComplete||button.dataset.fleetCancel;
   if(!id)return;
   const index=rows('Bookings').findIndex(b=>b['Booking ID']===id);
   const booking=rows('Bookings')[index];
@@ -632,11 +639,17 @@ function bindAdminFleetActions(){
   const customer=booking['Customer Name']||'Customer not recorded';
   const name=vehicle?.['Vehicle Name']||booking['Vehicle ID'];
   const dates=booking['Start AD']+' to '+addDaysAD(booking['End AD Exclusive'],-1);
-  if(!confirm('Cancel this booking?\n\n'+[name,customer,dates].join(' · ')+'\n\nThe booking and payment details will remain in history.'))return;
-  booking.Status='Cancelled';
+  const complete=button.dataset.fleetComplete!==undefined;
+  if(complete&&!canCompleteFleetBooking(booking)){
+   alertUser('This booking has not started yet.',true);
+   return;
+  }
+  const question=complete?'Has the vehicle been returned? Mark this booking complete?':'Cancel this booking?';
+  if(!confirm(question+'\n\n'+[name,customer,dates].join(' · ')+'\n\nThe booking and payment details will remain in history.'))return;
+  booking.Status=complete?'Completed':'Cancelled';
   markDirty();
   render();
-  alertUser('Booking cancelled. '+(cloudLoaded?'OneDrive auto-save queued.':'Save the workbook to keep the change.'));
+  alertUser((complete?'Booking completed. ':'Booking cancelled. ')+(cloudLoaded?'OneDrive auto-save queued.':'Save the workbook to keep the change.'));
  };
 }
 function pvrAdminFleetCards(){
