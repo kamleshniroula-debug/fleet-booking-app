@@ -404,12 +404,17 @@ if(window.parent!==window&&new URLSearchParams(location.search).get('embeddedRev
     <p class="pvr-gate-location">Lagankhel, Lalitpur</p>
     <span class="pvr-gate-badge">Administrator access</span>
     <h1 id="pvrAdminGateTitle">Administrator workspace</h1>
-    <p id="pvrAdminGateMessage" role="status">Sign in with your administrator Google account to open the dashboard.</p>
-    <button type="button" id="pvrAdminSignIn">Sign in with Google</button>
+    <p id="pvrAdminGateMessage" role="status">Use your administrator passkey to open the dashboard.</p>
+    <button type="button" id="pvrAdminPasskey">Sign in with a passkey</button>
+    <details>
+      <summary>First-time setup or account recovery</summary>
+      <p>Use your administrator account, then select Add passkey in Workspace Tools.</p>
+      <button type="button" id="pvrAdminSignIn">Continue with Google</button>
+    </details>
     <div class="pvr-gate-divider">Here as a staff member?</div>
     <a href="staff.html">Open staff workspace <span aria-hidden="true">→</span></a>
   </section>
-</div><div class="shell"><aside class="sidebar sidebar-left" id="pvrSidebarLeft" aria-label="Daily work" hidden><nav class="nav" id="nav" aria-label="Daily work"></nav></aside><main class="main"><header class="top"><div><div class="eyebrow">Operations workspace</div><h1 id="pageTitle" tabindex="-1">Dashboard</h1><div class="sub">Lagankhel, Lalitpur · BS 2081–2093 planning</div></div></header><div class="banner warn" id="notice">Open the matching expandable Excel workbook to begin. Local editing works without sign-in; download your edited copy to keep changes.</div><div id="content"></div><div class="footer">Prince Vehicle Rental · Phone 9851226425 · Dynamic rows and appended fields remain in your workbook. Verify imported historical financial figures.</div></main><aside class="sidebar sidebar-right" id="pvrSidebarRight" aria-label="Management" hidden><nav class="nav" id="managementNav" aria-label="Management"></nav><details class="workspace-tools" id="workspaceTools"><summary><span>⚙ Workspace settings</span><span class="settings-chevron">⌄</span></summary><p class="tools-explainer">Connections, backup and administration</p><div class="actions"><button class="btn" id="branding">Invoice branding</button><button class="btn" id="openLocal">Open workbook</button><button class="btn" id="download">Download workbook</button><button class="btn" id="googleLogin" type="button">Sign in with Google</button><button class="btn dark" id="login">Connect OneDrive</button><button class="btn primary" id="save">Save to both</button><button class="btn" id="retrieveBackup" type="button">Download Supabase backup</button><span id="pvrRoleState" class="sub" aria-live="polite">Role: checking…</span><span id="dualSyncState" class="sub" aria-live="polite">Supabase: not checked</span></div></details></aside></div><input type="file" id="file" class="fileinput" accept=".xlsx"><div id="embeddedPartnerReviewStatus" hidden><p id="embeddedPartnerReviewMessage" role="status">Loading the booking request…</p><p id="embeddedPartnerReviewConnect" hidden><a href="index.html" target="_blank" rel="noopener">Open the dashboard to connect OneDrive</a> · <button type="button" id="embeddedPartnerReviewRetry">Retry</button></p></div><div id="modalroot"></div><div id="toastroot"></div><script src="jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script><script>
+</div><div class="shell"><aside class="sidebar sidebar-left" id="pvrSidebarLeft" aria-label="Daily work" hidden><nav class="nav" id="nav" aria-label="Daily work"></nav></aside><main class="main"><header class="top"><div><div class="eyebrow">Operations workspace</div><h1 id="pageTitle" tabindex="-1">Dashboard</h1><div class="sub">Lagankhel, Lalitpur · BS 2081–2093 planning</div></div></header><div class="banner warn" id="notice">Open the matching expandable Excel workbook to begin. Local editing works without sign-in; download your edited copy to keep changes.</div><div id="content"></div><div class="footer">Prince Vehicle Rental · Phone 9851226425 · Dynamic rows and appended fields remain in your workbook. Verify imported historical financial figures.</div></main><aside class="sidebar sidebar-right" id="pvrSidebarRight" aria-label="Management" hidden><nav class="nav" id="managementNav" aria-label="Management"></nav><details class="workspace-tools" id="workspaceTools"><summary><span>⚙ Workspace settings</span><span class="settings-chevron">⌄</span></summary><p class="tools-explainer">Connections, backup and administration</p><div class="actions"><button class="btn" id="branding">Invoice branding</button><button class="btn" id="openLocal">Open workbook</button><button class="btn" id="download">Download workbook</button><button class="btn" id="pvrRegisterPasskey" type="button">Add passkey</button><button class="btn" id="googleLogin" type="button">Sign out</button><button class="btn dark" id="login">Connect OneDrive</button><button class="btn primary" id="save">Save to both</button><button class="btn" id="retrieveBackup" type="button">Download Supabase backup</button><span id="pvrRoleState" class="sub" aria-live="polite">Role: checking…</span><span id="dualSyncState" class="sub" aria-live="polite">Supabase: not checked</span></div></details></aside></div><input type="file" id="file" class="fileinput" accept=".xlsx"><div id="embeddedPartnerReviewStatus" hidden><p id="embeddedPartnerReviewMessage" role="status">Loading the booking request…</p><p id="embeddedPartnerReviewConnect" hidden><a href="index.html" target="_blank" rel="noopener">Open the dashboard to connect OneDrive</a> · <button type="button" id="embeddedPartnerReviewRetry">Retry</button></p></div><div id="modalroot"></div><div id="toastroot"></div><script src="jszip.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script><script>
 'use strict';
 window.pvrRequireAdmin=async()=>{
  if(!window.pvrStaffBridge)await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Access service did not load. Refresh and try again.')),15000);window.addEventListener('pvr-staff-ready',()=>{clearTimeout(timeout);resolve()},{once:true})});
@@ -2270,7 +2275,7 @@ async function printBookingConfirmation(index){
  alertUser('Navy and orange A5 landscape invoice generated.');
  }catch(e){alertUser('Invoice error: '+e.message,true)}
 }
-</script><script src="staff-admin-bridge.js"></script><script>if(embeddedPartnerReview&&window.pvrStaffBridge)window.pvrStaffBridge.tick=async()=>{};</script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</script><script src="staff-admin-bridge.js"></script><script>if(embeddedPartnerReview&&window.pvrStaffBridge)window.pvrStaffBridge.tick=async()=>{};</script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0/dist/umd/supabase.min.js"></script>
 <script>
 /* Google login is separate from the legacy OneDrive workbook integration.
    The Supabase publishable/anon key is public; NEVER put service_role or OAuth client secret here. */
@@ -2293,7 +2298,7 @@ async function printBookingConfirmation(index){
    if(!(key.startsWith('sb_publishable_')||key.startsWith('eyJ')))throw Error('This does not look like a Supabase publishable/anon key. Never enter a secret key.');
    localStorage.setItem(KEY_STORAGE,key);
   }
-  client=window.supabase.createClient(PROJECT_URL,key,{auth:{flowType:'implicit',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}});
+  client=window.supabase.createClient(PROJECT_URL,key,{auth:{flowType:'implicit',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true,experimental:{passkey:true}}});
   window.pvrStaffBridge?.connect(client);
   client.auth.onAuthStateChange((_event,session)=>update(session));
   return client;
@@ -2302,12 +2307,49 @@ async function printBookingConfirmation(index){
   if(session&&sessionStorage.getItem('pvr_login_destination')==='staff'){sessionStorage.removeItem('pvr_login_destination');location.replace(new URL('staff.html',SITE_URL).href);return}
   if(!button)return;
   const email=session?.user?.email;
-  button.textContent=email?'Google: '+email+' · Sign out':'Sign in with Google';
-  button.title=email?'Tap to sign out of Google login':'Sign in with Google through Supabase';
+  button.textContent=email?email+' · Sign out':'Sign out';
+  button.title='Sign out of the administrator workspace';
   setTimeout(()=>window.pvrStaffBridge?.sessionChanged(session),0);
   if(session)showRole(session).catch(()=>{});else{const r=document.getElementById('pvrRoleState');if(r)r.textContent='Role: sign in required';}
  }
  const adminSignIn=document.getElementById('pvrAdminSignIn');
+ const passkeySignIn=document.getElementById('pvrAdminPasskey');
+ const registerPasskey=document.getElementById('pvrRegisterPasskey');
+ const adminGateMessage=document.getElementById('pvrAdminGateMessage');
+ function checkPasskeySupport(){
+  if(location.origin!==new URL(SITE_URL).origin)throw Error('Open the published dashboard to use your passkey.');
+  if(!window.PublicKeyCredential)throw Error('This browser does not support passkeys.');
+ }
+ function passkeyError(error){
+  if(error.code==='passkey_disabled')return 'Passkeys are not enabled yet. Use the setup or recovery option below.';
+  if(error.code==='webauthn_credential_not_found')return 'No registered passkey was found for this account. Open first-time setup to add one.';
+  return error.message||'Try again or use account recovery.';
+ }
+ passkeySignIn.addEventListener('click',async()=>{
+  passkeySignIn.disabled=true;
+  try{
+   checkPasskeySupport();
+   const c=getClient();
+   sessionStorage.removeItem('pvr_login_destination');
+   sessionStorage.removeItem('pvr_oauth_destination');
+   adminGateMessage.textContent='Waiting for your device to verify the passkey…';
+   const {error}=await c.auth.signInWithPasskey();
+   if(error)throw error;
+   await window.pvrRequireAdmin();
+  }catch(error){adminGateMessage.textContent=passkeyError(error)}
+  finally{passkeySignIn.disabled=false}
+ });
+ registerPasskey.addEventListener('click',async()=>{
+  registerPasskey.disabled=true;
+  try{
+   checkPasskeySupport();
+   await window.pvrRequireAdmin();
+   const {error}=await getClient().auth.registerPasskey();
+   if(error)throw error;
+   notify('Passkey added. You can now use it to sign in.');
+  }catch(error){notify('Passkey setup: '+passkeyError(error))}
+  finally{registerPasskey.disabled=false}
+ });
  async function signInWithGoogle(c,queryParams={}){
   if(location.origin!==new URL(SITE_URL).origin)throw Error('Open your published GitHub Pages website to sign in.');
   const result=await c.auth.signInWithOAuth({provider:'google',options:{redirectTo:SITE_URL,queryParams}});
@@ -2332,9 +2374,8 @@ async function printBookingConfirmation(index){
   try{
    const c=getClient();if(!c)return;
    const {data:{session},error}=await c.auth.getSession();if(error)throw error;
-   if(session){if(confirm('Sign out of Google login?')){const result=await c.auth.signOut();if(result.error)throw result.error;update(null)}return}
-   await signInWithGoogle(c);
-  }catch(e){notify('Google sign-in: '+e.message)}
+   if(session&&confirm('Sign out of the administrator workspace?')){const result=await c.auth.signOut();if(result.error)throw result.error;update(null)}
+  }catch(e){notify('Sign-out: '+e.message)}
  });
 
  // Administrator access is checked by a server-side membership RPC.
@@ -2346,7 +2387,7 @@ async function printBookingConfirmation(index){
  document.getElementById('retrieveBackup').addEventListener('click',async()=>{
   try{
    const c=getClient();const {data:{session},error:authError}=await c.auth.getSession();
-   if(authError||!session)throw Error('Sign in with Google first.');
+   if(authError||!session)throw Error('Sign in as administrator first.');
    const {data,error}=await c.from('pvr_workbook_snapshots').select('payload').eq('user_id',session.user.id).maybeSingle();
    if(error)throw error;
    const snapshot=data?.payload;
