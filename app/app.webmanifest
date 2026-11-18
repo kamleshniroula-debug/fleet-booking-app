@@ -1,8 +1,8 @@
 {
-  "id": "./",
-  "name": "Prince Vehicle Rental",
-  "short_name": "Prince Rental",
-  "start_url": "./",
+  "id": "../rental-partner.html",
+  "name": "Prince Vehicle Rental Partner",
+  "short_name": "Prince Partner",
+  "start_url": "../rental-partner.html",
   "scope": "../",
   "display": "standalone",
   "background_color": "#edf4f3",
@@ -21,14 +21,5 @@
       "purpose": "any"
     }
   ],
-  "shortcuts": [
-    {
-      "name": "Staff Dashboard",
-      "url": "../staff.html"
-    },
-    {
-      "name": "Partner Rental",
-      "url": "../rental-partner.html"
-    }
-  ]
+  "description": "Prince Vehicle Rental partner portal"
 }
