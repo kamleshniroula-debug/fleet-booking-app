@@ -141,6 +141,7 @@ input,select,textarea{font-weight:550;letter-spacing:0}
 .pvr-side-handle[data-side="right"][aria-expanded="true"]{right:var(--pvr-drawer-width)}
 @media(pointer:coarse){.pvr-side-handle{top:66%}}
 .pvr-sidebar-scroll{min-height:0;overflow:auto;overscroll-behavior:contain}
+.pvr-arrow-car{position:fixed;z-index:41;width:32px;height:32px;display:grid;place-items:center;pointer-events:none;font-size:26px;line-height:1;transform:translate(-50%,-50%);filter:drop-shadow(0 2px 3px #061a3273)}
 @media(prefers-reduced-motion:reduce){.shell{--pvr-drawer-duration:0ms}}
 .pvr-side-handle:focus-visible{outline:2px solid #45d9c8;outline-offset:-3px}
 .shell>.sidebar .nav{display:grid;overflow:visible;gap:4px}
@@ -398,29 +399,7 @@ if(window.parent!==window&&new URLSearchParams(location.search).get('embeddedRev
 .booking-days-remaining.near-end { color: #a34e08; }
 .booking-days-remaining.ended { color: #b91c1c; }
 </style>
-<style id="pvr-mobile-launch-animation">
-.pvr-launch-car-track{display:none}
-@media (max-width:900px) and (prefers-reduced-motion:no-preference){
- .pvr-launch-car-track.pvr-launch-running{
-  position:fixed;
-  inset:calc(18px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) calc(18px + env(safe-area-inset-left,0px));
-  display:block;z-index:100001;pointer-events:none
- }
- .pvr-embedded-review .pvr-launch-car-track{display:none}
- .pvr-launch-car{
-  position:absolute;display:grid;place-items:center;width:34px;height:34px;font-size:28px;line-height:1;
-  filter:drop-shadow(0 2px 3px #061a3273);transform:translate(-50%,-50%);
-  animation:pvr-launch-car-lap 3.6s linear both
- }
- @keyframes pvr-launch-car-lap{
-  0%{top:0;left:0;transform:translate(-50%,-50%) scaleX(-1)}
-  18%{top:0;left:100%;transform:translate(-50%,-50%) scaleX(-1)}
-  50%{top:100%;left:100%;transform:translate(-50%,-50%)}
-  68%{top:100%;left:0;transform:translate(-50%,-50%)}
-  100%{top:0;left:0;transform:translate(-50%,-50%) scaleX(-1)}
- }
-}
-</style></head><body class="pvr-admin-locked"><div class="pvr-launch-car-track" aria-hidden="true"><span class="pvr-launch-car">🚗</span></div><div id="pvrAdminGate">
+</head><body class="pvr-admin-locked"><div id="pvrAdminGate">
   <section class="pvr-gate-card" aria-labelledby="pvrAdminGateTitle">
     <div class="pvr-gate-mark" aria-hidden="true"><span>♔</span>P</div>
     <p class="pvr-gate-brand">Prince Vehicle Rental</p>
@@ -2606,6 +2585,26 @@ async function printBookingConfirmation(index){
   {key:'right',name:'Management',menu:document.getElementById('pvrSidebarRight')}
  ];
  const shell=document.querySelector('.shell');
+ function driveAcross(handle,key){
+  if(typeof handle.animate!=='function'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const bounds=handle.getBoundingClientRect();
+  const x=bounds.left+bounds.width/2;
+  const y=bounds.top+bounds.height/2;
+  const destination=key==='left'?document.documentElement.clientWidth+16:-16;
+  const car=document.createElement('span');
+  car.className='pvr-arrow-car';
+  car.setAttribute('aria-hidden','true');
+  car.textContent='🚗';
+  car.style.left=x+'px';
+  car.style.top=y+'px';
+  const facing=key==='left'?-1:1;
+  document.body.append(car);
+  const motion=car.animate([
+   {transform:'translate(-50%,-50%) scaleX('+facing+')'},
+   {transform:'translateX('+(destination-x)+'px) translate(-50%,-50%) scaleX('+facing+')'}
+  ],{duration:650,easing:'linear'});
+  motion.onfinish=motion.oncancel=()=>car.remove();
+ }
  const drawers=sides.map(({key,name,menu})=>{
   const scrollArea=document.createElement('div');
   scrollArea.className='pvr-sidebar-scroll';
@@ -2623,7 +2622,10 @@ async function printBookingConfirmation(index){
    handle.setAttribute('aria-label',(expanded?'Close ':'Open ')+name);
    handle.textContent=(key==='left')===expanded?'❮':'❯';
   }
-  handle.onclick=()=>setExpanded(menu.inert);
+  handle.onclick=()=>{
+   if(menu.inert)driveAcross(handle,key);
+   setExpanded(menu.inert);
+  };
   let start=null;
   handle.addEventListener('pointerdown',event=>{
    if(event.pointerType==='mouse'||!event.isPrimary)return;
@@ -2681,30 +2683,6 @@ async function printBookingConfirmation(index){
   tools.open=true;
   shell.querySelector('.pvr-side-handle[data-side="right"]').focus();
  }
-})();
-</script><script id="pvr-mobile-launch-start">
-(()=>{
- const track=document.querySelector('.pvr-launch-car-track');
- const car=track.firstElementChild;
- const mobileMotion=matchMedia('(max-width:900px) and (prefers-reduced-motion:no-preference)');
- let started=false;
- function play(){
-  if(started||document.visibilityState!=='visible'||!mobileMotion.matches)return;
-  if(document.body.classList.contains('pvr-embedded-review'))return;
-  started=true;
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-   if(document.visibilityState==='visible')track.classList.add('pvr-launch-running');
-   else started=false;
-  }));
- }
- window.addEventListener('pageshow',event=>{
-  if(event.persisted){track.classList.remove('pvr-launch-running');started=false;}
-  play();
- });
- document.addEventListener('visibilitychange',()=>{
-  if(document.readyState==='complete')play();
- });
- car.addEventListener('animationend',()=>track.classList.remove('pvr-launch-running'));
 })();
 </script></body></html>
 
