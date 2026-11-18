@@ -374,6 +374,20 @@ if(window.parent!==window&&new URLSearchParams(location.search).get('embeddedRev
 #operationsOverview .operations-period-buttons .btn { min-height: 44px; }
 #operationsOverview .operations-period-buttons [aria-pressed="true"] { background: #14675e; border-color: #14675e; color: white; }
 </style>
+<style id="booking-days-remaining-style">
+#rentalProgress .booking-days-remaining,
+.pvr-fleet-progress .booking-days-remaining {
+  display: block;
+  margin-top: 4px;
+  font-size: clamp(17px, 1.7vw, 21px);
+  font-weight: 800;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+.booking-days-remaining.on-track { color: #14743e; }
+.booking-days-remaining.near-end { color: #a34e08; }
+.booking-days-remaining.ended { color: #b91c1c; }
+</style>
 </head><body class="pvr-admin-locked"><div id="pvrAdminGate">
   <section class="pvr-gate-card" aria-labelledby="pvrAdminGateTitle">
     <div class="pvr-gate-mark" aria-hidden="true"><span>♔</span>P</div>
@@ -500,6 +514,14 @@ function rentalProgressLayout(count){
  const compactness=Math.min(Math.max(count-1,0),6);
  return '--rental-gap:'+(13-compactness)+'px;--rental-padding:'+(13-compactness)+'px;--rental-track:'+(13-compactness)+'px;--rental-card-min:'+(336-compactness*16)+'px';
 }
+function bookingProgressTone(elapsed,total){
+ if(elapsed>=total)return 'ended';
+ return elapsed*5>=total*4?'near-end':'on-track';
+}
+function bookingDaysRemaining(elapsed,total){
+ const remaining=total-elapsed;
+ return `<strong class="booking-days-remaining ${bookingProgressTone(elapsed,total)}">${remaining} ${remaining===1?'day':'days'} remaining</strong>`;
+}
 function rentalProgressPanel(){
  const todayDate=localDate();
  const asDay=v=>Date.parse(String(v)+'T00:00:00Z')/86400000;
@@ -512,19 +534,19 @@ function rentalProgressPanel(){
  const visibleRentals=active.slice(0,10);
  const cards=visibleRentals.map(b=>{
   const start=asDay(b['Start AD']),end=asDay(b['End AD Exclusive']);
-  const total=end-start,elapsed=Math.max(0,Math.min(total,now-start+1)),remaining=total-elapsed;
+  const total=end-start,elapsed=Math.max(0,Math.min(total,now-start+1));
   const pct=Math.min(100,Math.max(0,Math.round(elapsed/total*100)));
   const overdue=now>=end;
-  const color=overdue?'#b91c1c':pct>=85?'#dc2626':pct>=60?'#f59e0b':'#16a34a';
+  const color={ended:'#b91c1c','near-end':'#a34e08','on-track':'#14743e'}[bookingProgressTone(elapsed,total)];
   const vehicle=rows('Vehicles').find(v=>v['Vehicle ID']===b['Vehicle ID']);
   const name=vehicle?.['Vehicle Name']||b['Vehicle ID']||'Unknown vehicle';
   const state=overdue?((now-end)+' day(s) overdue'):'Booking in progress';
    const bookingIndex=rows('Bookings').indexOf(b);
    const currentStatus=String(b.Status||'Active');
    const statusControl=`<div class="rental-status-controls"><label for="rental-status-${bookingIndex}">Booking status</label><select id="rental-status-${bookingIndex}" data-rental-status="${bookingIndex}" aria-label="Change booking status for ${esc(name)}">${['Active','Extended','Completed','Cancelled'].map(st=>`<option value="${st}" ${currentStatus===st?'selected':''}>${st}</option>`).join('')}</select><button type="button" class="btn" data-rental-extend="${bookingIndex}">+ Extend days / rate</button></div>`;
-  return `<div class="rental-progress-item ${overdue?'overdue':''}"><div class="rental-progress-top"><div><strong>${esc(name)}</strong><div class="mini">${esc(b['Customer Name']||'Customer not recorded')}</div></div><strong style="color:${color}">${esc(state)}</strong></div><div class="rental-progress-track" role="progressbar" aria-label="Rental elapsed" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="rental-progress-fill" style="width:${pct}%;background:${color}"></div></div><div class="rental-progress-meta"><span>${esc(b['Start AD'])} → ${esc(b['End AD Exclusive'])} (return boundary)</span><span>${Math.min(elapsed,total)} of ${total} days passed · ${remaining} days remaining</span></div>${statusControl}</div>`;
+  return `<div class="rental-progress-item ${overdue?'overdue':''}"><div class="rental-progress-top"><div><strong>${esc(name)}</strong><div class="mini">${esc(b['Customer Name']||'Customer not recorded')}</div></div><strong style="color:${color}">${esc(state)}</strong></div><div class="rental-progress-track" role="progressbar" aria-label="Rental elapsed" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="rental-progress-fill" style="width:${pct}%;background:${color}"></div></div><div class="rental-progress-meta"><span>${esc(b['Start AD'])} → ${esc(b['End AD Exclusive'])} (return boundary)</span><span>${elapsed} of ${total} days passed</span>${bookingDaysRemaining(elapsed,total)}</div>${statusControl}</div>`;
  }).join('');
- return `<div class="panel" id="rentalProgress"><div class="panelhead"><div><h2>🚗 Live booking progress</h2><div class="hint">Active rental periods · Green → orange → red as return approaches · Based on device date</div></div><span class="tag">${active.length} current</span></div><div class="rental-progress-list${visibleRentals.length>1?' is-compact':''}" style="${rentalProgressLayout(visibleRentals.length)}">${cards||'<div class="hint">No current vehicle rentals with verified booking dates.</div>'}</div>${active.length>visibleRentals.length?`<p class="hint">Showing ${visibleRentals.length} of ${active.length} current rentals. Open Bookings to see more.</p>`:''}<p class="hint" style="margin-top:12px">End AD Exclusive is the first day after the rental. The bar updates when the dashboard opens or refreshes; save booking changes to OneDrive.</p></div>`;
+ return `<div class="panel" id="rentalProgress"><div class="panelhead"><div><h2>🚗 Live booking progress</h2><div class="hint">Green below 80% · Orange from 80% · Red at 0 days remaining · Nepal time</div></div><span class="tag">${active.length} current</span></div><div class="rental-progress-list${visibleRentals.length>1?' is-compact':''}" style="${rentalProgressLayout(visibleRentals.length)}">${cards||'<div class="hint">No current vehicle rentals with verified booking dates.</div>'}</div>${active.length>visibleRentals.length?`<p class="hint">Showing ${visibleRentals.length} of ${active.length} current rentals. Open Bookings to see more.</p>`:''}<p class="hint" style="margin-top:12px">End AD Exclusive is the first day after the rental. The bar updates when the dashboard opens or refreshes; save booking changes to OneDrive.</p></div>`;
 }
 // Refresh only the progress panel while the dashboard stays open; do not disturb booking forms.
 setInterval(()=>{
@@ -651,7 +673,7 @@ function pvrAdminVehicleCardStyle(v){
  return c?'background:color-mix(in srgb,'+c+' 12%,var(--paper,#fff));border-color:color-mix(in srgb,'+c+' 28%,var(--line,#dce5eb));border-top:3px solid color-mix(in srgb,'+c+' 45%,var(--line,#dce5eb))':'';
 }
 
-function pvrAdminProgressMarkup(p){return p?`<div class="pvr-fleet-progress"><div>${p.elapsed} of ${p.total} days passed<span class="pvr-days-left">${p.remaining} days remaining</span></div><progress value="${p.elapsed}" max="${p.total}" aria-label="Elapsed booking days">${p.elapsed} of ${p.total}</progress>${p.overdue?'<small>Awaiting receipt</small>':''}</div>`:''}
+function pvrAdminProgressMarkup(p){return p?`<div class="pvr-fleet-progress"><div>${p.elapsed} of ${p.total} days passed${bookingDaysRemaining(p.elapsed,p.total)}</div><progress value="${p.elapsed}" max="${p.total}" aria-label="Elapsed booking days">${p.elapsed} of ${p.total}</progress>${p.overdue?'<small>Awaiting receipt</small>':''}</div>`:''}
 function pvrAdminFleetAvailable(v){
  const t=localDate(),open=rows('Bookings').filter(b=>b['Vehicle ID']===v['Vehicle ID']&&pvrFleetBookingOpen(b));
  if(open.some(b=>!pvrFleetValidDate(b['Start AD'])||!pvrFleetValidDate(b['End AD Exclusive'])||b['End AD Exclusive']<=b['Start AD']||b['Start AD']<=t&&b['End AD Exclusive']>t||b['Handover AD']&&!b['Returned AD']&&b['End AD Exclusive']<=t))return false;
