@@ -516,6 +516,23 @@ main.main{margin-top:-27px!important}
 .pvr-fleet-overview-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:8px;list-style:none;margin:0;padding:0}
 .pvr-fleet-overview-list li{background:#fff;border:1px solid #dde8e9;border-radius:9px;padding:8px 10px;overflow-wrap:anywhere}
 .pvr-fleet-overview-list strong,.pvr-fleet-overview-list small{display:block}
+.pvr-fleet-overview-list .pvr-overview-request{display:block;width:100%;text-align:left;background:transparent;border:0;color:#183842;padding:6px 0;cursor:pointer}
+.pvr-fleet-overview-list .pvr-overview-request small{color:#176e63;font-weight:700}
+.pvr-fleet-overview-list .pvr-overview-request:focus-visible{outline:2px solid #168078;outline-offset:2px}
+.pvr-overview-progress{margin-top:8px;padding-top:7px;border-top:1px solid #e3e9e9}
+.pvr-overview-progress-label{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:3px 9px;color:#47636d;font-size:.78rem}
+.pvr-overview-progress-label strong{color:#19594e}
+.pvr-overview-progress progress{width:100%;height:7px;display:block;margin-top:6px;border:0;border-radius:8px;overflow:hidden;accent-color:#267e70;background:#dce8e8}
+.pvr-overview-progress progress::-webkit-progress-bar{background:#dce8e8;border-radius:8px}
+.pvr-overview-progress progress::-webkit-progress-value{background:#267e70;border-radius:8px}
+.pvr-overview-progress progress::-moz-progress-bar{background:#267e70;border-radius:8px}
+.pvr-overview-future{margin-top:8px;border-top:1px solid #dde8e9;padding-top:6px}
+.pvr-overview-future summary{cursor:pointer;font-weight:650;font-size:.8rem;color:#315461}
+.pvr-overview-future ul{padding-left:20px;margin:4px 0 0}
+.pvr-overview-future ul li{border:0;background:transparent;padding:2px 0;color:#5c433b;font-size:.8rem}
+#pvrPreferredVehicle{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 16px}
+#pvrPreferredVehicle strong{margin-left:6px}
+#pvrPreferredVehicleState{margin:4px 0 0}
 .pvr-fleet-overview-list small{color:#4d6873;margin-top:2px}
 .pvr-fleet-overview-list .pvr-fleet-overview-period{color:#7d4230;font-weight:600;margin-top:4px}
 @media(max-width:650px){.pvr-fleet-overview-groups{grid-template-columns:minmax(0,1fr)}}
@@ -535,7 +552,11 @@ main.main{margin-top:-27px!important}
 </section>
 <section class="panel" id="pvrBookingSection"><div class="topline"><div><div class="eyebrow">YOUR RENTAL COMPANY DASHBOARD</div><h2>Find and request a vehicle</h2><div class="sub">Set your pickup and return dates above, find matching vehicles, then send a request for approval.</div></div><span class="pill"><span aria-hidden="true" class="dot"></span>Admin approval required</span></div>
 <div class="date-note" id="authBox"><strong id="authStatus">Checking Google sign-in…</strong><p class="sub">Only rental companies assigned by Prince Vehicle Rental can submit requests.</p><button class="primary" id="authButton" type="button">Sign in with Google</button></div>
-<form hidden="" id="requestForm"><div class="formgrid"><section aria-label="Rental booking search" class="pvr-quick-booking" id="pvrQuickBooking">
+<form hidden="" id="requestForm">
+ <div class="date-note" id="pvrPreferredVehicle" tabindex="-1" hidden>
+  <div><span>Requesting:</span><strong id="pvrPreferredVehicleName"></strong><p class="sub" id="pvrPreferredVehicleState" role="status"></p></div>
+  <button type="button" class="pvr-avail-refresh" id="pvrClearPreferredVehicle">Choose another vehicle</button>
+ </div><div class="formgrid"><section aria-label="Rental booking search" class="pvr-quick-booking" id="pvrQuickBooking">
 <div class="pvr-quick-intro"><div class="pvr-quick-heading">
 <div class="pvr-mini-eyebrow"><span class="pvr-pulse"></span> YOUR RENTAL SEARCH</div>
 <h3>Choose dates. Discover available vehicles.</h3>
@@ -620,6 +641,8 @@ main.main{margin-top:-27px!important}
  'use strict';
  const DICT={"Return date must be later than pickup date.":"फिर्ता मिति लैजाने मितिभन्दा पछिको हुनुपर्छ।","Return date must be later than pickup date, and dates must be valid.":"फिर्ता मिति लैजाने मितिभन्दा पछिको र मान्य हुनुपर्छ।","PARTNER RESERVATIONS / PRIVATE ACCESS":"साझेदार आरक्षण / निजी पहुँच","THE PRIVATE RENTAL WORKSPACE":"साझेदार भाडा सेवा","Your rental workspace,":"तपाईंको भाडा सेवा","beautifully simplified.":"अब अझ सहज र आकर्षक।","Explore the shared fleet, review published availability, and send vehicle requests from one elegant, secure dashboard.":"उपलब्ध सवारीसाधन हेर्नुहोस्, बुकिङका मितिहरू जाँच्नुहोस् र एउटै सुरक्षित ड्यासबोर्डबाट सवारी अनुरोध पठाउनुहोस्।","Partner-only access":"साझेदारलाई मात्र पहुँच","AD & BS calendar":"ई.सं. र वि.सं. पात्रो","Admin-reviewed requests":"प्रशासकद्वारा समीक्षा गरिने अनुरोध","PRINCE · PARTNER WORKSPACE":"प्रिन्स · साझेदार पोर्टल","YOUR WORKSPACE AT A GLANCE":"तपाईंको ड्यासबोर्ड एक नजरमा","Welcome to your partner dashboard":"साझेदार ड्यासबोर्डमा स्वागत छ","Plan with clarity. Request with confidence.":"सजिलै योजना बनाउनुहोस् र अनुरोध पठाउनुहोस्।","Secure partner access":"सुरक्षित साझेदार पहुँच","PARTNER FLEET":"उपलब्ध सवारीसाधन","vehicle":"सवारी","vehicles":"सवारीसाधन","Browse the vehicles listed for your company":"तपाईंको कम्पनीका लागि सूचीबद्ध सवारीसाधन हेर्नुहोस्","AVAILABILITY CALENDAR":"उपलब्धता पात्रो","Check published dates before sending a request":"अनुरोध पठाउनुअघि उपलब्ध मिति जाँच्नुहोस्","YOUR REQUESTS":"तपाईंका अनुरोध","Track status":"अवस्था हेर्नुहोस्","Sign in to review your requests and approvals":"आफ्ना अनुरोध र स्वीकृति हेर्न साइन इन गर्नुहोस्","Review previous requests and approval decisions":"पहिलेका अनुरोध र स्वीकृतिको अवस्था हेर्नुहोस्","Explore vehicles":"सवारीसाधन हेर्नुहोस्","Availability calendar":"उपलब्धता पात्रो","New request":"नयाँ अनुरोध","My history":"मेरो इतिहास","YOUR RENTAL COMPANY DASHBOARD":"भाडा कम्पनीको ड्यासबोर्ड","Find and request a vehicle":"सवारी खोज्नुहोस् र अनुरोध पठाउनुहोस्","Select a vehicle, check its calendar, and request your preferred dates. All requests are reviewed before confirmation.":"सवारी छान्नुहोस्, पात्रो जाँच्नुहोस् र आफूलाई चाहिएको मितिका लागि अनुरोध गर्नुहोस्। स्वीकृतिपछि मात्र बुकिङ निश्चित हुन्छ।","Admin approval required":"प्रशासकको स्वीकृति आवश्यक","Checking Google sign-in…":"गुगल साइन इन जाँचिँदैछ…","Only rental companies assigned by Prince Vehicle Rental can submit requests.":"प्रिन्स भेहिकल रेन्टलले अनुमति दिएका कम्पनीले मात्र अनुरोध पठाउन सक्छन्।","Sign in with Google":"गुगलबाट साइन इन","Sign out":"साइन आउट","Choose your vehicle":"सवारी छान्नुहोस्","Explore dates":"मिति हेर्नुहोस्","Send a request":"अनुरोध पठाउनुहोस्","Registered rental company":"दर्ता भएको भाडा कम्पनी","Select vehicle":"सवारी छान्नुहोस्","Loading vehicles…":"सवारीसाधन लोड हुँदैछन्…","Choose a vehicle":"सवारी छान्नुहोस्","Explore the fleet":"सवारीसाधन हेर्नुहोस्","Select a vehicle to see its calendar. Tap once for pickup, then again for return.":"उपलब्धता हेर्न सवारी छान्नुहोस्। लैजाने मितिमा एकपटक र फिर्ता गर्ने मितिमा फेरि थिच्नुहोस्।","↻ Refresh availability":"↻ उपलब्धता अद्यावधिक","YOUR DATE VIEW":"मितिको दृश्य","Availability at a glance":"एक नजरमा उपलब्धता","‹ Previous":"‹ अघिल्लो","Next ›":"अर्को ›","No block in snapshot*":"अवरोध रेकर्ड नभएको*","Booked":"बुक भएको","Maintenance":"मर्मतसम्भार","Unverified":"पुष्टि नभएको","Availability is not verified yet. An administrator must publish a current fleet snapshot.":"उपलब्धता अझै पुष्टि भएको छैन। प्रशासकले अद्यावधिक सवारी विवरण प्रकाशित गर्नुपर्छ।","*Calendar dates are provisional, not a booking guarantee. No personal customer details are shared. Every request remains Pending until approved.":"*पात्रोमा देखिएका मिति प्रारम्भिक जानकारी मात्र हुन्, पक्का बुकिङ होइनन्। ग्राहकका व्यक्तिगत विवरण देखाइँदैनन्। स्वीकृति नआउँदासम्म अनुरोध बाँकी रहन्छ।","Preferred calendar":"रोजाइको पात्रो","AD · English":"ई.सं. · AD","BS · नेपाली":"वि.सं. · BS","Pickup date (AD)":"लैजाने मिति (ई.सं.)","Return date (AD, inclusive)":"फिर्ता मिति (ई.सं., सो दिनसहित)","BS year":"वि.सं. वर्ष","BS month":"वि.सं. महिना","Pickup day (BS)":"लैजाने दिन (वि.सं.)","Return day (BS)":"फिर्ता दिन (वि.सं.)","Verified BS 2083 calendar only. Other BS years will be enabled after verified calendar data is available.":"हाल प्रमाणित वि.सं. २०८३ को पात्रो मात्र उपलब्ध छ। अन्य वर्षको प्रमाणित तथ्याङ्क भएपछि थपिनेछ।","Select dates to see the corresponding AD and BS dates.":"मिति छानेपछि सम्बन्धित ई.सं. र वि.सं. मिति देखिन्छ।","Choose pickup and return dates.":"सवारी लैजाने र फिर्ता गर्ने मिति छान्नुहोस्।","Pickup":"लैजाने मिति","Return":"फिर्ता मिति","Return must be on or after pickup.":"फिर्ता मिति लैजाने मितिभन्दा अगाडि हुनुहुँदैन।","Approval required; availability is not guaranteed.":"स्वीकृति आवश्यक छ; उपलब्धताको ग्यारेन्टी छैन।","Optional request notes":"अनुरोधसम्बन्धी थप विवरण (ऐच्छिक)","Pickup details or special instructions":"सवारी लैजाने स्थान वा विशेष निर्देशन","Request only.":"यो अनुरोध मात्र हो।","Dates stay pending until approved by Prince Vehicle Rental; submitting does not reserve the vehicle.":"प्रिन्स भेहिकल रेन्टलले स्वीकृत नगरेसम्म अनुरोध बाँकी रहन्छ। अनुरोध पठाउँदैमा सवारी बुक हुँदैन।","Submit request →":"अनुरोध पठाउनुहोस् →","YOUR COMPANY":"तपाईंको कम्पनी","Request history":"अनुरोध इतिहास","Refresh":"अद्यावधिक","Loading…":"लोड हुँदैछ…","Approved partners":"स्वीकृत साझेदार","Only companies registered and assigned by the administrator can request vehicles.":"प्रशासकले दर्ता र अनुमति दिएका कम्पनीहरूले मात्र सवारी अनुरोध गर्न सक्छन्।","BS and AD dates":"वि.सं. र ई.सं. मिति","Choose AD dates or verified BS 2083 dates; both are shown for review.":"ई.सं. वा प्रमाणित वि.सं. २०८३ का मिति छान्नुहोस्; समीक्षाका लागि दुवै देखाइन्छन्।","Admin reviewed":"प्रशासकबाट समीक्षा","Requests are not confirmed until reviewed and saved to the fleet booking system.":"समीक्षा गरी बुकिङ प्रणालीमा सुरक्षित गरेपछि मात्र अनुरोध निश्चित हुन्छ।","Search your requests":"आफ्ना अनुरोध खोज्नुहोस्","Search your booking requests":"बुकिङ अनुरोधहरू खोज्नुहोस्","Filter your requests":"अनुरोध छान्नुहोस्","All requests":"सबै अनुरोध","Pending":"बाँकी","Rejected":"अस्वीकृत","Approved":"स्वीकृत","pending":"बाँकी","rejected":"अस्वीकृत","approved":"स्वीकृत","visible":"देखिएका","Baishakh":"वैशाख","Jestha":"जेठ","Asar":"असार","Shrawan":"साउन","Bhadra":"भदौ","Asoj":"असोज","Kartik":"कात्तिक","Mangsir":"मंसिर","Poush":"पुस","Magh":"माघ","Falgun":"फागुन","Chaitra":"चैत","January":"जनवरी","February":"फेब्रुअरी","March":"मार्च","April":"अप्रिल","May":"मे","June":"जुन","July":"जुलाई","August":"अगस्ट","September":"सेप्टेम्बर","October":"अक्टोबर","November":"नोभेम्बर","December":"डिसेम्बर","Sun":"आइत","Mon":"सोम","Tue":"मंगल","Wed":"बुध","Thu":"बिही","Fri":"शुक्र","Sat":"शनि","no recorded block":"अवरोध रेकर्ड नभएको","No recorded block (provisional)":"अवरोध नभएको (प्रारम्भिक)","available":"उपलब्ध","unknown":"अज्ञात","booked":"बुक भएको","maintenance":"मर्मतसम्भार","No requests yet.":"अहिलेसम्म कुनै अनुरोध छैन।","Sign in to continue":"अगाडि बढ्न साइन इन गर्नुहोस्","Supabase library failed to load":"सुपाबेस सेवा लोड भएन","Google sign-in required":"गुगल साइन इन आवश्यक छ","Google login session is missing":"गुगल साइन इनको सत्र फेला परेन","not available":"उपलब्ध छैन","No current fleet snapshot.":"सवारी विवरणको हालको प्रतिलिपि उपलब्ध छैन।","Choose a vehicle to view its calendar.":"पात्रो हेर्न सवारी छान्नुहोस्।","Availability data is not connected. All dates are unverified; requests still need administrator review.":"उपलब्धता विवरण जोडिएको छैन। सबै मिति अपुष्ट छन् र अनुरोध प्रशासकले जाँच्नुपर्छ।","No active vehicles found. Please ask Prince Vehicle Rental to publish the fleet list.":"सक्रिय सवारी फेला परेनन्। प्रिन्स भेहिकल रेन्टललाई सवारी सूची प्रकाशित गर्न भन्नुहोस्।","Vehicle":"सवारी","Reg:":"दर्ता नं.:","Model:":"मोडेल:","Colour:":"रङ:","Seats:":"सिट:","Type:":"प्रकार:","Vehicle details not provided":"सवारीको विवरण उपलब्ध छैन","Selected · View calendar":"छानिएको · पात्रो हेर्नुहोस्","Tap to view calendar":"पात्रो हेर्न थिच्नुहोस्","Checking latest fleet availability…":"सवारीको पछिल्लो उपलब्धता जाँचिँदैछ…","This date range includes a blocked date:":"यो अवधिमा रोकिएको मिति छ:","Choose another return date.":"अर्को फिर्ता मिति छान्नुहोस्।","Sign in with an assigned company.":"अनुमति प्राप्त कम्पनीबाट साइन इन गर्नुहोस्।","Choose a valid date range.":"मान्य मिति अवधि छान्नुहोस्।","Requests may cover up to 365 days.":"अधिकतम ३६५ दिनसम्म अनुरोध गर्न सकिन्छ।","Choose a vehicle.":"सवारी छान्नुहोस्।","Pickup date cannot be in the past.":"सवारी लैजाने मिति बितिसकेको हुनुहुँदैन।","Requested dates include a known booked or maintenance day:":"रोजिएको अवधिमा बुकिङ वा मर्मतसम्भार परेको छ:","Choose different dates.":"अन्य मिति छान्नुहोस्।","Request submitted successfully. Status: Pending. This is not a confirmed booking.":"अनुरोध सफलतापूर्वक पठाइयो। अवस्था: बाँकी। यो पक्का बुकिङ होइन।","Request not saved:":"अनुरोध सुरक्षित भएन:","Cannot load vehicles:":"सवारी लोड भएन:","Cannot load history:":"अनुरोध इतिहास लोड भएन:","Company access is not configured:":"कम्पनीको पहुँच सेट गरिएको छैन:","Signed in, but company activation failed:":"साइन इन भयो, तर कम्पनी सक्रिय हुन सकेन:","Please contact Prince Vehicle Rental if it continues.":"समस्या रहिरहे प्रिन्स भेहिकल रेन्टललाई सम्पर्क गर्नुहोस्।","Signed in, but this Google account has no active rental company assignment. Sign out and choose the Gmail address registered with Prince Vehicle Rental.":"साइन इन भयो, तर यस गुगल खातामा सक्रिय भाडा कम्पनी तोकिएको छैन। साइन आउट गरेर प्रिन्स भेहिकल रेन्टलमा दर्ता भएको जिमेल प्रयोग गर्नुहोस्।","Supabase unavailable":"सुपाबेस सेवा उपलब्ध छैन","PRINCE VEHICLE RENTAL · LAGANKHEL, LALITPUR, NEPAL":"प्रिन्स भेहिकल रेन्टल · लगनखेल, ललितपुर, नेपाल","Partner fleet":"साझेदार सवारीसाधन","Previous month":"अघिल्लो महिना","Next month":"अर्को महिना","Rental company dashboard overview":"भाडा कम्पनी ड्यासबोर्डको सारांश","Dashboard quick navigation":"ड्यासबोर्डका छोटा लिंक","Booking request steps":"बुकिङ अनुरोधका चरण","Vehicles available for partner requests":"साझेदार अनुरोधका लागि सवारीसाधन","Your animated runner chasing the car":"सवारीलाई पछ्याउने एनिमेसन","Portal language":"पोर्टलको भाषा","PRINCE":"PRINCE","Dates remain unverified until the secure availability function is deployed.":"सुरक्षित उपलब्धता सेवा सक्रिय नभएसम्म मितिहरू अपुष्ट रहनेछन्।","Last saved:":"अन्तिम बचत:","You can still request dates for administrator review.":"प्रशासकको समीक्षाका लागि मिति अनुरोध गर्न सक्नुहुन्छ।","Last fleet save:":"सवारी विवरणको अन्तिम बचत:","Grey dates require administrator review.":"खैरो मितिका लागि प्रशासकको समीक्षा आवश्यक छ।","Green means no recorded booking or maintenance block in that snapshot, not guaranteed availability. Admin approval is still required.":"हरियोले त्यस रेकर्डमा बुकिङ वा मर्मतको अवरोध नरहेको देखाउँछ, तर उपलब्धताको ग्यारेन्टी होइन। प्रशासकको स्वीकृति आवश्यक छ।","Outside verified BS 2083 range":"प्रमाणित वि.सं. २०८३ को दायराबाहिर","Availability not verified.":"उपलब्धता पुष्टि भएको छैन।","Some booking dates for this vehicle have not been verified.":"यस सवारीका केही बुकिङ मिति पुष्टि भएका छैनन्।","Based on saved fleet data from":"सुरक्षित सवारी विवरणको मिति:","Choose your rental dates first":"पहिले भाडाका मिति छान्नुहोस्","Pick up and return dates to see only vehicles without a recorded booking or maintenance block during the entire period.":"पूरै अवधिमा बुकिङ वा मर्मत अवरोध नभएका सवारी मात्र हेर्न लैजाने र फिर्ता गर्ने मिति छान्नुहोस्।","Choose your pickup and return dates.":"लैजाने र फिर्ता गर्ने मिति छान्नुहोस्।","🔎 Find available vehicles":"🔎 उपलब्ध सवारी खोज्नुहोस्","Choose dates first":"पहिले मिति छान्नुहोस्","Choose dates":"मिति छान्नुहोस्","See available vehicles":"उपलब्ध सवारी हेर्नुहोस्","Vehicle available for your dates":"रोजिएको मितिमा उपलब्ध सवारी","Available vehicles for your dates":"रोजिएको मितिमा उपलब्ध सवारीसाधन","Select dates above, then choose a matching vehicle. Tap a vehicle to inspect its calendar before requesting.":"माथि मिति छान्नुहोस्, त्यसपछि उपलब्ध सवारी रोज्नुहोस्। अनुरोध गर्नुअघि पात्रो जाँच्न सवारी थिच्नुहोस्।","Select dates to see available vehicles.":"उपलब्ध सवारी हेर्न मिति छान्नुहोस्।","Choose valid pickup and return dates.":"लैजाने र फिर्ता गर्ने मान्य मिति छान्नुहोस्।","Pickup date must not be in the past.":"लैजाने मिति बितिसकेको हुनुहुँदैन।","The rental period must be 365 days or fewer.":"भाडा अवधि बढीमा ३६५ दिन हुनुपर्छ।","Checking available vehicles for your dates…":"तपाईंको मितिका लागि उपलब्ध सवारी जाँचिँदैछ…","Availability cannot be verified. Please ask Prince Vehicle Rental to update the fleet data.":"उपलब्धता पुष्टि गर्न सकिएन। प्रिन्स भेहिकल रेन्टललाई सवारी विवरण अद्यावधिक गर्न अनुरोध गर्नुहोस्।","No vehicles available for the entire selected period. Try different dates.":"रोजिएको सम्पूर्ण अवधिमा कुनै सवारी उपलब्ध छैन। कृपया अर्को मिति छान्नुहोस्।","available vehicle(s) for your selected dates (provisional).":"रोजिएको मितिमा प्रारम्भिक रूपमा उपलब्ध सवारीसाधन।","Results use the last published fleet snapshot. Refresh to check again.":"नतिजा पछिल्लो प्रकाशित सवारी विवरणमा आधारित छ। पुन: जाँच गर्न अद्यावधिक गर्नुहोस्।","Please choose an available vehicle from the date-filtered results.":"मितिअनुसार छानिएका उपलब्ध सवारीमध्ये एउटा रोज्नुहोस्।","Choose dates and check availability before sending a request.":"अनुरोध पठाउनुअघि मिति छानेर उपलब्धता जाँच्नुहोस्।","Cannot verify availability right now. Please refresh and try again.":"अहिले उपलब्धता पुष्टि हुन सकेन। अद्यावधिक गरेर फेरि प्रयास गर्नुहोस्।","Check availability":"उपलब्धता जाँच्नुहोस्","YOUR RENTAL SEARCH":"सवारी भाडा खोज","Choose dates. Discover available vehicles.":"मिति छान्नुहोस्। उपलब्ध सवारी खोज्नुहोस्।","Find the right car in three easy steps. Results are based on published fleet availability.":"तीन सरल चरणमा उपयुक्त सवारी खोज्नुहोस्। नतिजा प्रकाशित उपलब्धता विवरणमा आधारित छन्।","✦ Private partner access":"✦ साझेदारलाई मात्र पहुँच","02 · Choose your vehicle":"०२ · सवारी छान्नुहोस्","Only matching vehicles will appear here":"रोजिएका मितिमा उपलब्ध सवारी मात्र यहाँ देखिन्छन्","Vehicle matching your dates":"तपाईंको मितिमा उपलब्ध सवारी","✓ AD / BS calendars":"✓ ई.सं. / वि.सं. पात्रो","✓ Checked against known bookings":"✓ रेकर्ड भएका बुकिङसँग जाँच","✓ Admin approval required":"✓ प्रशासकको स्वीकृति आवश्यक","Set your pickup and return dates above, find matching vehicles, then send a request for approval.":"माथि लैजाने र फिर्ता गर्ने मिति छान्नुहोस्, उपलब्ध सवारी खोज्नुहोस् र स्वीकृतिका लागि अनुरोध पठाउनुहोस्।","Rental booking search":"सवारी भाडा खोज","Choose dates":"मिति छान्नुहोस्","Choose vehicle":"सवारी छान्नुहोस्"};
  Object.assign(DICT,{"Fleet availability": "सवारी उपलब्धता", "See which vehicles are available or booked on your selected date.": "तपाईंले छान्नुभएको मितिमा कुन सवारी उपलब्ध वा बुक छन् हेर्नुहोस्।", "Availability date (AD)": "उपलब्धता मिति (ई.सं.)", "Refresh fleet": "सवारी सूची अद्यावधिक गर्नुहोस्", "Availability is unverified. Check again after the fleet is synced.": "उपलब्धता पुष्टि भएको छैन। सवारी विवरण अद्यावधिक भएपछि फेरि हेर्नुहोस्।", "Last synced (Nepal time):": "अन्तिम अद्यावधिक (नेपाल समय):", "Vehicle requests still require approval.": "सवारी अनुरोधका लागि स्वीकृति आवश्यक छ।", "Available vehicles": "उपलब्ध सवारी", "Booked vehicles": "बुक भएका सवारी", "In maintenance": "मर्मतमा", "Availability unverified": "उपलब्धता अपुष्ट", "No vehicles available on this date.": "यो मितिमा कुनै सवारी उपलब्ध छैन।", "No vehicles booked on this date.": "यो मितिमा कुनै सवारी बुक भएको छैन।", "seats": "सिट", "Maintenance dates:": "मर्मत मिति:", "Booked dates:": "बुकिङ मिति:", "Next booking:": "अर्को बुकिङ:", "End date not set": "अन्तिम मिति तोकिएको छैन"});
+ Object.assign(DICT,{"Requesting:": "अनुरोध गर्दै:", "Choose another vehicle": "अर्को सवारी छान्नुहोस्", "Request this vehicle →": "यो सवारी अनुरोध गर्नुहोस् →", "Upcoming bookings": "आगामी बुकिङहरू", "Choose pickup and return dates for this vehicle.": "यो सवारी लैजाने र फिर्ता गर्ने मिति छान्नुहोस्।", "This vehicle is not currently accepting partner requests.": "यो सवारीका लागि अहिले साझेदार अनुरोध स्वीकार गरिँदैन।", "This vehicle has no recorded conflict for those dates.": "ती मितिमा यो सवारीको अर्को बुकिङ देखिएको छैन।", "This vehicle is unavailable for those dates. Choose a different period.": "ती मितिमा यो सवारी उपलब्ध छैन। अर्को अवधि छान्नुहोस्।", "Availability could not be verified for these dates.": "यी मितिको उपलब्धता पुष्टि गर्न सकिएन।"});
+ Object.assign(DICT,{"of": "मध्ये", "day passed": "दिन बित्यो", "days passed": "दिन बिते", "day remaining": "दिन बाँकी", "days remaining": "दिन बाँकी", "Booking progress": "बुकिङ प्रगति"});
  const STORE='pvr_partner_language';
  let lang='en';
  try{lang=localStorage.getItem(STORE)==='ne'?'ne':'en'}catch(_e){}
@@ -726,7 +749,8 @@ const BS_MONTHS=['Baishakh','Jestha','Asar','Shrawan','Bhadra','Asoj','Kartik','
 const BS_LENGTHS=[31,31,32,31,31,31,30,29,30,29,30,30],EPOCH=Date.UTC(2026,3,14),DAY=86400000;
 let company=null,user=null,mode='AD';
 let pvrCatalog=[],pvrAvail=null,pvrMonthDate=new Date(new Date().getFullYear(),new Date().getMonth(),1),pvrPickingEnd=false;
-let pvrSearchActive=false,pvrSearchRange='',pvrSearchBusy=false,pvrAvailabilitySeq=0;
+let pvrSearchActive=false,pvrSearchRange='',pvrSearchBusy=false;
+let pvrPreferredVehicle=null;
 const iso=ms=>new Date(ms).toISOString().slice(0,10),dayms=d=>Date.parse(d+'T00:00:00Z');
 function bsToAd(month,day){if(month<0||month>11||day<1||day>BS_LENGTHS[month])return '';return iso(EPOCH+(BS_LENGTHS.slice(0,month).reduce((a,b)=>a+b,0)+day-1)*DAY)}
 function adToBs(ad){const diff=Math.round((dayms(ad)-EPOCH)/DAY);if(!Number.isFinite(diff)||diff<0||diff>=BS_LENGTHS.reduce((a,b)=>a+b,0))return 'Outside verified BS 2083 range';let n=diff,m=0;while(n>=BS_LENGTHS[m])n-=BS_LENGTHS[m++];return '2083/'+String(m+1).padStart(2,'0')+'/'+String(n+1).padStart(2,'0')}
@@ -763,7 +787,7 @@ function pvrLocalISO(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(
 function pvrValidRange(){
  const r=dates(),a=dayms(r.start),b=dayms(r.end);
  if(!/^\d{4}-\d{2}-\d{2}$/.test(r.start||'')||!/^\d{4}-\d{2}-\d{2}$/.test(r.end||'')||!Number.isFinite(a)||!Number.isFinite(b)||b<=a)return null;
- if(r.start<pvrLocalISO(new Date())||b-a>365*DAY)return null;
+ if(r.start<pvrOverviewToday()||b-a>365*DAY)return null;
  return {start:r.start,end:r.end,exclusive:iso(b+DAY),key:r.start+'|'+r.end};
 }
 function pvrFilterKind(id,range){
@@ -782,13 +806,14 @@ function pvrFilterKind(id,range){
 function pvrVehicleList(){
  const range=pvrValidRange();
  if(!pvrSearchActive||pvrSearchBusy||!range||pvrSearchRange!==range.key)return [];
- const catalog=pvrCatalog.filter(v=>v.vehicle_id);
+ const matchesPreference=v=>!pvrPreferredVehicle||String(v.vehicle_id)===pvrPreferredVehicle.id;
+ const catalog=pvrCatalog.filter(v=>v.vehicle_id&&matchesPreference(v));
  // A missing/unverified snapshot must not hide the registered fleet. These are
  // catalog entries only, NOT confirmed available vehicles.
  if(!pvrAvail?.verified||!Array.isArray(pvrAvail.vehicles)||!Array.isArray(pvrAvail.periods))return catalog;
  const snapshot=pvrAvail.vehicles.filter(v=>v.vehicle_id&&v.active!==false&&String(v.status||'').toLowerCase()!=='inactive');
  const byId=new Map(snapshot.map(v=>[String(v.vehicle_id),v]));
- const candidates=catalog.length?catalog.map(v=>({...v,...(byId.get(String(v.vehicle_id))||{}),vehicle_id:String(v.vehicle_id),vehicle_name:v.vehicle_name||byId.get(String(v.vehicle_id))?.vehicle_name||v.vehicle_id})):snapshot;
+ const candidates=pvrCatalog.length?catalog.map(v=>({...v,...(byId.get(String(v.vehicle_id))||{}),vehicle_id:String(v.vehicle_id),vehicle_name:v.vehicle_name||byId.get(String(v.vehicle_id))?.vehicle_name||v.vehicle_id})):snapshot.filter(matchesPreference);
  // A vehicle missing from a verified snapshot is unverified, not available.
  return candidates.filter(v=>pvrFilterKind(v.vehicle_id,range)!=='booked'&&pvrFilterKind(v.vehicle_id,range)!=='maintenance');
 }
@@ -829,6 +854,11 @@ async function pvrFindAvailable(){
   pvrSearchBusy=false;
   if(pvrValidRange()?.key!==range.key){pvrDateChanged();return}
   const options=pvrVehicleList();
+  if(pvrPreferredVehicle){
+   pvrRenderVehicles();pvrRenderMonth();
+   pvrSearchStatus($('pvrPreferredVehicleState').textContent,$('vehicle').value?'ok':'error');
+   return;
+  }
   if(!pvrAvail?.verified||!Array.isArray(pvrAvail.periods))pvrSearchStatus(options.length+' registered vehicle(s) shown. Availability cannot be verified; requests are disabled until the secure availability service is restored.','error');
   else if(!options.length){
    const fleet=(pvrAvail.vehicles||[]).filter(v=>v.vehicle_id&&v.active!==false&&String(v.status||'').toLowerCase()!=='inactive');
@@ -844,7 +874,7 @@ async function pvrFindAvailable(){
   pvrRenderVehicles();pvrRenderMonth();
  }
 }
-function pvrSelected(){return $('vehicle').value}
+function pvrSelected(){return $('vehicle').value||pvrPreferredVehicle?.id||''}
 function pvrStatus(){
  const el=$('pvrAvailStatus'),id=pvrSelected();
  if(!id){el.textContent='Choose a vehicle to view its calendar.';return}
@@ -857,11 +887,21 @@ function pvrStatus(){
 }
 function pvrRenderVehicles(){
  const cards=$('pvrVehicleCards'),select=$('vehicle');if(!cards||!select)return;
- const list=pvrVehicleList(),chosen=select.value,range=pvrValidRange(),count=$('pvrFoundCount');
+ const list=pvrVehicleList(),chosen=pvrPreferredVehicle?.id||select.value,range=pvrValidRange(),count=$('pvrFoundCount');
  select.dataset.totalFleet=String((pvrAvail?.verified&&Array.isArray(pvrAvail.vehicles)?pvrAvail.vehicles:pvrCatalog).filter(v=>v.active!==false&&String(v.status||'').toLowerCase()!=='inactive').length);
  select.replaceChildren(new Option(window.pvrT(range?'Choose a vehicle':'Choose dates first'),''));
  for(const v of list)select.append(new Option(v.vehicle_name||v.display_name||v.vehicle_id,v.vehicle_id));
- if(list.some(v=>String(v.vehicle_id)===chosen))select.value=chosen;
+ if(list.some(v=>String(v.vehicle_id)===chosen)&&(!pvrPreferredVehicle||pvrFilterKind(chosen,range)==='available'))select.value=chosen;
+ const preferred=$('pvrPreferredVehicle');
+ preferred.hidden=!pvrPreferredVehicle;
+ if(pvrPreferredVehicle){
+  $('pvrPreferredVehicleName').textContent=pvrPreferredVehicle.name;
+  const kind=pvrFilterKind(chosen,range);
+  let message='Choose pickup and return dates for this vehicle.';
+  if(pvrCatalog.length&&!pvrCatalog.some(v=>String(v.vehicle_id)===chosen))message='This vehicle is not currently accepting partner requests.';
+  else if(range)message=kind==='available'?'This vehicle has no recorded conflict for those dates.':kind==='booked'||kind==='maintenance'?'This vehicle is unavailable for those dates. Choose a different period.':'Availability could not be verified for these dates.';
+  $('pvrPreferredVehicleState').textContent=message;
+ }
  cards.replaceChildren();
  if(count){
   count.dataset.state=list.length?'ok':'empty';
@@ -887,7 +927,7 @@ function pvrRenderVehicles(){
 function pvrOverviewToday(){
  return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kathmandu',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 }
-function pvrOverviewGroups(snapshot,date){
+function pvrOverviewGroups(snapshot,date,asOf=date){
  if(!snapshot?.verified||snapshot.all_vehicles_uncertain||!Array.isArray(snapshot.vehicles)||!Array.isArray(snapshot.periods))return null;
  const groups={available:[],booked:[],maintenance:[],unknown:[]};
  const unknown=new Set((snapshot.uncertain_vehicle_ids||[]).map(String));
@@ -904,14 +944,20 @@ function pvrOverviewGroups(snapshot,date){
   const blocks=(periods.get(id)||[]).sort((a,b)=>a.start_ad.localeCompare(b.start_ad));
   const booking=blocks.find(block=>block.kind!=='maintenance'&&block.start_ad<=date&&block.end_ad_exclusive>date);
   const service=blocks.find(block=>block.kind==='maintenance'&&block.start_ad<=date&&block.end_ad_exclusive>date);
-  const next=unknown.has(id)?null:blocks.find(block=>block.kind!=='maintenance'&&block.start_ad>date);
+  const upcoming=blocks.filter(block=>block.kind!=='maintenance'&&block.start_ad>asOf);
   const kind=booking?'booked':service?'maintenance':unknown.has(id)?'unknown':'available';
-  groups[kind].push({vehicle,period:booking||service,next});
+  groups[kind].push({vehicle,period:booking||service,upcoming});
  }
  for(const group of Object.values(groups))group.sort((a,b)=>
   String(a.period?.end_ad_exclusive||'').localeCompare(String(b.period?.end_ad_exclusive||''))||
   String(a.vehicle.vehicle_name||a.vehicle.vehicle_id).localeCompare(String(b.vehicle.vehicle_name||b.vehicle.vehicle_id)));
  return groups;
+}
+function pvrPartnerBookingProgress(period,today){
+ const start=dayms(period.start_ad),end=dayms(period.end_ad_exclusive),now=dayms(today);
+ if(!Number.isFinite(start)||!Number.isFinite(end)||!Number.isFinite(now)||start>now||now>=end)return null;
+ const total=(end-start)/DAY,elapsed=(now-start)/DAY+1;
+ return {total,elapsed,remaining:total-elapsed};
 }
 function pvrOverviewNode(tag,text,className){
  const node=document.createElement(tag);
@@ -925,7 +971,8 @@ function pvrRenderFleetOverview(){
  const today=pvrOverviewToday();
  dateInput.min=today;
  if(!dateInput.value||dateInput.value<today)dateInput.value=today;
- const groups=pvrOverviewGroups(pvrAvail,dateInput.value);
+ const groups=pvrOverviewGroups(pvrAvail,dateInput.value,today);
+ const openDetails=new Set([...root.querySelectorAll('details[open]')].map(details=>details.dataset.vehicle));
  root.replaceChildren();
  if(!groups){
   status.textContent='Availability is unverified. Check again after the fleet is synced.';
@@ -948,12 +995,17 @@ function pvrRenderFleetOverview(){
   if(!list.length)section.append(pvrOverviewNode('p',empty[kind],'sub'));
   else{
    const vehicles=pvrOverviewNode('ul',null,'pvr-fleet-overview-list');
-   for(const {vehicle,period,next} of list){
+   for(const {vehicle,period,upcoming} of list){
     const row=pvrOverviewNode('li');
-    row.append(pvrOverviewNode('strong',vehicle.vehicle_name||vehicle.display_name||'Vehicle'));
+    const button=pvrOverviewNode('button',null,'pvr-overview-request');
+    button.type='button';
+    const name=vehicle.vehicle_name||vehicle.display_name||'Vehicle';
+    button.append(pvrOverviewNode('strong',name),pvrOverviewNode('small','Request this vehicle →'));
+    button.addEventListener('click',()=>pvrOpenVehicleRequest(vehicle,name));
+    row.append(button);
     const facts=[vehicle.registration,vehicle.model,vehicle.colour,vehicle.seats&&vehicle.seats+' '+window.pvrT('seats')].filter(Boolean);
     if(facts.length)row.append(pvrOverviewNode('small',facts.join(' · ')));
-    const event=period||(kind==='available'?next:null);
+    const event=period||upcoming[0];
     if(event){
      const description=pvrOverviewNode('small',null,'pvr-fleet-overview-period');
      const end=dayms(event.end_ad_exclusive);
@@ -963,6 +1015,36 @@ function pvrRenderFleetOverview(){
      else if(Number.isFinite(end))description.append(document.createTextNode(' → '+iso(end-DAY)));
      row.append(description);
     }
+    const progress=kind==='booked'?pvrPartnerBookingProgress(period,today):null;
+    if(progress){
+     const visual=pvrOverviewNode('div',null,'pvr-overview-progress');
+     const label=pvrOverviewNode('div',null,'pvr-overview-progress-label');
+     const elapsed=pvrOverviewNode('span');
+     elapsed.append(document.createTextNode(progress.elapsed+' '),pvrOverviewNode('span','of'),document.createTextNode(' '+progress.total+' '),pvrOverviewNode('span',progress.total===1?'day passed':'days passed'));
+     const remaining=pvrOverviewNode('strong');
+     remaining.append(document.createTextNode(progress.remaining+' '),pvrOverviewNode('span',progress.remaining===1?'day remaining':'days remaining'));
+     label.append(elapsed,remaining);
+     const bar=pvrOverviewNode('progress');
+     bar.max=progress.total;
+     bar.value=progress.elapsed;
+     bar.setAttribute('aria-label','Booking progress');
+     visual.append(label,bar);
+     row.append(visual);
+    }
+    if(upcoming.length){
+     const details=pvrOverviewNode('details',null,'pvr-overview-future');
+     details.dataset.vehicle=String(vehicle.vehicle_id);
+     details.open=openDetails.has(details.dataset.vehicle);
+     const label=pvrOverviewNode('summary');
+     label.append(pvrOverviewNode('span','Upcoming bookings'),document.createTextNode(' ('+upcoming.length+')'));
+     const dates=pvrOverviewNode('ul');
+     for(const block of upcoming){
+      const end=dayms(block.end_ad_exclusive);
+      if(Number.isFinite(end))dates.append(pvrOverviewNode('li',block.start_ad+' → '+iso(end-DAY)));
+     }
+     details.append(label,dates);
+     row.append(details);
+    }
     vehicles.append(row);
    }
    section.append(vehicles);
@@ -970,6 +1052,24 @@ function pvrRenderFleetOverview(){
   root.append(section);
  }
 }
+function pvrOpenVehicleRequest(vehicle,name){
+ if(!company||$('requestForm').hidden)return;
+ pvrPreferredVehicle={id:String(vehicle.vehicle_id),name};
+ pvrPickingEnd=false;
+ const month=$('pvrFleetOverviewDate').value||pvrOverviewToday();
+ const [year,number]=month.split('-').map(Number);
+ pvrMonthDate=new Date(year,number-1,1);
+ pvrDateChanged();
+ const preferred=$('pvrPreferredVehicle');
+ preferred.scrollIntoView({block:'start'});
+ preferred.focus({preventScroll:true});
+}
+$('pvrClearPreferredVehicle').onclick=()=>{
+ pvrPreferredVehicle=null;
+ $('vehicle').value='';
+ pvrDateChanged();
+ $(mode==='AD'?'start':'bsStart').focus();
+};
 $('pvrFleetOverviewDate').addEventListener('change',pvrRenderFleetOverview);
 $('pvrFleetOverviewRefresh').addEventListener('click',async event=>{
  const button=event.currentTarget;
@@ -1064,7 +1164,7 @@ $('pvrAvailRefresh').addEventListener('click',()=>pvrFindAvailable());
 $('pvrFindVehicles').addEventListener('click',()=>pvrFindAvailable());
 document.addEventListener('pvr-language-change',()=>{summary();pvrRenderVehicles();pvrRenderMonth();pvrRenderFleetOverview();if(company)history().catch(()=>{});});
 pvrRenderMonth();
-async function check(){if(!client){$('authStatus').textContent='Supabase library failed to load';return}const {data:{session},error}=await client.auth.getSession();if(error)throw error;user=session?.user||null;$('authButton').textContent=user?'Sign out':'Sign in with Google';$('requestForm').hidden=true;$('historyPanel').hidden=true;$('pvrFleetOverview').hidden=true;$('pvrFleetOverviewGroups').replaceChildren();pvrAvail=null;company=null;if(!user){$('authStatus').textContent='Sign in to continue';return}
+async function check(){if(!client){$('authStatus').textContent='Supabase library failed to load';return}const {data:{session},error}=await client.auth.getSession();if(error)throw error;if(user?.id!==session?.user?.id)pvrPreferredVehicle=null;user=session?.user||null;$('authButton').textContent=user?'Sign out':'Sign in with Google';$('requestForm').hidden=true;$('historyPanel').hidden=true;$('pvrFleetOverview').hidden=true;$('pvrFleetOverviewGroups').replaceChildren();pvrAvail=null;company=null;if(!user){$('authStatus').textContent='Sign in to continue';return}
 // Claim a pre-approved invitation using the actual Supabase project URL and publishable key.
 // Do not silently ignore a failed claim: otherwise a signed-in partner looks unassigned.
 let invitationIssue='';
@@ -1089,7 +1189,7 @@ if(!company){$('authStatus').textContent=invitationIssue?window.pvrT('Signed in,
 $('authStatus').textContent=window.pvrT('Signed in: '+(user.email||'Partner'));$('companyName').value=company.name;try{await loadVehicles()}catch(vehicleError){console.warn('Partner vehicle catalog:',vehicleError.message)}$('requestForm').hidden=false;$('historyPanel').hidden=false;$('pvrFleetOverview').hidden=false;$('pvrFleetOverviewStatus').textContent='Checking latest fleet availability…';await pvrLoadAvailability();await history()}
 $('authButton').onclick=async()=>{try{if(!client)throw Error('Supabase unavailable');if(user){await client.auth.signOut();company=null;await check();return}const redirect=location.origin+location.pathname;const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:redirect}});if(error)throw error}catch(e){feedback(e.message,true)}};
 $('refreshHistory').onclick=()=>history().catch(e=>feedback(e.message,true));
-$('requestForm').onsubmit=async e=>{e.preventDefault();if(!user||!company)return feedback('Sign in with an assigned company.',true);const {start,end}=dates();if(!start||!end||end<=start)return feedback('Return date must be later than pickup date.',true);if(dayms(end)-dayms(start)>365*DAY)return feedback('Requests may cover up to 365 days.',true);const vehicle=$('vehicle').value;if(!vehicle)return feedback('Choose a vehicle.',true);const chosenRange=pvrValidRange();if(!chosenRange||!pvrSearchActive||pvrSearchRange!==chosenRange.key||!pvrVehicleList().some(v=>String(v.vehicle_id)===vehicle))return feedback('Please choose an available vehicle from the date-filtered results.',true);if(!pvrAvail?.verified||pvrFilterKind(vehicle,chosenRange)!=='available')return feedback('This vehicle is listed, but its availability is not verified. Please ask Prince Vehicle Rental to refresh the secure fleet snapshot.',true);if(start<pvrLocalISO(new Date()))return feedback('Pickup date cannot be in the past.',true);const busy=pvrRangeBlocked(vehicle,start,end);if(busy)return feedback(window.pvrT('Requested dates include a known booked or maintenance day:')+' '+busy+'. '+window.pvrT('Choose different dates.'),true);const btn=$('submitRequest');btn.disabled=true;try{await pvrLoadAvailability();if(!pvrAvail?.verified||pvrFilterKind(vehicle,chosenRange)!=='available'||!pvrVehicleList().some(v=>String(v.vehicle_id)===vehicle)||!pvrValidRange()||pvrValidRange().key!==chosenRange.key)throw Error('Cannot verify availability right now. Please refresh and try again.');
+$('requestForm').onsubmit=async e=>{e.preventDefault();if(!user||!company)return feedback('Sign in with an assigned company.',true);const {start,end}=dates();if(!start||!end||end<=start)return feedback('Return date must be later than pickup date.',true);if(dayms(end)-dayms(start)>365*DAY)return feedback('Requests may cover up to 365 days.',true);const vehicle=$('vehicle').value;if(!vehicle)return feedback('Choose a vehicle.',true);const chosenRange=pvrValidRange();if(!chosenRange||!pvrSearchActive||pvrSearchRange!==chosenRange.key||!pvrVehicleList().some(v=>String(v.vehicle_id)===vehicle))return feedback('Please choose an available vehicle from the date-filtered results.',true);if(!pvrAvail?.verified||pvrFilterKind(vehicle,chosenRange)!=='available')return feedback('This vehicle is listed, but its availability is not verified. Please ask Prince Vehicle Rental to refresh the secure fleet snapshot.',true);if(start<pvrOverviewToday())return feedback('Pickup date cannot be in the past.',true);const busy=pvrRangeBlocked(vehicle,start,end);if(busy)return feedback(window.pvrT('Requested dates include a known booked or maintenance day:')+' '+busy+'. '+window.pvrT('Choose different dates.'),true);const btn=$('submitRequest');btn.disabled=true;try{await pvrLoadAvailability();if(!pvrAvail?.verified||pvrFilterKind(vehicle,chosenRange)!=='available'||!pvrVehicleList().some(v=>String(v.vehicle_id)===vehicle)||!pvrValidRange()||pvrValidRange().key!==chosenRange.key)throw Error('Cannot verify availability right now. Please refresh and try again.');
 // Server-controlled request submission; company, user and status are NEVER accepted from the browser.
 const {data:requestId,error}=await client.rpc('pvr_submit_partner_request',{
   p_vehicle_id:vehicle,
