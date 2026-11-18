@@ -353,7 +353,7 @@ const SCHEMAS={
 'Other Expenses':['Expense ID','Date AD','Category','Vehicle ID','Amount NPR','Paid By','Notes'],
 'Rate Options':['Daily Rate NPR'],
 'Instructions':['Topic','Details']};
-const NAV=['Dashboard','Booking Calendar','Bookings','Vehicles','Owners','Owner Payments','Staff','Electricity Bills','Maintenance','Tyres','Other Expenses','Customers','Customer Blacklist','Rental Companies','Rental Partner'];
+const NAV=['Dashboard','Booking Calendar','Bookings','Vehicles','Owners','Owner Payments','Staff','Staff Access','Electricity Bills','Maintenance','Tyres','Other Expenses','Customers','Customer Blacklist','Rental Companies','Rental Partner'];
 const TYPES={'Status':['Active','Inactive','Reserved','Completed','Extended','Due for return','Cancelled','Scheduled','In progress','Returned','Renewed','Paid','Pending','Partial','Unpaid'], 'Payment Status':['Paid','Unpaid','Partial'],'Paid By':['Prince Vehicle Rental','Vehicle owner','Insurance','Other'],'Type':['Regular servicing','Repair / breakdown','Tyres / brakes','Battery / electrical','Accident repair','Other'],'Reason':['Normal wear','Puncture / damage','Uneven wear','Accident damage','Premature wear','Other'],'Method':['Cash','Bank transfer','eSewa','Khalti','Other']};
 const REQUIRED_SCHEMAS=JSON.parse(JSON.stringify(SCHEMAS));
 // Backwards-compatible: older workbooks may not have the optional evening charge column.
@@ -367,8 +367,8 @@ const n=v=>Number(v)||0, today=()=>new Date().toISOString().slice(0,10), uid=pre
 const rows=s=>data[s]||[], val=(s,key,match,field)=>rows(s).find(r=>r[key]===match)?.[field]||'';
 function alertUser(msg,bad=false){$('toastroot').innerHTML=`<div class="toast ${bad?'bad':''}">${esc(msg)}</div>`;setTimeout(()=>$('toastroot').innerHTML='',5200)}
 function status(msg,warn=false){$('notice').className='banner'+(warn?' warn':'');$('notice').textContent=msg}
-function nav(){ $('nav').innerHTML=NAV.map(x=>`<button data-nav="${esc(x)}" class="${page===x?'active':''}"><span class="nav-icon" aria-hidden="true">${({Dashboard:'◈','Booking Calendar':'▦',Bookings:'▤',Vehicles:'🚘',Owners:'♙','Owner Payments':'◉',Staff:'♟','Electricity Bills':'ϟ',Maintenance:'⚙',Tyres:'◎','Other Expenses':'▧',Customers:'♧','Customer Blacklist':'⚑','Rental Companies':'▣','Rental Partner':'▦'})[x]||'•'}</span><span>${esc(x==='Vehicles'?'Vehicle Registration':x)}</span></button>`).join('');document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{if(b.dataset.nav==='Rental Companies'){window.location.assign(new URL('admin-access.html',document.baseURI).href);return}if(b.dataset.nav==='Rental Partner'){window.location.assign(new URL('rental-partner.html',document.baseURI).href);return}page=b.dataset.nav;filter='';render()}) }
-function render(){nav();$('pageTitle').textContent=page; $('content').innerHTML=page==='Dashboard'?dashboard():page==='Booking Calendar'?bookingCalendar():page==='Customers'?customersPage():page==='Customer Blacklist'?customerBlacklistMarkup():page==='Staff'?staffPage():section();if(page==='Booking Calendar')bindBookingCalendar();if(page==='Customers')bindCustomers();if(page==='Customer Blacklist'&&zip)bindCustomerBlacklist();if(page==='Staff')bindStaffPage();if(page==='Dashboard'&&zip)edit('Bookings',-1,true);if(page==='Dashboard'){bindBookingAlerts();bindRentalStatusActions();bindRentalExtendActions();bindAdminFleetActions();
+function nav(){ $('nav').innerHTML=NAV.map(x=>`<button data-nav="${esc(x)}" class="${page===x?'active':''}"><span class="nav-icon" aria-hidden="true">${({Dashboard:'◈','Booking Calendar':'▦',Bookings:'▤',Vehicles:'🚘',Owners:'♙','Owner Payments':'◉',Staff:'♟','Staff Access':'♜','Electricity Bills':'ϟ',Maintenance:'⚙',Tyres:'◎','Other Expenses':'▧',Customers:'♧','Customer Blacklist':'⚑','Rental Companies':'▣','Rental Partner':'▦'})[x]||'•'}</span><span>${esc(x==='Vehicles'?'Vehicle Registration':x)}</span></button>`).join('');document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{if(b.dataset.nav==='Rental Companies'){window.location.assign(new URL('admin-access.html',document.baseURI).href);return}if(b.dataset.nav==='Rental Partner'){window.location.assign(new URL('rental-partner.html',document.baseURI).href);return}page=b.dataset.nav;filter='';render()}) }
+function render(){nav();$('pageTitle').textContent=page; $('content').innerHTML=page==='Dashboard'?dashboard():page==='Booking Calendar'?bookingCalendar():page==='Customers'?customersPage():page==='Customer Blacklist'?customerBlacklistMarkup():page==='Staff'?staffPage():page==='Staff Access'?staffAccessPage():section();if(page==='Booking Calendar')bindBookingCalendar();if(page==='Customers')bindCustomers();if(page==='Customer Blacklist'&&zip)bindCustomerBlacklist();if(page==='Staff')bindStaffPage();if(page==='Staff Access')bindStaffAccess();if(page==='Dashboard'&&zip)edit('Bookings',-1,true);if(page==='Dashboard'){bindBookingAlerts();bindRentalStatusActions();bindRentalExtendActions();bindAdminFleetActions();
  const dashboardRange=$('dashboardBookingRange');
  if(dashboardRange)dashboardRange.onchange=()=>{
   dashboardBookingRange=dashboardRange.value;
@@ -890,6 +890,72 @@ function customerUploadId(index){
 
 // Unified staff workspace. Payroll and Staff Advances remain in their original
 // workbook sheets; the navigation simply presents them together.
+function staffAccessPage(){
+ return `<section class="panel pvr-staff-access">
+  <div class="panelhead"><div><h2>Add staff access</h2><p class="hint">Have your staff member open the staff app and sign in with Google once. Then enter that same email here to verify their sign-in and activate access.</p></div><a class="btn" href="./staff.html" target="_blank" rel="noopener">Open staff app ↗</a></div>
+  <form id="pvrStaffAccessForm">
+   <div class="fieldgrid">
+    <div class="field"><label for="pvrStaffAccessName">Full name</label><input id="pvrStaffAccessName" name="name" autocomplete="off" required minlength="2" maxlength="120"></div>
+    <div class="field"><label for="pvrStaffAccessEmail">Google email</label><input id="pvrStaffAccessEmail" name="email" type="email" autocomplete="off" maxlength="254" required></div>
+   </div>
+   <div class="toolbar"><button class="btn primary" type="submit">Verify &amp; activate</button></div>
+  </form>
+  <p id="pvrStaffAccessStatus" role="status" class="hint"></p>
+ </section>
+ <section class="panel pvr-staff-access">
+  <div class="panelhead"><h2>Staff accounts</h2><button type="button" class="btn" id="pvrStaffAccessRefresh">Refresh accounts</button></div>
+  <div id="pvrStaffAccessList" aria-live="polite"></div>
+ </section>`;
+}
+function bindStaffAccess(){
+ const form=$('pvrStaffAccessForm'),list=$('pvrStaffAccessList'),statusLine=$('pvrStaffAccessStatus');
+ const refresh=$('pvrStaffAccessRefresh'),submit=form.querySelector('button[type="submit"]');
+ let accounts=[],busy=false;
+ function displayAccounts(){
+  list.innerHTML=accounts.length?`<div class="tablewrap"><table><thead><tr><th>Name</th><th>Google email</th><th>Access</th><th>Action</th></tr></thead><tbody>
+   ${accounts.map((a,i)=>`<tr><td>${esc(a.name)}</td><td>${esc(a.email)}</td><td><span class="tag ${a.active?'Active':'Inactive'}">${a.active?'Active':'Inactive'}</span></td><td><button type="button" class="btn" data-pvr-staff-account="${i}">${a.active?'Deactivate':'Reactivate'}</button></td></tr>`).join('')}
+  </tbody></table></div>`:'<p class="hint">No staff accounts have been granted access yet.</p>';
+ }
+ async function request(args,success){
+  if(busy)return false;
+  busy=true;
+  submit.disabled=refresh.disabled=true;
+  statusLine.textContent=success?'Checking staff sign-in and updating access…':'Loading staff accounts…';
+  try{
+   accounts=await window.pvrStaffAccess(args);
+   if(!form.isConnected)return false;
+   displayAccounts();
+   statusLine.textContent=success||'';
+   return true;
+  }catch(error){
+   if(form.isConnected)statusLine.textContent=error.message;
+   return false;
+  }finally{
+   busy=false;
+   submit.disabled=refresh.disabled=false;
+  }
+ }
+ form.onsubmit=async event=>{
+  event.preventDefault();
+  const fields=new FormData(form),name=String(fields.get('name')).trim(),email=String(fields.get('email')).trim().toLowerCase();
+  if(name.length<2){statusLine.textContent='Enter the staff member’s full name.';return}
+  if(!confirm('Verify and grant staff workspace access to '+email+'?'))return;
+  if(await request({p_email:email,p_name:name,p_active:true},'Staff sign-in found and access activated. They can now open the staff app.'))form.reset();
+ };
+ list.onclick=event=>{
+  const button=event.target.closest('[data-pvr-staff-account]');
+  if(!button||busy)return;
+  const account=accounts[Number(button.dataset.pvrStaffAccount)];
+  if(!account)return;
+  const action=account.active?'Deactivate':'Reactivate';
+  if(!confirm(action+' staff access for '+account.email+'?'))return;
+  request({p_email:account.email,p_name:account.name,p_active:!account.active},account.active?'Staff access deactivated.':'Staff access reactivated.');
+ };
+ refresh.onclick=()=>request({});
+ if(window.pvrStaffAccess)request({});
+ else window.addEventListener('pvr-staff-access-ready',()=>{if(form.isConnected)request({});},{once:true});
+}
+
 function staffPage(){
  if(!zip)return '<div class="panel"><h2>Staff management</h2><p>Open your Excel workbook to view and edit staff records.</p></div>';
  const staff=rows('Staff'),pay=rows('Payroll'),adv=rows('Staff Advances');
@@ -1983,6 +2049,14 @@ async function printBookingConfirmation(index){
  let pending=false;
  const syncLabel=document.getElementById('dualSyncState');
  const syncText=(msg,bad=false)=>{if(syncLabel){syncLabel.textContent='Supabase: '+msg;syncLabel.style.color=bad?'#b2454d':'#147b58'}};
+ window.pvrStaffAccess=async (args={})=>{
+  await window.pvrRequireAdmin();
+  const {data,error}=await getClient().rpc('pvr_staff_manage',args);
+  if(error)throw Error(error.message);
+  if(!Array.isArray(data))throw Error('The staff account response could not be read.');
+  return data;
+ };
+ window.dispatchEvent(new Event('pvr-staff-access-ready'));
  window.pvrDualSync={
   async publishVehicle(id){
    const c=getClient();
