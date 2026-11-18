@@ -339,7 +339,25 @@ if(window.parent!==window&&new URLSearchParams(location.search).get('embeddedRev
 .pvr-embedded-review .modal{width:100%;max-height:none;overflow:visible;margin:0;border:0;border-radius:0;box-shadow:none;padding:clamp(14px,3vw,24px)}
 .pvr-embedded-review .modalhead h2{font-size:1.15rem}
 .pvr-embedded-review #closeModal{display:none}
-.pvr-embedded-review #embeddedReviewFeedback{margin:12px 0}
+.partner-review-card{width:min(520px,100%);padding:clamp(16px,4vw,24px);background:#fff}
+.pvr-embedded-review .partner-review-card{width:100%}
+.partner-review-card .review-vehicle{padding:18px 20px;border-radius:16px;background:linear-gradient(125deg,#102839,#18535a);color:#fff}
+.partner-review-card .review-vehicle span{color:#d8bd88}
+.partner-review-card .review-vehicle h2{margin:6px 0 0;font-size:clamp(1.35rem,4vw,1.85rem);font-weight:750;line-height:1.2;overflow-wrap:anywhere}
+.review-vehicle span,.review-days span,.review-rate label{font-size:.78rem;font-weight:700;letter-spacing:.035em}
+.partner-review-card .review-metrics{display:grid;grid-template-columns:.8fr 1.2fr;gap:10px;margin-top:12px}
+.review-days,.review-rate{min-width:0;padding:12px 14px;border:1px solid #dbe6e8;border-radius:13px;background:#f4f9f9;color:#31535b}
+.review-days strong{display:block;margin-top:5px;font-size:1.4rem;line-height:1.5;color:#142c3d}
+.review-rate-input{display:flex;align-items:center;gap:7px;margin-top:4px;padding:0 8px;border:1px solid #b9d5d6;border-radius:8px;background:#fff;color:#346169}
+.review-rate-input:focus-within{outline:2px solid #078b82;outline-offset:2px}
+.review-rate-input span{font-size:.7rem;font-weight:800}
+.partner-review-card .review-rate-input input{min-width:0;width:100%;padding:7px 0;border:0;border-radius:0;background:transparent;color:#142c3d;font-size:16px;font-weight:800;box-shadow:none;outline:0}
+.partner-review-card .review-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:16px}
+.partner-review-card .review-actions button{min-height:42px}
+.partner-review-card .review-reject{color:#96354a;border-color:#ead2d8;background:#fff}
+.partner-review-card .review-feedback{margin:12px 0 0;padding:9px 11px;border-radius:8px;background:#f3f7f9;color:#344e5a;font-size:.87rem}
+.partner-review-card .review-feedback[hidden]{display:none}
+@media(max-width:390px){.partner-review-card .review-actions .primary{width:100%}}
 </style></head><body class="pvr-admin-locked"><div id="pvrAdminGate">
   <section class="pvr-gate-card" aria-labelledby="pvrAdminGateTitle">
     <div class="pvr-gate-mark" aria-hidden="true"><span>♔</span>P</div>
@@ -1667,17 +1685,9 @@ function bookingPaymentDetails(saved,values){
  }
  return updated;
 }
-function editBookingSimple(index=-1,inline=false,vehicleId='',partnerReview=null){
+function editBookingSimple(index=-1,inline=false,vehicleId=''){
  if(!zip){alertUser('Open the matching Excel workbook first.',true);return}
  const existing=index>=0?rows('Bookings')[index]:{},r={...existing};if(index<0){r['Booking ID']=uid('BKG');r.Status='Reserved';r['Created AD']=today();r['Start AD']=localDate();r['Vehicle ID']=vehicleId}
- if(partnerReview){
-  r['Booking ID']='BKG-PARTNER-'+partnerReview.request_id;
-  r['Start AD']=partnerReview.start_ad;
-  r['End AD Exclusive']=partnerReview.end_ad_exclusive;
-  r['Customer Name']=partnerReview.companyName;
-  r.Notes=partnerReview.notes||'';
-  r.Status='Active';
- }
  const mode=r.Status||'Active';
  // Overlaps are always rechecked in validate() before saving.
 
@@ -1700,44 +1710,10 @@ function editBookingSimple(index=-1,inline=false,vehicleId='',partnerReview=null
  return `<div class="field"><label>${esc(label)}</label>${control}</div>`};
  const advanceBox=`<div class="field" style="border:2px solid #0d9488;background:#edfaf7;border-radius:12px;padding:14px;grid-column:1/-1"><label style="font-size:15px;color:#075e56">Advance payment received (NPR)</label><input name="Advance NPR" type="number" min="0" step="any" inputmode="decimal" value="${esc(r['Advance NPR']??'0')}" placeholder="Enter advance received" style="font-size:18px;font-weight:700"><small>Advance is deducted from rental charges automatically. The refundable deposit is separate.</small></div>`;
  const form=`${bsCalendarMarkup()}<div class="field"><label>Reservation type</label><select id="bookingMode"><option value="Reserved" ${mode==='Reserved'?'selected':''}>Pre-Booking</option><option value="Active" ${mode==='Active'?'selected':''}>Booking (confirmed)</option>${['Reserved','Active'].includes(mode)?'':`<option value="${esc(mode)}" selected>${esc(mode)}</option>`}</select><small>Pre-bookings reserve vehicle dates. Convert later by editing and choosing Booking.</small></div><div class="fieldgrid">${advanceBox}${fields.map(field).join('')}</div><p class="callout" id="bookingBlacklistNotice" role="status" hidden></p><div class="callout" id="bookingTotalPreview">Enter rental details to calculate the balance.</div>`;
- const reviewNotice=partnerReview?'<p class="callout">The requested vehicle and dates are fixed. Enter the booking details to approve, or reject the request.</p><p id="embeddedReviewFeedback" role="status" hidden></p>':'';
- const rejectButton=partnerReview?'<button class="btn" type="button" id="rejectPartnerRequest" style="color:#a33246">Reject request</button>':'';
- const root=inline?$('homeBookingForm'):$('modalroot');root.innerHTML=`${inline?'':'<div class="modalbg"><div class="modal">'}<div class="modalhead"><h2>${partnerReview?'Approve partner request':(index>=0?'Edit':'New')+' Pre-Booking / Booking'}</h2><button class="btn" id="closeModal">Close</button></div><form id="recordForm">${reviewNotice}${form}<div class="foot"><button class="btn" type="button" id="cancelModal">Cancel</button>${rejectButton}${index>=0?'<button class="btn" type="button" id="deleteBookingInEdit" style="color:#b2454d">Delete booking</button><button class="btn" type="button" id="saveBookingPayments" title="Saves pricing, advance, discount, deposit and evening charge using the original booking dates">Save payment details only</button>':''}<button class="btn primary" type="submit">${partnerReview?'Save and approve':'Save '+(index>=0?'changes':'reservation')}</button></div></form>${inline?'':'</div></div>'}`;
- $('closeModal').onclick=$('cancelModal').onclick=()=>{
-  if(partnerReview&&embeddedPartnerReview)sendPartnerReviewMessage('pvr-review-close');
-  else if(inline)editBookingSimple(-1,true);
-  else $('modalroot').innerHTML='';
- };
+ const root=inline?$('homeBookingForm'):$('modalroot');root.innerHTML=`${inline?'':'<div class="modalbg"><div class="modal">'}<div class="modalhead"><h2>${index>=0?'Edit':'New'} Pre-Booking / Booking</h2><button class="btn" id="closeModal">Close</button></div><form id="recordForm">${form}<div class="foot"><button class="btn" type="button" id="cancelModal">Cancel</button>${index>=0?'<button class="btn" type="button" id="deleteBookingInEdit" style="color:#b2454d">Delete booking</button><button class="btn" type="button" id="saveBookingPayments" title="Saves pricing, advance, discount, deposit and evening charge using the original booking dates">Save payment details only</button>':''}<button class="btn primary" type="submit">Save ${index>=0?'changes':'reservation'}</button></div></form>${inline?'':'</div></div>'}`;
+ $('closeModal').onclick=$('cancelModal').onclick=()=>{if(inline)editBookingSimple(-1,true);else $('modalroot').innerHTML=''};
  attachBSCalendar(index<0);
  const f=$('recordForm'),preset=$('ratePreset'),manual=$('dailyRateManual'),effective=$('effectiveRate');
- if(partnerReview){
-  f.elements.namedItem('Vehicle ID').disabled=true;
-  for(const name of ['Start AD','Booking End AD','Days'])f.elements.namedItem(name).readOnly=true;
-  f.querySelector('.bs-picker').hidden=true;
-  $('bookingMode').closest('.field').hidden=true;
- }
- const reviewSubmit=f.querySelector('[type="submit"]'), reviewReject=$('rejectPartnerRequest');
- let reviewBusy=false;
- function reviewFeedback(message){
-  const feedback=$('embeddedReviewFeedback');feedback.hidden=false;feedback.textContent=message;
- }
- async function runReview(action,work){
-  if(reviewBusy)return;
-  reviewBusy=true;reviewSubmit.disabled=true;reviewReject.disabled=true;
-  $('cancelModal').disabled=true;$('closeModal').disabled=true;
-  sendPartnerReviewMessage('pvr-review-busy',{busy:true,unsaved:dirty});
-  reviewFeedback(action==='reject'?'Rejecting the request…':'Saving the booking and approving the request…');
-  try{await work()}catch(error){reviewFeedback(error.message)}
-  finally{
-   reviewBusy=false;reviewSubmit.disabled=false;reviewReject.disabled=false;
-   $('cancelModal').disabled=false;$('closeModal').disabled=false;
-   sendPartnerReviewMessage('pvr-review-busy',{busy:false,unsaved:dirty});
-  }
- }
- if(reviewReject)reviewReject.onclick=()=>{
-  if(!confirm('Reject this rental company request?'))return;
-  runReview('reject',()=>window.pvrRejectPartnerRequest(partnerReview));
- };
  const blacklistFields=['Customer Name','Phone','Citizenship / Passport'];
  const blacklistNotice=$('bookingBlacklistNotice');
  function updateBlacklistNotice(){
@@ -1788,39 +1764,81 @@ function editBookingSimple(index=-1,inline=false,vehicleId='',partnerReview=null
    alertUser('Payment details saved. The original vehicle, dates and booking status were kept.');
   }catch(error){alertUser(error.message,true);window.alert(error.message)}
  };
- f.onsubmit=async e=>{e.preventDefault();update();const fd=new FormData(f),out={...r};fields.filter(h=>h!=='Booking End AD').forEach(h=>out[h]=String(fd.get(h)??'').trim());out['Advance NPR']=String(fd.get('Advance NPR')??'0').trim();out['Daily Rate NPR']=pricingPlan.value==='Daily'?effective.value:'';out['Package Amount NPR']=pricingPlan.value==='Daily'?'':out['Package Amount NPR'];out.Status=$('bookingMode').value;out['Booking ID']=r['Booking ID'];out['Created AD']=r['Created AD'];try{
- if(partnerReview){
-  const existing=rows('Bookings').find(row=>row['Booking ID']===r['Booking ID']);
-  if(existing){
-   await runReview('approve',async()=>{
-    await window.pvrClaimPartnerRequest(partnerReview);
-    if(dirty)await autoSaveCloud();
-    await window.pvrApproveSavedPartnerRequest(partnerReview);
-   });
-   return;
+ f.onsubmit=async e=>{e.preventDefault();update();const fd=new FormData(f),out={...r};fields.filter(h=>h!=='Booking End AD').forEach(h=>out[h]=String(fd.get(h)??'').trim());out['Advance NPR']=String(fd.get('Advance NPR')??'0').trim();out['Daily Rate NPR']=pricingPlan.value==='Daily'?effective.value:'';out['Package Amount NPR']=pricingPlan.value==='Daily'?'':out['Package Amount NPR'];out.Status=$('bookingMode').value;out['Booking ID']=r['Booking ID'];out['Created AD']=r['Created AD'];try{validate('Bookings',out,index);if(!checkCustomerFlagBeforeBooking(out))return;if(index<0)rows('Bookings').push(out);else rows('Bookings')[index]=out;markDirty();$('modalroot').innerHTML='';render();alertUser('Reservation saved. Save to OneDrive to persist changes.')}catch(err){alertUser(err.message,true);window.alert(err.message)}};
+}
+function renderPartnerReview(request){
+ const bookingId='BKG-PARTNER-'+request.request_id;
+ const findBooking=()=>rows('Bookings').find(row=>row['Booking ID']===bookingId);
+ const existing=findBooking();
+ const days=Math.round((Date.parse(request.end_ad_exclusive)-Date.parse(request.start_ad))/86400000);
+ const vehicle=rows('Vehicles').find(row=>row['Vehicle ID']===request.vehicle_id);
+ const name=vehicle?.['Vehicle Name']||request.vehicle_id;
+ const rate=existing?.['Daily Rate NPR']||'5000';
+ $('modalroot').innerHTML=`<div class="modalbg"><section class="modal partner-review-card" aria-label="Review booking request">
+  <form id="compactPartnerReview">
+   <div class="review-vehicle"><span>Vehicle</span><h2>${esc(name)}</h2></div>
+   <div class="review-metrics">
+    <div class="review-days"><span>Rental days</span><strong>${days}</strong></div>
+    <div class="review-rate"><label for="partnerDailyRate">Daily rate</label><div class="review-rate-input"><span aria-hidden="true">NPR</span><input id="partnerDailyRate" aria-label="Daily rate in NPR" type="number" inputmode="decimal" min="0.01" step="any" value="${esc(rate)}" required ${existing?'readonly':''}></div></div>
+   </div>
+   <p id="compactReviewFeedback" class="review-feedback" role="status" hidden></p>
+   <div class="review-actions">
+    <button class="btn" type="button" id="compactReviewCancel">Cancel</button>
+    <button class="btn review-reject" type="button" id="compactReviewReject" ${existing?'disabled':''}>Reject request</button>
+    <button class="btn primary" type="submit">${existing?'Finish approval':'Save and approve'}</button>
+   </div>
+  </form>
+ </section></div>`;
+ const form=$('compactPartnerReview'),rateInput=$('partnerDailyRate'),feedback=$('compactReviewFeedback');
+ const approve=form.querySelector('[type="submit"]'),reject=$('compactReviewReject'),cancel=$('compactReviewCancel');
+ let busy=false;
+ function showFeedback(message){
+  feedback.hidden=false;
+  feedback.textContent=message;
+ }
+ async function runDecision(message,decide){
+  if(busy)return;
+  busy=true;approve.disabled=true;reject.disabled=true;cancel.disabled=true;rateInput.readOnly=true;
+  sendPartnerReviewMessage('pvr-review-busy',{busy:true,unsaved:dirty});
+  showFeedback(message);
+  try{await decide()}catch(error){showFeedback(error.message)}
+  finally{
+   const saved=Boolean(findBooking());
+   busy=false;approve.disabled=false;reject.disabled=saved;cancel.disabled=false;rateInput.readOnly=saved;
+   if(saved)approve.textContent='Finish approval';
+   sendPartnerReviewMessage('pvr-review-busy',{busy:false,unsaved:dirty});
   }
-  if(!cloudLoaded||!token||!etag||autoSaving||source!=='OneDrive '+cloudFile)throw Error('Wait for the connected OneDrive workbook before approving.');
-  out['Vehicle ID']=partnerReview.vehicle_id;
-  if(out['Start AD']!==partnerReview.start_ad||out['End AD Exclusive']!==partnerReview.end_ad_exclusive||out.Status!=='Active')throw Error('Reopen the partner request to restore its vehicle and dates.');
  }
- validate('Bookings',out,index);if(!checkCustomerFlagBeforeBooking(out))return;
- if(partnerReview){
-  await runReview('approve',async()=>{
-   await window.pvrClaimPartnerRequest(partnerReview);
-   rows('Bookings').push(out);
-   markDirty();
-   await autoSaveCloud();
-   await window.pvrApproveSavedPartnerRequest(partnerReview);
+ cancel.onclick=()=>{
+  if(embeddedPartnerReview)sendPartnerReviewMessage('pvr-review-close');
+  else $('modalroot').innerHTML='';
+ };
+ reject.onclick=()=>{
+  if(confirm('Reject this rental company request?'))runDecision('Rejecting the request…',()=>window.pvrRejectPartnerRequest(request));
+ };
+ form.onsubmit=event=>{
+  event.preventDefault();
+  if(busy)return;
+  const saved=findBooking();
+  const booking={
+   'Booking ID':bookingId,'Vehicle ID':request.vehicle_id,'Customer Name':request.companyName,
+   'Start AD':request.start_ad,'End AD Exclusive':request.end_ad_exclusive,'Days':String(days),
+   'Pricing Plan':'Daily','Daily Rate NPR':rateInput.value,'Advance NPR':'0','Deposit Held NPR':'0',
+   Status:'Active',Notes:request.notes||'','Created AD':today()
+  };
+  try{
+   if(!saved){
+    validate('Bookings',booking,-1);
+    if(!checkCustomerFlagBeforeBooking(booking))return;
+   }
+  }catch(error){showFeedback(error.message);return}
+  runDecision('Saving the booking and approving the request…',async()=>{
+   await window.pvrClaimPartnerRequest(request);
+   if(!saved){rows('Bookings').push(booking);markDirty();}
+   if(dirty)await autoSaveCloud();
+   await window.pvrApproveSavedPartnerRequest(request);
   });
-  return;
- }
- if(index<0)rows('Bookings').push(out);else rows('Bookings')[index]=out;
- markDirty();$('modalroot').innerHTML='';render();
- alertUser('Reservation saved. Save to OneDrive to persist changes.');
- }catch(err){
-  if(partnerReview)reviewFeedback(err.message);
-  else{alertUser(err.message,true);window.alert(err.message)}
- }};
+ };
 }
 function edit(section,index=-1,inline=false){if(section==='Vehicles')return editVehicle(index);if(section==='Bookings')return editBookingSimple(index,inline);if(!zip){alertUser('Open the matching Excel workbook first.',true);return}let heads=SCHEMAS[section],existing=index>=0?rows(section)[index]:{},prefix=section.replace(/[^A-Z]/gi,'').slice(0,3).toUpperCase();let record={...existing};if(index<0)record[heads[0]]=uid(prefix);if(section==='Agreements'&&index<0)record.Status='Active';if(section==='Vehicles'&&index<0)record.Status='Active';if(section==='Bookings'&&index<0){record.Status='Active';record['Created AD']=today()}if(section==='Staff'&&index<0)record.Status='Active';let html=(section==='Bookings'?bsCalendarMarkup():'')+heads.map((h,i)=>{let v=record[h]??'',opts=i===0?null:optionsFor(h);let isDate=/ AD$|Start AD|End AD Exclusive|Paid AD|Join AD|Replacement AD|Bill AD|Created AD|Date AD/.test(h);let type=/NPR|Quantity|Days/.test(h)?'number':isDate?'date':h==='Month YYYY-MM'?'month':'text';let control=h==='Evening / Night Charge NPR'?`<input name="Evening / Night Charge NPR" type="number" inputmode="decimal" min="0" step="any" placeholder="Optional evening charge (Rs.)" value="${esc(v)}"><small>One-time extra charge per booking, not per day. Leave blank for zero.</small>`:h==='Daily Rate NPR'?`<select id="ratePreset" aria-label="Choose daily rate"><option value="">Select a standard rate</option>${opts.map(o=>`<option value="${esc(o.v)}" ${String(v)===o.v?'selected':''}>${esc(o.label)}</option>`).join('')}<option value="manual" ${v&&!opts.some(o=>o.v===String(v))?'selected':''}>✎ Enter custom rate</option></select><input id="dailyRateManual" name="Daily Rate NPR" type="number" inputmode="decimal" min="0.01" step="any" placeholder="Or enter any daily rate (Rs.)" value="${esc(v)}"><small>Choose a standard rate (Rs. 4,000–25,000, step 500) or type your own amount above.</small>`:opts?`<select name="${esc(h)}"><option value="">Choose…</option>${opts.map(o=>`<option value="${esc(o.v)}" ${String(v)===o.v?'selected':''}>${esc(o.label)}</option>`).join('')}</select>`:h==='Notes'||h==='Workshop / Notes'?`<textarea name="${esc(h)}">${esc(v)}</textarea>`:`<input name="${esc(h)}" type="${type}" value="${esc(v)}" ${i===0?'readonly':''} ${type==='number'?'min="0" step="any"':''}>`;return `<div class="field"><label>${esc(h)}</label>${control}</div>`}).join('');(inline?$('homeBookingForm'):$('modalroot')).innerHTML=`${inline?'':'<div class="modalbg"><div class="modal">'}<div class="modalhead"><h2>${index<0?'Add':'Edit'} ${esc(pageLabel(section))}</h2><button class="btn" id="closeModal">Close</button></div><form id="recordForm"><div class="fieldgrid">${html}</div><div class="foot"><button class="btn" type="button" id="cancelModal">Cancel</button><button class="btn primary" type="submit">Save record</button></div></form>${inline?'':'</div></div>'}`;$('closeModal').onclick=$('cancelModal').onclick=()=>{if(inline)edit('Bookings',-1,true);else $('modalroot').innerHTML=''};if(section==='Agreements'){const ownerSelect=$('recordForm').elements.namedItem('Owner ID');const vehicleSelect=$('recordForm').elements.namedItem('Vehicle ID');if(ownerSelect&&!rows('Owners').length){const msg=document.createElement('div');msg.className='callout';msg.style.marginBottom='12px';msg.textContent='No owners are saved in the loaded workbook. Add the owner in the Owners section first, then return to Agreements.';$('recordForm').prepend(msg)}if(vehicleSelect&&ownerSelect&&index<0){vehicleSelect.addEventListener('change',()=>{const vehicle=rows('Vehicles').find(v=>v['Vehicle ID']===vehicleSelect.value);const ownerId=vehicle?.['Owner ID'];if(ownerId&&rows('Owners').some(o=>o['Owner ID']===ownerId))ownerSelect.value=ownerId})}}if(section==='Bookings'){attachBSCalendar();const preset=$('ratePreset'),manual=$('dailyRateManual');if(preset&&manual){preset.addEventListener('change',()=>{if(preset.value&&preset.value!=='manual')manual.value=preset.value;else if(preset.value==='manual'){manual.focus();manual.select()}});manual.addEventListener('input',()=>{preset.value=Array.from(preset.options).some(o=>o.value===manual.value)?manual.value:'manual'})}}$('recordForm').onsubmit=e=>{e.preventDefault();let f=new FormData(e.target),r={};heads.forEach(h=>r[h]=String(f.get(h)||'').trim());try{validate(section,r,index);if(index<0)rows(section).push(r);else rows(section)[index]=r;markDirty();$('modalroot').innerHTML='';render();alertUser('Record updated. Download or save the workbook to persist it.');if(section==='Owner Payments'&&n(r['Amount NPR'])>0&&r['Paid AD'])printOwnerPaymentReceipt(index<0?rows(section).length-1:index)}catch(err){if(section==='Bookings'&&err.message.startsWith('OWNER AGREEMENT WARNING'))window.alert(err.message);else alertUser(err.message,true)}}}
 function previousBookingMonthStart(){const [y,m]=localDate().slice(0,7).split('-').map(Number);return new Date(Date.UTC(y,m-2,1)).toISOString().slice(0,10)}
@@ -2297,22 +2315,11 @@ async function printBookingConfirmation(index){
    const {data:request,error}=await c.from('pvr_partner_requests').select('request_id,company_id,vehicle_id,start_ad,end_ad_exclusive,status,notes').eq('request_id',id).single();
    if(error)throw Error('Could not open the partner request: '+error.message);
    if(request.status!=='pending'){finishPartnerReview(request.status);return;}
-   const existing=rows('Bookings').find(row=>row['Booking ID']==='BKG-PARTNER-'+id);
-   if(existing){
-    if(confirm('This request already has a booking in OneDrive. Finish approving the request?')){
-     sendPartnerReviewMessage('pvr-review-busy',{busy:true});
-     try{
-      await window.pvrClaimPartnerRequest(request);
-      await window.pvrApproveSavedPartnerRequest(request);
-     }finally{sendPartnerReviewMessage('pvr-review-busy',{busy:false});}
-    }else if(embeddedPartnerReview)sendPartnerReviewMessage('pvr-review-close');
-    return;
-   }
    const {data:company,error:companyError}=await c.from('pvr_rental_companies').select('company_name').eq('company_id',request.company_id).single();
    if(companyError)throw Error('Could not load the rental company: '+companyError.message);
    if(embeddedPartnerReview)$('embeddedPartnerReviewStatus').hidden=true;
    else{page='Bookings';filter='';render();}
-   editBookingSimple(-1,false,request.vehicle_id,{...request,companyName:company.company_name});
+   renderPartnerReview({...request,companyName:company.company_name});
   }catch(error){
    if(embeddedPartnerReview)showEmbeddedPartnerStatus(error.message);
    else{status(error.message,true);alertUser(error.message,true);}
