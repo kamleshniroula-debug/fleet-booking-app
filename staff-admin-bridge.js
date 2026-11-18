@@ -9,7 +9,7 @@
   if(!client||!cloudLoaded||!token||!zip||source!=='OneDrive '+cloudFile)return;
   if(paused)throw Error('Staff synchronization paused after a conflict. Reload the cloud workbook and retry.');
   pulling=(async()=>{
-   const {data:session,error:authError}=await client.auth.getSession();if(authError||!session.session)throw Error('Sign in with Google as administrator before saving staff-enabled workbooks.');
+   const {data:session,error:authError}=await client.auth.getSession();if(authError||!session.session)throw Error('Sign in as administrator before saving staff-enabled workbooks.');
    const {data:operations,error}=await client.rpc('pvr_staff_admin_pending');
    if(error){if(error.code==='PGRST202'||error.code==='42883'){label('setup not installed; use enable-staff-access.sql');return}throw Error('Staff sync: '+error.message)}
    const groups=new Map();for(const op of operations){const g=groups.get(op.booking_id)||{before:op.before_row,after:op.after_row,ids:[]};g.after=op.after_row;g.ids.push(op.operation_id);groups.set(op.booking_id,g)}
@@ -66,9 +66,9 @@
  }
  function gate(allowed,text){document.body.classList.toggle('pvr-admin-locked',!allowed);const el=document.getElementById('pvrAdminGate');if(el)el.hidden=allowed;const msg=document.getElementById('pvrAdminGateMessage');if(msg)msg.textContent=text;}
  async function requireAdmin(){
-  if(!client)throw Error('Google sign-in is not ready yet.');
+  if(!client)throw Error('Administrator sign-in is not ready yet.');
   const {data,error}=await client.auth.getSession();
-  if(error||!data.session){gate(false,'Sign in with your administrator Google account to open the dashboard.');throw Error('Administrator Google sign-in required.');}
+  if(error||!data.session){gate(false,'Use your administrator passkey to open the dashboard.');throw Error('Administrator sign-in required.');}
   const result=await client.rpc('pvr_staff_admin_pending');
   if(result.error){const text=result.error.code==='PGRST202'||result.error.code==='42883'?'Install enable-staff-access.sql in Supabase first, then sign in as administrator.':'Administrator access is required. Staff should use the staff workspace.';gate(false,text);throw Error(text)}
   const current=await client.auth.getSession();if(current.data.session?.user?.id!==data.session.user.id){gate(false,'Account changed. Sign in as administrator.');throw Error('Account changed during verification.')}
@@ -78,7 +78,7 @@
  }
  window.pvrStaffBridge={
   requireAdmin,
-  async sessionChanged(session){let staffDestination=false;try{staffDestination=sessionStorage.getItem('pvr_oauth_destination')==='staff'}catch{}if(session&&staffDestination){try{sessionStorage.removeItem('pvr_oauth_destination')}catch{}window.location.replace(new URL('staff.html',window.location.href).href);return}const signIn=document.getElementById('pvrAdminSignIn');if(signIn)signIn.textContent=session?'Change Google account':'Sign in with Google';const generation=++roleGeneration;if(!session){gate(false,'Sign in with your administrator Google account to open the dashboard.');return}try{await requireAdmin()}catch(e){if(generation===roleGeneration)label(e.message,true)}},
+  async sessionChanged(session){let staffDestination=false;try{staffDestination=sessionStorage.getItem('pvr_oauth_destination')==='staff'}catch{}if(session&&staffDestination){try{sessionStorage.removeItem('pvr_oauth_destination')}catch{}window.location.replace(new URL('staff.html',window.location.href).href);return}const signIn=document.getElementById('pvrAdminSignIn');if(signIn)signIn.textContent=session?'Change Google account':'Continue with Google';const generation=++roleGeneration;if(!session){gate(false,'Use your administrator passkey to open the dashboard.');return}try{await requireAdmin()}catch(e){if(generation===roleGeneration)label(e.message,true)}},
   connect(c){if(client===c)return;client=c;window.dispatchEvent(new Event('pvr-staff-ready'));const button=document.createElement('a');button.href='staff.html';button.className='btn';button.textContent='Staff access & booking portal';button.style.display='inline-block';button.style.margin='8px';document.getElementById('googleLogin')?.parentNode.appendChild(button);label('checking setup…')},
   async beforeSave(){
    chargingSaveIds=[];expenseSaveIds=[];
