@@ -760,23 +760,25 @@ function pvrAdminFleetCards(){
  return `<section class="panel" id="adminFleet"><div class="panelhead"><h2>Vehicle availability</h2><span class="hint">${list.length} active vehicles</span></div><div class="pvr-fleet-cards">${list.map(({v,p})=>{const maintenance=pvrAdminFleetInMaintenance(v);const available=!p&&!maintenance&&pvrAdminFleetAvailable(v);return `<article class="pvr-fleet-card" style="${pvrAdminVehicleCardStyle(v)}">${p?'<span class="pvr-fleet-tag">'+(p.overdue?'Return overdue':'Booking in progress')+'</span>':available?'<span class="pvr-fleet-tag">Available</span>':''}${maintenance?'<span class="pvr-fleet-tag pvr-fleet-maintenance"><span aria-hidden="true">⚙</span> In maintenance</span>':''}<h3>${esc(v['Vehicle Name']||v['Vehicle ID'])}</h3><p>${esc(v.Registration||'Registration not recorded')}</p>${pvrAdminProgressMarkup(p)}${pvrAdminFleetActions(v,p,available)}</article>`}).join('')||'<p class="hint">Open your workbook to view vehicles.</p>'}</div></section>`;
 }
 
-let operationsRange='all';
+const operationsPeriods=[['week','This week'],['month','This month'],['last-month','Last month']];
+let operationsRange='week';
 function operationsDateRange(range,t=localDate()){
  if(range==='week'){
   const weekday=(new Date(t+'T00:00:00Z').getUTCDay()+6)%7;
   return {start:addDaysAD(t,-weekday),end:addDaysAD(t,7-weekday)};
  }
- if(range==='month'){
+ if(range==='month'||range==='last-month'){
   const date=new Date(t.slice(0,7)+'-01T00:00:00Z');
+  if(range==='last-month')date.setUTCMonth(date.getUTCMonth()-1);
   const start=date.toISOString().slice(0,10);
   date.setUTCMonth(date.getUTCMonth()+1);
   return {start,end:date.toISOString().slice(0,10)};
  }
- return null;
+ return operationsDateRange('week',t);
 }
 function operationsBreakdown(range){
  const bounds=operationsDateRange(range);
- const includes=date=>!bounds||(pvrFleetValidDate(date)&&date>=bounds.start&&date<bounds.end);
+ const includes=date=>pvrFleetValidDate(date)&&date>=bounds.start&&date<bounds.end;
  const totals=[0,0,0,0];
  const vehicles=rows('Vehicles').map(v=>({id:v['Vehicle ID'],name:v['Vehicle Name']||v['Vehicle ID'],registration:v.Registration,totals:[0,0,0,0]}));
  const byId=new Map(vehicles.map(vehicle=>[vehicle.id,vehicle]));
@@ -808,16 +810,16 @@ const operationsExpenseTypes=['Electricity Bills','Tyres','Maintenance','Other E
 function operationsOverview(review){
  const {bounds,totals,vehicles}=operationsBreakdown(operationsRange);
  const labels=['Recorded booking value','Recorded booking advances','Charging bills total','Tyre expenses total'];
- const dateLabel=bounds?`${bounds.start} to ${addDaysAD(bounds.end,-1)} AD`:'All dates';
+ const dateLabel=`${bounds.start} to ${addDaysAD(bounds.end,-1)} AD`;
  const cells=values=>values.map(value=>`<td>${money(value)}</td>`).join('');
- return `<section class="panel" id="operationsOverview"><div class="panelhead"><h2>Operations overview</h2><div class="toolbar"><label for="operationsRange">Period</label><select id="operationsRange">${[['all','All time'],['week','This week'],['month','This month']].map(([value,label])=>`<option value="${value}" ${operationsRange===value?'selected':''}>${label}</option>`).join('')}</select><button type="button" class="btn primary" id="operationsAddExpense">+ Add expense</button></div></div>
+ return `<section class="panel" id="operationsOverview"><div class="panelhead"><h2>Operations overview</h2><div class="toolbar"><label for="operationsRange">Period</label><select id="operationsRange">${operationsPeriods.map(([value,label])=>`<option value="${value}" ${operationsRange===value?'selected':''}>${label}</option>`).join('')}</select><button type="button" class="btn primary" id="operationsAddExpense">+ Add expense</button></div></div>
  <dialog id="operationsExpenseDialog" aria-labelledby="operationsExpenseTitle">
   <div class="modalhead"><h2 id="operationsExpenseTitle">Add expense</h2><button type="button" class="btn" id="operationsExpenseClose">Close</button></div>
   <div class="operations-expense-types">${operationsExpenseTypes.map(type=>`<button type="button" class="btn" data-expense-type="${esc(type)}">${esc(pageLabel(type))}</button>`).join('')}</div>
  </dialog>
  <h3>Fleet totals</h3><p class="hint">${dateLabel} · Booking amounts use the start date. Expenses use their recorded dates.</p>
  <div class="kpirow">${labels.map((label,i)=>`<div class="panel"><div class="mini">${label}</div><h2>${money(totals[i])}</h2></div>`).join('')}</div>
- <div class="panelhead operations-vehicle-header"><div><h3>By vehicle</h3><p class="hint">${dateLabel}</p></div><div class="operations-period-buttons" role="group" aria-label="By vehicle report period">${[['all','All time'],['week','Weekly'],['month','Monthly']].map(([value,label])=>`<button type="button" class="btn" data-operations-period="${value}" aria-pressed="${operationsRange===value}">${label}</button>`).join('')}</div></div><div class="tablewrap"><table><thead><tr><th scope="col">Vehicle</th><th scope="col">Booking value</th><th scope="col">Advances</th><th scope="col">Charging bills</th><th scope="col">Tyre expenses</th></tr></thead><tbody>${vehicles.map(v=>`<tr><th scope="row">${esc(v.name)}${v.registration?`<br><span class="hint">${esc(v.registration)}</span>`:''}</th>${cells(v.totals)}</tr>`).join('')||'<tr><td colspan="5">No vehicles recorded.</td></tr>'}</tbody></table></div>
+ <div class="panelhead operations-vehicle-header"><div><h3>By vehicle</h3><p class="hint">${dateLabel}</p></div><div class="operations-period-buttons" role="group" aria-label="By vehicle report period">${operationsPeriods.map(([value,label])=>`<button type="button" class="btn" data-operations-period="${value}" aria-pressed="${operationsRange===value}">${label}</button>`).join('')}</div></div><div class="tablewrap"><table><thead><tr><th scope="col">Vehicle</th><th scope="col">Booking value</th><th scope="col">Advances</th><th scope="col">Charging bills</th><th scope="col">Tyre expenses</th></tr></thead><tbody>${vehicles.map(v=>`<tr><th scope="row">${esc(v.name)}${v.registration?`<br><span class="hint">${esc(v.registration)}</span>`:''}</th>${cells(v.totals)}</tr>`).join('')||'<tr><td colspan="5">No vehicles recorded.</td></tr>'}</tbody></table></div>
  <p class="hint">Amounts are recorded totals. ${review?`${review} bookings have incomplete dates and may be excluded by date filters.`:''}</p></section>`;
 }
 function bindOperationsOverview(){
