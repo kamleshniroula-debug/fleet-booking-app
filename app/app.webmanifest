@@ -1,0 +1,34 @@
+{
+  "id": "./",
+  "name": "Prince Vehicle Rental",
+  "short_name": "Prince Rental",
+  "start_url": "./",
+  "scope": "../",
+  "display": "standalone",
+  "background_color": "#edf4f3",
+  "theme_color": "#142d3d",
+  "icons": [
+    {
+      "src": "../icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "../icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Staff Dashboard",
+      "url": "../staff.html"
+    },
+    {
+      "name": "Partner Rental",
+      "url": "../rental-partner.html"
+    }
+  ]
+}
