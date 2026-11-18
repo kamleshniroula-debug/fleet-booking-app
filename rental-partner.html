@@ -777,6 +777,7 @@ main.main {
   gap: 9px;
   margin-bottom: 8px;
 }
+#pvrFleetOverviewGroups .pvr-fleet-card-name,
 #pvrFleetOverviewGroups .pvr-overview-request strong {
   font-size: 1.15rem;
   line-height: 1.35;
@@ -1295,12 +1296,17 @@ function pvrRenderFleetOverview(){
    const vehicles=pvrOverviewNode('ul',null,'pvr-fleet-overview-list');
    for(const {vehicle,period,upcoming} of list){
     const row=pvrOverviewNode('li');
-    const button=pvrOverviewNode('button',null,'pvr-overview-request');
-    button.type='button';
     const name=vehicle.vehicle_name||vehicle.display_name||'Vehicle';
-    button.append(pvrOverviewNode('strong',name),pvrOverviewNode('small','Request this vehicle →'));
-    button.addEventListener('click',()=>pvrOpenVehicleRequest(vehicle,name));
-    row.append(pvrOverviewNode('span',cardStatuses[kind],'pvr-fleet-card-status'),button);
+    row.append(pvrOverviewNode('span',cardStatuses[kind],'pvr-fleet-card-status'));
+    if(kind==='available'){
+     const button=pvrOverviewNode('button',null,'pvr-overview-request');
+     button.type='button';
+     button.append(pvrOverviewNode('strong',name),pvrOverviewNode('small','Request this vehicle →'));
+     button.addEventListener('click',()=>pvrOpenVehicleRequest(vehicle,name));
+     row.append(button);
+    }else{
+     row.append(pvrOverviewNode('strong',name,'pvr-fleet-card-name'));
+    }
     const facts=[vehicle.registration,vehicle.model,vehicle.colour,vehicle.seats&&vehicle.seats+' '+window.pvrT('seats')].filter(Boolean);
     if(facts.length)row.append(pvrOverviewNode('small',facts.join(' · ')));
     const event=period||upcoming[0];
