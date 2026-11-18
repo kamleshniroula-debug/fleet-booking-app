@@ -2,7 +2,7 @@
    Only acknowledgments verified against the saved Supabase snapshot clear operations. */
 (()=>{
  const gateButton=document.getElementById('pvrAdminSignIn');if(gateButton)gateButton.onclick=()=>document.getElementById('googleLogin')?.click();
- let client=null,ids=[],pulling=null,paused=false,lease=null,roleGeneration=0;
+ let client=null,ids=[],chargingIds=[],chargingSaveIds=[],pulling=null,paused=false,lease=null,roleGeneration=0;
  const equal=(a,b)=>JSON.stringify(Object.entries(a||{}).filter(([,v])=>v!==''&&v!=null).map(([k,v])=>[k,String(v)]).sort(([a],[b])=>a.localeCompare(b)))===JSON.stringify(Object.entries(b||{}).filter(([,v])=>v!==''&&v!=null).map(([k,v])=>[k,String(v)]).sort(([a],[b])=>a.localeCompare(b)));
  const label=(text,bad=false)=>{let el=document.getElementById('pvrStaffSync');if(!el){el=document.createElement('div');el.id='pvrStaffSync';el.className='hint';el.style.padding='10px';document.getElementById('dualSyncState')?.parentNode.appendChild(el)}el.textContent='Staff: '+text;el.style.color=bad?'#b2454d':'#147b58'};
  async function pull(){
@@ -24,8 +24,19 @@
     changes.push({index,row:g.after});
    }
    for(const {index,row} of changes){for(const k of Object.keys(row))if(!SCHEMAS.Bookings.includes(k))SCHEMAS.Bookings.push(k);if(index<0)rows('Bookings').push({...row});else rows('Bookings')[index]={...row}}
+   const {data:bills,error:billError}=await client.rpc('pvr_staff_admin_charging_pending');
+   if(billError&&!['PGRST202','42883'].includes(billError.code))throw Error('Charging bill sync: '+billError.message);
+   let importedBills=0;
+   for(const bill of bills||[]){
+    const id='STF-CHG-'+bill.id;
+    const current=rows('Electricity Bills').find(row=>row['Bill ID']===id);
+    if(current)continue;
+    rows('Electricity Bills').push({'Bill ID':id,'Vehicle ID':bill.vehicle_id,'Bill AD':bill.bill_date,'Total NPR':String(bill.total_npr),'Payment Status':'','Notes':''});
+    importedBills++;
+   }
+   chargingIds=(bills||[]).map(bill=>bill.id);
    ids=operations.map(o=>o.operation_id);
-   if(changes.length){dirty=true;editVersion++;render();label(changes.length+' booking(s) imported; Excel save pending')}
+   if(changes.length||importedBills){dirty=true;editVersion++;render();label(changes.length+' booking(s), '+importedBills+' charging bill(s) imported; Excel save pending')}
    else label(ids.length?ids.length+' operation(s) awaiting save verification':'up to date');
   })();try{return await pulling}finally{pulling=null}
  }
@@ -52,16 +63,24 @@
   async sessionChanged(session){let staffDestination=false;try{staffDestination=sessionStorage.getItem('pvr_oauth_destination')==='staff'}catch{}if(session&&staffDestination){try{sessionStorage.removeItem('pvr_oauth_destination')}catch{}window.location.replace(new URL('staff.html',window.location.href).href);return}const signIn=document.getElementById('pvrAdminSignIn');if(signIn)signIn.textContent=session?'Change Google account':'Sign in with Google';const generation=++roleGeneration;if(!session){gate(false,'Sign in with your administrator Google account to open the dashboard.');return}try{await requireAdmin()}catch(e){if(generation===roleGeneration)label(e.message,true)}},
   connect(c){if(client===c)return;client=c;const signIn=document.getElementById('pvrAdminSignIn');if(signIn)signIn.onclick=()=>document.getElementById('googleLogin')?.click();window.dispatchEvent(new Event('pvr-staff-ready'));const button=document.createElement('a');button.href='staff.html';button.className='btn';button.textContent='Staff access & booking portal';button.style.display='inline-block';button.style.margin='8px';document.getElementById('googleLogin')?.parentNode.appendChild(button);label('checking setup…')},
   async beforeSave(){
+   chargingSaveIds=[];
    if(!client)return;
    const next=crypto.randomUUID();const {error}=await client.rpc('pvr_staff_sync_lease',{p_token:next,p_release:false});
    if(error){if(error.code==='PGRST202'||error.code==='42883')return;throw Error(error.message)}
    lease=next;
-   try{await pull();validateMergedBookings()}catch(e){await this.endSave();throw e}
+   try{await pull();validateMergedBookings();chargingSaveIds=[...chargingIds]}catch(e){await this.endSave();throw e}
   },
   async endSave(){if(!lease||!client)return;const current=lease;lease=null;const {error}=await client.rpc('pvr_staff_sync_lease',{p_token:current,p_release:true});if(error)label('save lease will expire automatically: '+error.message,true)},
-  async afterSnapshot(){if(!client||!ids.length)return;const batch=[...ids];const {error}=await client.rpc('pvr_staff_admin_ack',{p_ids:batch});if(error){label('workbook saved; acknowledgment pending: '+error.message,true);return}ids=ids.filter(id=>!batch.includes(id));label('changes saved to Excel and verified')},
+  async afterSnapshot(){
+   if(!client)return;
+   if(chargingSaveIds.length){
+    const {error}=await client.rpc('pvr_staff_admin_charging_ack',{p_ids:chargingSaveIds});
+    if(error)label('workbook saved; charging bill acknowledgment pending: '+error.message,true);
+    chargingSaveIds=[];
+   }
+   if(!ids.length)return;const batch=[...ids];const {error}=await client.rpc('pvr_staff_admin_ack',{p_ids:batch});if(error){label('workbook saved; acknowledgment pending: '+error.message,true);return}ids=ids.filter(id=>!batch.includes(id));label('changes saved to Excel and verified')},
   async tick(){if(!client||!cloudLoaded||!token||!zip||autoSaving||document.hidden)return;try{await pull();if(dirty)await autoSaveCloud()}catch(e){label(e.message,true)}}
  };
  setInterval(()=>window.pvrStaffBridge.tick(),20000);
- window.addEventListener('pvr-cloud-loaded',()=>{paused=false;ids=[];setTimeout(()=>window.pvrStaffBridge.tick(),3000)});
+ window.addEventListener('pvr-cloud-loaded',()=>{paused=false;ids=[];chargingIds=[];chargingSaveIds=[];setTimeout(()=>window.pvrStaffBridge.tick(),3000)});
 })();
