@@ -360,6 +360,12 @@ if(window.parent!==window&&new URLSearchParams(location.search).get('embeddedRev
 .partner-review-card .review-feedback{margin:12px 0 0;padding:9px 11px;border-radius:8px;background:#f3f7f9;color:#344e5a;font-size:.87rem}
 .partner-review-card .review-feedback[hidden]{display:none}
 @media(max-width:390px){.partner-review-card .review-actions .primary{width:100%}}
+</style><style>
+#operationsExpenseDialog{width:min(440px,calc(100% - 32px));margin:auto;padding:20px;border:1px solid #d3e0e7;border-radius:18px;background:#fff;color:#152c3f;box-shadow:0 22px 65px #10263755}
+#operationsExpenseDialog::backdrop{background:#10253699}
+#operationsExpenseDialog h2{margin:0}
+.operations-expense-types{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr));gap:9px;margin-top:14px}
+.operations-expense-types .btn{min-height:44px;text-align:left}
 </style></head><body class="pvr-admin-locked"><div id="pvrAdminGate">
   <section class="pvr-gate-card" aria-labelledby="pvrAdminGateTitle">
     <div class="pvr-gate-mark" aria-hidden="true"><span>♔</span>P</div>
@@ -768,12 +774,17 @@ function operationsBreakdown(range){
  vehicles.sort((a,b)=>String(a.name).localeCompare(String(b.name)));
  return {bounds,totals,vehicles};
 }
+const operationsExpenseTypes=['Electricity Bills','Tyres','Maintenance','Other Expenses'];
 function operationsOverview(review){
  const {bounds,totals,vehicles}=operationsBreakdown(operationsRange);
  const labels=['Recorded booking value','Recorded booking advances','Charging bills total','Tyre expenses total'];
  const dateLabel=bounds?`${bounds.start} to ${addDaysAD(bounds.end,-1)} AD`:'All dates';
  const cells=values=>values.map(value=>`<td>${money(value)}</td>`).join('');
- return `<section class="panel" id="operationsOverview"><div class="panelhead"><h2>Operations overview</h2><div class="toolbar"><label for="operationsRange">Period</label><select id="operationsRange">${[['all','All time'],['week','This week'],['month','This month']].map(([value,label])=>`<option value="${value}" ${operationsRange===value?'selected':''}>${label}</option>`).join('')}</select></div></div>
+ return `<section class="panel" id="operationsOverview"><div class="panelhead"><h2>Operations overview</h2><div class="toolbar"><label for="operationsRange">Period</label><select id="operationsRange">${[['all','All time'],['week','This week'],['month','This month']].map(([value,label])=>`<option value="${value}" ${operationsRange===value?'selected':''}>${label}</option>`).join('')}</select><button type="button" class="btn primary" id="operationsAddExpense">+ Add expense</button></div></div>
+ <dialog id="operationsExpenseDialog" aria-labelledby="operationsExpenseTitle">
+  <div class="modalhead"><h2 id="operationsExpenseTitle">Add expense</h2><button type="button" class="btn" id="operationsExpenseClose">Close</button></div>
+  <div class="operations-expense-types">${operationsExpenseTypes.map(type=>`<button type="button" class="btn" data-expense-type="${esc(type)}">${esc(pageLabel(type))}</button>`).join('')}</div>
+ </dialog>
  <h3>Fleet totals</h3><p class="hint">${dateLabel} · Booking amounts use the start date. Expenses use their recorded dates.</p>
  <div class="kpirow">${labels.map((label,i)=>`<div class="panel"><div class="mini">${label}</div><h2>${money(totals[i])}</h2></div>`).join('')}</div>
  <h3>By vehicle</h3><div class="tablewrap"><table><thead><tr><th scope="col">Vehicle</th><th scope="col">Booking value</th><th scope="col">Advances</th><th scope="col">Charging bills</th><th scope="col">Tyre expenses</th></tr></thead><tbody>${vehicles.map(v=>`<tr><th scope="row">${esc(v.name)}${v.registration?`<br><span class="hint">${esc(v.registration)}</span>`:''}</th>${cells(v.totals)}</tr>`).join('')||'<tr><td colspan="5">No vehicles recorded.</td></tr>'}</tbody></table></div>
@@ -782,6 +793,18 @@ function operationsOverview(review){
 function bindOperationsOverview(){
  const select=$('operationsRange');
  if(!select)return;
+ const dialog=$('operationsExpenseDialog');
+ $('operationsAddExpense').onclick=()=>{
+  if(!zip){alertUser('Open the matching Excel workbook first.',true);return;}
+  dialog.showModal();
+ };
+ $('operationsExpenseClose').onclick=()=>dialog.close();
+ for(const button of dialog.querySelectorAll('[data-expense-type]')){
+  button.onclick=()=>{
+   dialog.close();
+   edit(button.dataset.expenseType);
+  };
+ }
  select.onchange=()=>{
   operationsRange=select.value;
   const review=rows('Bookings').filter(b=>!b['Start AD']||!b['End AD Exclusive']).length;
