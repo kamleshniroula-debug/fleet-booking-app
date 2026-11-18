@@ -398,7 +398,29 @@ if(window.parent!==window&&new URLSearchParams(location.search).get('embeddedRev
 .booking-days-remaining.near-end { color: #a34e08; }
 .booking-days-remaining.ended { color: #b91c1c; }
 </style>
-</head><body class="pvr-admin-locked"><div id="pvrAdminGate">
+<style id="pvr-mobile-launch-animation">
+.pvr-launch-car-track{display:none}
+@media (max-width:900px) and (pointer:coarse) and (prefers-reduced-motion:no-preference){
+ @supports (offset-path:inset(0 round 22px)){
+  .pvr-launch-car-track{
+   position:fixed;
+   inset:calc(15px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(15px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px));
+   display:block;z-index:100001;pointer-events:none
+  }
+  .pvr-embedded-review .pvr-launch-car-track{display:none}
+  .pvr-launch-car{
+   position:absolute;top:0;left:0;display:grid;place-items:center;width:30px;height:30px;font-size:24px;line-height:1;
+   filter:drop-shadow(0 2px 3px #061a3273);offset-path:inset(0 round 22px);offset-rotate:auto 180deg;
+   animation:pvr-launch-car-lap 2.8s linear both
+  }
+  @keyframes pvr-launch-car-lap{
+   0%{offset-distance:0%;opacity:0}
+   5%,91%{opacity:1}
+   100%{offset-distance:100%;opacity:0}
+  }
+ }
+}
+</style></head><body class="pvr-admin-locked"><div class="pvr-launch-car-track" aria-hidden="true"><span class="pvr-launch-car">🚗</span></div><div id="pvrAdminGate">
   <section class="pvr-gate-card" aria-labelledby="pvrAdminGateTitle">
     <div class="pvr-gate-mark" aria-hidden="true"><span>♔</span>P</div>
     <p class="pvr-gate-brand">Prince Vehicle Rental</p>
