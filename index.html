@@ -468,8 +468,8 @@ REQUIRED_SCHEMAS.Bookings=REQUIRED_SCHEMAS.Bookings.filter(h=>h!=='Evening / Nig
 // Older workbooks store the electric motor identifier under 'Engine Number'.
 REQUIRED_SCHEMAS.Vehicles=REQUIRED_SCHEMAS.Vehicles.filter(h=>h!=='Engine / Motor Number');
 const workspaceQuery=new URLSearchParams(location.search);
-const requestedPage=workspaceQuery.get('view');
-let data={},zip=null,paths={},shared=[],page=NAV.includes(requestedPage)&&requestedPage!=='Rental Companies'?requestedPage:'Dashboard',token=null,etag=null,source='none',dirty=false,filter='';
+const requestedPage=getWorkspacePage(workspaceQuery);
+let data={},zip=null,paths={},shared=[],page=requestedPage,token=null,etag=null,source='none',dirty=false,filter='';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'Rs. '+(Number(n)||0).toLocaleString('en-IN',{maximumFractionDigits:2});
 const n=v=>Number(v)||0, today=()=>new Date().toISOString().slice(0,10), uid=prefix=>prefix+'-'+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase();
@@ -482,7 +482,32 @@ function nav(){
  const buttons=pages=>pages.map(x=>`<button data-nav="${esc(x)}" class="${page===x?'active':''}"><span class="nav-icon" aria-hidden="true">${({Dashboard:'◈','Booking Calendar':'▦',Bookings:'▤',Vehicles:'🚘',Owners:'♙','Owner Payments':'◉',Staff:'♟','Staff Access':'♜','Electricity Bills':'ϟ',Maintenance:'⚙',Tyres:'◎','Other Expenses':'▧',Customers:'♧','Customer Blacklist':'⚑','Rental Companies':'▣'})[x]||'•'}</span><span>${esc(x==='Vehicles'?'Vehicle Registration':pageLabel(x))}</span></button>`).join('');
  $('nav').innerHTML=buttons(NAV.filter(pageName=>!managementPages.has(pageName)));
  $('managementNav').innerHTML=buttons(NAV.filter(pageName=>managementPages.has(pageName)));
- document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{if(b.dataset.nav==='Rental Companies'){window.location.assign(new URL('admin-access.html',document.baseURI).href);return}page=b.dataset.nav;filter='';render()}) }
+ document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{if(b.dataset.nav==='Rental Companies'){window.location.assign(new URL('admin-access.html',document.baseURI).href);return}navigateWorkspace(b.dataset.nav)}) }
+function getWorkspacePage(query){
+ const view=query.get('view');
+ return NAV.includes(view)&&view!=='Rental Companies'?view:'Dashboard';
+}
+function navigateWorkspace(nextPage,range=bookingListRange){
+ if(nextPage!==page){
+  const url=new URL(location.href);
+  if(nextPage==='Dashboard')url.searchParams.delete('view');
+  else url.searchParams.set('view',nextPage);
+  history.pushState({workspaceBookingRange:range},'',url);
+ }
+ page=nextPage;
+ bookingListRange=range;
+ filter='';
+ render();
+}
+window.addEventListener('popstate',event=>{
+ const previousPage=getWorkspacePage(new URLSearchParams(location.search));
+ if(previousPage===page)return;
+ page=previousPage;
+ bookingListRange=event.state?.workspaceBookingRange||'recent';
+ filter='';
+ $('modalroot').innerHTML='';
+ render();
+});
 function render(){nav();$('pageTitle').textContent=pageLabel(page); $('content').innerHTML=page==='Dashboard'?dashboard():page==='Booking Calendar'?bookingCalendar():page==='Customers'?customersPage():page==='Customer Blacklist'?customerBlacklistMarkup():page==='Staff'?staffPage():page==='Staff Access'?staffAccessPage():section();if(page==='Booking Calendar')bindBookingCalendar();if(page==='Customers')bindCustomers();if(page==='Customer Blacklist'&&zip)bindCustomerBlacklist();if(page==='Staff')bindStaffPage();if(page==='Staff Access')bindStaffAccess();if(page==='Dashboard'){
  bindAdminFleetActions();
  if(zip)edit('Bookings',-1,true);
@@ -494,7 +519,7 @@ function render(){nav();$('pageTitle').textContent=pageLabel(page); $('content')
   const scrollY=window.scrollY;render();window.scrollTo(0,scrollY);
  };
  document.querySelectorAll('[data-open-bookings]').forEach(button=>{
-  button.onclick=()=>{page='Bookings';filter='';bookingListRange=button.dataset.openBookings;render()};
+  button.onclick=()=>{navigateWorkspace('Bookings',button.dataset.openBookings)};
  });
  }if(page==='Vehicles')bindVehicleGallery(); document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>edit(b.dataset.add));document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>edit(page,Number(b.dataset.edit)));document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>toggleVehicle(Number(b.dataset.toggle)));const q=$('search');if(q){q.value=filter;q.oninput=()=>{filter=q.value;renderTable()}}const bookingRange=$('bookingListRange');if(bookingRange){bookingRange.value=bookingListRange;bookingRange.onchange=()=>{bookingListRange=bookingRange.value;renderTable()}}if(page!=='Dashboard'&&page!=='Customers'&&page!=='Staff')renderTable();const ac=$('addColumn');if(ac)ac.onclick=()=>addColumn(page)}
 
@@ -2253,7 +2278,7 @@ function extendBooking(index){const b=rows('Bookings')[index];if(!b||!zip)return
  try{validate('Bookings',rec,-1)}catch(e){alertUser('Extension blocked: '+e.message,true);return}
  if(!confirm('Extend rental for '+days+' day(s)?\nNew period: '+start+' to '+addDaysAD(end,-1)+'\nAdditional rental charge: NPR '+(days*rate).toLocaleString()+'\n\nThe original period and its invoice history will be preserved. The dashboard progress bar will follow the new end date. Changes will automatically sync to OneDrive when connected.'))return;
  b.Status='Extended';b['Period Invoice Date AD']=b['End AD Exclusive'];
- rows('Bookings').push(rec);markDirty();page='Dashboard';render();alertUser('Booking extended by '+days+' day(s). Additional rental charge: NPR '+(days*rate).toLocaleString()+'. Dashboard progress updated; OneDrive auto-save is pending.');
+ rows('Bookings').push(rec);markDirty();navigateWorkspace('Dashboard');alertUser('Booking extended by '+days+' day(s). Additional rental charge: NPR '+(days*rate).toLocaleString()+'. Dashboard progress updated; OneDrive auto-save is pending.');
 }
 function settleBooking(index){const b=rows('Bookings')[index];if(!b)return;
  if(b.Status==='Cancelled'||b.Status==='Extended'){alertUser('Settle the latest active period, not a cancelled or extended period.',true);return}
@@ -2589,7 +2614,7 @@ async function printBookingConfirmation(index){
    const {data:company,error:companyError}=await c.from('pvr_rental_companies').select('company_name').eq('company_id',request.company_id).single();
    if(companyError)throw Error('Could not load the rental company: '+companyError.message);
    if(embeddedPartnerReview)$('embeddedPartnerReviewStatus').hidden=true;
-   else{page='Bookings';filter='';render();}
+   else{navigateWorkspace('Bookings');}
    renderPartnerReview({...request,companyName:company.company_name});
   }catch(error){
    if(embeddedPartnerReview)showEmbeddedPartnerStatus(error.message);
