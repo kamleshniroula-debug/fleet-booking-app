@@ -487,26 +487,37 @@ function getWorkspacePage(query){
  const view=query.get('view');
  return NAV.includes(view)&&view!=='Rental Companies'?view:'Dashboard';
 }
+function workspaceHistoryState(){
+ return {workspacePage:page,workspaceBookingRange:bookingListRange,workspaceScrollY:window.scrollY};
+}
 function navigateWorkspace(nextPage,range=bookingListRange){
- if(nextPage!==page){
+ const changed=nextPage!==page;
+ if(changed){
+  // Keep the browser from applying the old section's scroll before it is rendered.
+  history.scrollRestoration='manual';
+  history.replaceState({...history.state,...workspaceHistoryState()},'');
   const url=new URL(location.href);
   if(nextPage==='Dashboard')url.searchParams.delete('view');
   else url.searchParams.set('view',nextPage);
-  history.pushState({workspaceBookingRange:range},'',url);
+  history.pushState({workspacePage:nextPage,workspaceBookingRange:range,workspaceScrollY:0},'',url);
  }
  page=nextPage;
  bookingListRange=range;
  filter='';
  render();
+ if(changed)window.scrollTo({top:0,behavior:'instant'});
 }
 window.addEventListener('popstate',event=>{
- const previousPage=getWorkspacePage(new URLSearchParams(location.search));
+ const state=event.state;
+ const previousPage=state?.workspacePage||getWorkspacePage(new URLSearchParams(location.search));
  if(previousPage===page)return;
+ history.scrollRestoration='manual';
  page=previousPage;
- bookingListRange=event.state?.workspaceBookingRange||'recent';
+ bookingListRange=state?.workspaceBookingRange||'recent';
  filter='';
  $('modalroot').innerHTML='';
  render();
+ window.scrollTo({top:state?.workspaceScrollY||0,behavior:'instant'});
 });
 function render(){nav();$('pageTitle').textContent=pageLabel(page); $('content').innerHTML=page==='Dashboard'?dashboard():page==='Booking Calendar'?bookingCalendar():page==='Customers'?customersPage():page==='Customer Blacklist'?customerBlacklistMarkup():page==='Staff'?staffPage():page==='Staff Access'?staffAccessPage():section();if(page==='Booking Calendar')bindBookingCalendar();if(page==='Customers')bindCustomers();if(page==='Customer Blacklist'&&zip)bindCustomerBlacklist();if(page==='Staff')bindStaffPage();if(page==='Staff Access')bindStaffAccess();if(page==='Dashboard'){
  bindAdminFleetActions();
