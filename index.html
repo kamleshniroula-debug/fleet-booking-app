@@ -811,15 +811,10 @@ function canCompleteFleetBooking(booking){
 }
 function pvrAdminFleetActions(vehicle,progress){
  if(!zip)return '';
- const vehicleId=vehicle['Vehicle ID'];
- const upcoming=progress?null:rows('Bookings')
-  .filter(b=>b['Vehicle ID']===vehicleId&&pvrFleetBookingOpen(b)&&
-   pvrFleetValidDate(b['Start AD'])&&pvrFleetValidDate(b['End AD Exclusive'])&&
-   b['Start AD']>localDate()&&b['End AD Exclusive']>b['Start AD'])
-  .sort((a,b)=>a['Start AD'].localeCompare(b['Start AD']))[0];
- const booking=progress?.booking||upcoming;
+ const schedule=vehicleBookingSchedule(vehicle);
+ const booking=progress?.booking||schedule.upcoming[0];
  const id=booking?.['Booking ID'];
- return `${upcoming?'<p class="pvr-fleet-upcoming">Next booking · '+esc(upcoming['Start AD'])+'</p>':''}
+ return `${vehicleBookingCardDates(progress,schedule)}
   <div class="pvr-fleet-actions">
    ${vehicleBookingActions(vehicle)}
    ${bookingRecordActions(booking)}
@@ -917,17 +912,52 @@ function bookingRentalDates(booking){
  return pvrFleetValidDate(start)&&pvrFleetValidDate(end)&&end>start
   ? start+' to '+addDaysAD(end,-1) : 'Dates need review';
 }
+function compactBookingDates(booking){
+ const start=booking['Start AD'],end=booking['End AD Exclusive'];
+ const last=addDaysAD(end,-1);
+ const short=date=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}).format(new Date(date+'T00:00:00Z'));
+ if(start===last)return short(start);
+ if(start.slice(0,7)===last.slice(0,7))return Number(start.slice(8))+'–'+short(last);
+ if(start.slice(0,4)===last.slice(0,4))return short(start)+' – '+short(last);
+ return short(start)+' '+start.slice(0,4)+' – '+short(last)+' '+last.slice(0,4);
+}
+function vehicleBookingSchedule(vehicle,today=localDate()){
+ const current=[],upcoming=[];
+ let previous;
+ for(const booking of rows('Bookings')){
+  const start=booking['Start AD'],end=booking['End AD Exclusive'];
+  if(booking['Vehicle ID']!==vehicle['Vehicle ID']||String(booking.Status||'').trim()==='Cancelled'||
+     !pvrFleetValidDate(start)||!pvrFleetValidDate(end)||end<=start)continue;
+  const open=pvrFleetBookingOpen(booking);
+  if(start>today){
+   if(open)upcoming.push(booking);
+  }else if(open&&(end>today||booking['Handover AD']&&!booking['Returned AD'])){
+   current.push(booking);
+  }else if(!previous||end>previous['End AD Exclusive']||
+           end===previous['End AD Exclusive']&&start>previous['Start AD']){
+   previous=booking;
+  }
+ }
+ const byStart=(a,b)=>a['Start AD'].localeCompare(b['Start AD']);
+ return {current:current.sort(byStart),upcoming:upcoming.sort(byStart),previous};
+}
+function vehicleBookingCardDates(progress,schedule){
+ const current=progress?.booking||schedule.current[0];
+ const booking=current||schedule.upcoming[0]||schedule.previous;
+ if(!booking)return '';
+ const label=current?'Current booking':schedule.upcoming.length?'Next booking':'Previous booking';
+ return `<p class="pvr-fleet-upcoming">${label} · ${esc(compactBookingDates(booking))}</p>`;
+}
 function openVehicleBookings(vehicle){
- const bookings=rows('Bookings').filter(b=>b['Vehicle ID']===vehicle['Vehicle ID'])
-  .sort((a,b)=>Number(pvrFleetBookingOpen(b))-Number(pvrFleetBookingOpen(a))||
-   String(b['Start AD']||'').localeCompare(String(a['Start AD']||'')));
+ const {current,upcoming,previous}=vehicleBookingSchedule(vehicle);
+ const bookings=[...current,...upcoming,...(previous?[previous]:[])];
  const root=$('modalroot');
  root.innerHTML=`<div class="modalbg"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="vehicleBookingsTitle">
   <div class="modalhead"><h2 id="vehicleBookingsTitle">${esc(vehicle['Vehicle Name']||vehicle['Vehicle ID'])} bookings</h2>
   <button type="button" class="btn" id="closeVehicleBookings">Close</button></div>
   ${vehicle.Status==='Active'?`<button type="button" class="btn primary" data-booking-new="${esc(vehicle['Vehicle ID'])}">New booking</button>`:''}
   ${bookings.length?`<ul>${bookings.map(b=>`<li><strong>${esc(b['Customer Name']||'Customer not recorded')}</strong>
-   · ${esc(bookingRentalDates(b))} · ${esc(b.Status||'Booking')}${bookingRecordActions(b)}</li>`).join('')}</ul>`:'<p>No bookings for this vehicle.</p>'}
+   · ${esc(compactBookingDates(b))} · ${esc(b.Status||'Booking')}${bookingRecordActions(b)}</li>`).join('')}</ul>`:'<p>No bookings for this vehicle.</p>'}
  </section></div>`;
  const close=$('closeVehicleBookings');
  close.onclick=()=>{root.innerHTML=''};
@@ -1547,7 +1577,7 @@ function vehicleGalleryMarkup(){
  };
  list.sort((a,b)=>Number(!!pvrAdminFleetProgress(b))-Number(!!pvrAdminFleetProgress(a))||String(a['Vehicle Name']).localeCompare(String(b['Vehicle Name'])));
  const feature=(label,val)=>val?`${label}: ${esc(val)}`:'';
- return `<div class="panel"><div class="panelhead"><div><h2>🚗 Vehicle gallery</h2><button type="button" class="btn" id="pvrExportVehiclePdf">Download vehicle list PDF</button><div class="hint">Active vehicles from your workbook · photos and features</div></div></div><p class="pvr-gallery-note">Upload a real vehicle photo to your connected OneDrive. Photos are separate from the Excel workbook and Supabase snapshot; sign in to OneDrive to view them on another device.</p><div class="pvr-vehicle-gallery">${list.map(v=>{const id=v['Vehicle ID']||'',avail=availability(v),progress=pvrAdminFleetProgress(v),details=[feature('Reg.',v.Registration),feature('Colour',v.Colour||v.Color),feature('Year',v['Manufacture Year']),feature('Seats',v.Seats),feature('Type',v['Vehicle Type']),feature('Model',v.Model)].filter(Boolean);return `<article class="pvr-vehicle-card" style="${pvrAdminVehicleCardStyle(v)}"><div class="pvr-vehicle-thumb" data-photo-id="${esc(id)}">🚙</div><div class="pvr-vehicle-info"><strong>${esc(v['Vehicle Name']||'Unnamed vehicle')}</strong><div class="pvr-vehicle-features">${details.join(' · ')||'Features not entered yet'}</div><div class="pvr-gallery-availability"><span class="pvr-avail-tag ${avail.cls}">${progress?'Booking in progress':esc(avail.label)}</span>${progress?'':`<small>${esc(avail.detail)}</small>`}</div>${pvrAdminProgressMarkup(progress)}<span class="pvr-vehicle-status ${v.Status==='Active'?'':'inactive'}">${esc(v.Status||'Status not set')}</span><div class="pvr-vehicle-actions">${vehicleBookingActions(v)}<button type="button" data-gallery-edit="${v.__idx}">Edit features</button><button type="button" data-gallery-upload="${v.__idx}">Upload photo</button><button type="button" data-gallery-toggle="${v.__idx}">Deactivate</button><button type="button" data-gallery-delete="${v.__idx}" style="color:#b2454d;font-weight:800">Delete permanently</button></div></div></article>`}).join('')||'<div class="hint">No active vehicles match this gallery view.</div>'}</div><input id="pvrVehiclePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden></div>`;
+ return `<div class="panel"><div class="panelhead"><div><h2>🚗 Vehicle gallery</h2><button type="button" class="btn" id="pvrExportVehiclePdf">Download vehicle list PDF</button><div class="hint">Active vehicles from your workbook · photos and features</div></div></div><p class="pvr-gallery-note">Upload a real vehicle photo to your connected OneDrive. Photos are separate from the Excel workbook and Supabase snapshot; sign in to OneDrive to view them on another device.</p><div class="pvr-vehicle-gallery">${list.map(v=>{const id=v['Vehicle ID']||'',avail=availability(v),progress=pvrAdminFleetProgress(v),details=[feature('Reg.',v.Registration),feature('Colour',v.Colour||v.Color),feature('Year',v['Manufacture Year']),feature('Seats',v.Seats),feature('Type',v['Vehicle Type']),feature('Model',v.Model)].filter(Boolean);return `<article class="pvr-vehicle-card" style="${pvrAdminVehicleCardStyle(v)}"><div class="pvr-vehicle-thumb" data-photo-id="${esc(id)}">🚙</div><div class="pvr-vehicle-info"><strong>${esc(v['Vehicle Name']||'Unnamed vehicle')}</strong><div class="pvr-vehicle-features">${details.join(' · ')||'Features not entered yet'}</div><div class="pvr-gallery-availability"><span class="pvr-avail-tag ${avail.cls}">${progress?'Booking in progress':esc(avail.label)}</span>${progress||avail.cls==='available'?'':`<small>${esc(avail.detail)}</small>`}</div>${vehicleBookingCardDates(progress,vehicleBookingSchedule(v))}${pvrAdminProgressMarkup(progress)}<span class="pvr-vehicle-status ${v.Status==='Active'?'':'inactive'}">${esc(v.Status||'Status not set')}</span><div class="pvr-vehicle-actions">${vehicleBookingActions(v)}<button type="button" data-gallery-edit="${v.__idx}">Edit features</button><button type="button" data-gallery-upload="${v.__idx}">Upload photo</button><button type="button" data-gallery-toggle="${v.__idx}">Deactivate</button><button type="button" data-gallery-delete="${v.__idx}" style="color:#b2454d;font-weight:800">Delete permanently</button></div></div></article>`}).join('')||'<div class="hint">No active vehicles match this gallery view.</div>'}</div><input id="pvrVehiclePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden></div>`;
 }
 function printVehicleGalleryPdf(){
  const gallery=document.querySelector('.pvr-vehicle-gallery');
