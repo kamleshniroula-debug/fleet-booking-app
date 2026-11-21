@@ -396,10 +396,11 @@ body{background:radial-gradient(ellipse 95% 60% at 95% 0%,#c9dce9 0%,transparent
 .pvr-fleet-card .pvr-fleet-upcoming{margin-top:10px}
 .pvr-fleet-nav{display:flex;align-items:center;gap:8px}
 .pvr-fleet-nav .btn{min-width:44px;min-height:44px;margin:0;font-size:20px;padding:0}
-.pvr-fleet-cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:10px max(8%,calc((100% - 540px) / 2)) 22px;overscroll-behavior-inline:contain}
-.pvr-fleet-slot{flex:0 0 100%;min-width:0;display:flex;scroll-snap-align:center}
+.pvr-fleet-cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:18px max(12%,calc((100% - 540px) / 2)) 30px;overscroll-behavior-inline:contain}
+.pvr-fleet-slot{position:relative;z-index:var(--fleet-layer,1);flex:0 0 100%;min-width:0;display:flex;scroll-snap-align:center}
 .pvr-fleet-card{width:100%;box-sizing:border-box;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:clamp(12px,3vw,22px);border:1px solid var(--line,#dce5eb);border-radius:18px;background:var(--paper,#fff);box-shadow:0 16px 32px #173b5033,0 3px 8px #173b501a;overflow-wrap:anywhere;
  transform:perspective(850px) translateX(var(--fleet-shift,0px)) translateZ(var(--fleet-depth,0px)) rotateY(var(--fleet-angle,0deg)) scale(var(--fleet-scale,1));opacity:var(--fleet-opacity,1)}
+#adminFleet .pvr-fleet-card[data-carousel-active]{outline:2px solid #54bbac;outline-offset:2px;box-shadow:0 18px 36px #173b5052,0 0 14px #54bbac55}
 .pvr-fleet-card .pvr-fleet-progress{width:100%;max-width:480px}
 .pvr-fleet-card h3{font:clamp(20px,4vw,32px)/1.15 Georgia,serif;margin:8px 0 5px;letter-spacing:-.035em}
 @media(prefers-reduced-motion:reduce){.pvr-fleet-card{transform:none;opacity:1}}
@@ -852,11 +853,12 @@ function bindAdminFleetActions(){
     slot.querySelector('.pvr-fleet-card')?.toggleAttribute('data-carousel-active',index===Math.round(position));
     const distance=Math.max(-1,Math.min(1,index-position));
     const depth=Math.abs(distance);
+    slot.style.setProperty('--fleet-layer',index===Math.round(position)?3:1);
     slot.style.setProperty('--fleet-angle',`${-distance*56}deg`);
-    slot.style.setProperty('--fleet-depth',`${-depth*155}px`);
-    slot.style.setProperty('--fleet-shift',`${-distance*step*.23}px`);
-    slot.style.setProperty('--fleet-scale',1-depth*.12);
-    slot.style.setProperty('--fleet-opacity',1-depth*.30);
+    slot.style.setProperty('--fleet-depth',`${42-depth*175}px`);
+    slot.style.setProperty('--fleet-shift',`${-distance*step*.42}px`);
+    slot.style.setProperty('--fleet-scale',1.03-depth*.14);
+    slot.style.setProperty('--fleet-opacity',1-depth*.26);
    });
   }
   function realIndex(index){
