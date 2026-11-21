@@ -396,12 +396,12 @@ body{background:radial-gradient(ellipse 95% 60% at 95% 0%,#c9dce9 0%,transparent
 .pvr-fleet-card .pvr-fleet-upcoming{margin-top:10px}
 .pvr-fleet-nav{display:flex;align-items:center;gap:8px}
 .pvr-fleet-nav .btn{min-width:44px;min-height:44px;margin:0;font-size:20px;padding:0}
-.pvr-fleet-cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:14px 9% 30px;overscroll-behavior-inline:contain}
+.pvr-fleet-cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:10px max(8%,calc((100% - 540px) / 2)) 22px;overscroll-behavior-inline:contain}
 .pvr-fleet-slot{flex:0 0 100%;min-width:0;display:flex;scroll-snap-align:center}
-.pvr-fleet-card{width:100%;min-height:54vh;min-height:54svh;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:clamp(20px,6vw,72px);border:1px solid var(--line,#dce5eb);border-radius:clamp(18px,4vw,36px);background:var(--paper,#fff);box-shadow:0 16px 32px #173b5033,0 3px 8px #173b501a;overflow-wrap:anywhere;
+.pvr-fleet-card{width:100%;box-sizing:border-box;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:clamp(12px,3vw,22px);border:1px solid var(--line,#dce5eb);border-radius:18px;background:var(--paper,#fff);box-shadow:0 16px 32px #173b5033,0 3px 8px #173b501a;overflow-wrap:anywhere;
  transform:perspective(850px) translateX(var(--fleet-shift,0px)) translateZ(var(--fleet-depth,0px)) rotateY(var(--fleet-angle,0deg)) scale(var(--fleet-scale,1));opacity:var(--fleet-opacity,1)}
 .pvr-fleet-card .pvr-fleet-progress{width:100%;max-width:480px}
-.pvr-fleet-card h3{font:clamp(30px,6vw,64px)/1.06 Georgia,serif;margin:12px 0 10px;letter-spacing:-.035em}
+.pvr-fleet-card h3{font:clamp(20px,4vw,32px)/1.15 Georgia,serif;margin:8px 0 5px;letter-spacing:-.035em}
 @media(prefers-reduced-motion:reduce){.pvr-fleet-card{transform:none;opacity:1}}
 .pvr-fleet-card h3:first-child{margin-top:0}
 .pvr-fleet-card p{font-size:13px;margin:0;color:var(--muted,#64748b);letter-spacing:.3px}
@@ -819,9 +819,9 @@ function pvrAdminFleetActions(vehicle,progress,available){
   .sort((a,b)=>a['Start AD'].localeCompare(b['Start AD']))[0];
  const booking=progress?.booking||upcoming;
  const id=booking?.['Booking ID'];
- if(!available&&!id)return '';
  return `${upcoming?'<p class="pvr-fleet-upcoming">Next booking · '+esc(upcoming['Start AD'])+'</p>':''}
   <div class="pvr-fleet-actions">
+   <button type="button" class="btn" data-fleet-edit="${esc(vehicleId)}">Edit vehicle</button>
    ${available?'<button type="button" class="btn primary" data-fleet-new="'+esc(vehicleId)+'">New booking</button>':''}
    ${id?'<button type="button" class="btn" data-fleet-extend="'+esc(id)+'">Extend</button>':''}
    ${id&&progress&&canCompleteFleetBooking(booking)?'<button type="button" class="btn pvr-fleet-complete" data-fleet-complete="'+esc(id)+'">Complete</button>':''}
@@ -875,6 +875,12 @@ function bindAdminFleetActions(){
  fleet.onclick=event=>{
   const button=event.target.closest('button');
   if(!button||!zip)return;
+  if(button.dataset.fleetEdit!==undefined){
+   const index=rows('Vehicles').findIndex(v=>String(v['Vehicle ID']||'')===button.dataset.fleetEdit);
+   if(index<0||!button.dataset.fleetEdit){alertUser('Vehicle not found.',true);return}
+   editVehicle(index,true);
+   return;
+  }
   if(button.dataset.fleetNew!==undefined){
    const vehicle=rows('Vehicles').find(v=>v['Vehicle ID']===button.dataset.fleetNew);
    if(!vehicle||vehicle.Status!=='Active'||!pvrAdminFleetAvailable(vehicle)){
@@ -1923,7 +1929,7 @@ async function refreshVehicleDocList(vehicleId){
  list.querySelectorAll('[data-vdoc-delete]').forEach(el=>el.onclick=async()=>{if(!confirm('Permanently delete this vehicle document from OneDrive?'))return;try{await graphVehicleDocRequest('/me/drive/items/'+encodeURIComponent(el.dataset.vdocDelete),{method:'DELETE'});await refreshVehicleDocList(vehicleId)}catch(e){alertUser(e.message,true)}});
  }catch(e){list.textContent=e.message}
 }
-function editVehicle(index=-1){
+function editVehicle(index=-1,detailsOnly=false){
  if(!zip){alertUser('Open the matching Excel workbook first.',true);return}
  const vehicle=index<0?{}:rows('Vehicles')[index];
  if(index>=0&&!vehicle){alertUser('Vehicle not found.',true);return}
@@ -1933,6 +1939,37 @@ function editVehicle(index=-1){
  const fields=['Vehicle Name','Registration','Colour','Manufacture Year'];
  const field=(h,value,readonly=false)=>{const date=/ AD$/.test(h),numeric=/Seats|Manufacture Year/.test(h),type=date?'date':numeric?'number':'text';const opts=h==='Status'?['Active','Inactive'].map(x=>`<option value="${x}" ${value===x?'selected':''}>${x}</option>`).join(''):null;
  return `<div class="field"><label>${esc(h)}</label>${opts?`<select name="${esc(h)}">${opts}</select>`:`<input name="${esc(h)}" type="${type}" value="${esc(value||'')}" ${readonly?'readonly':''}>`}</div>`};
+ function readVehicleDetails(formData){
+  const updated={...vehicle};
+  for(const name of fields)updated[name]=String(formData.get(name)||'').trim();
+  if(!updated['Vehicle Name']||!updated.Registration)throw Error('Vehicle name and registration number are required.');
+  if(rows('Vehicles').some((other,i)=>i!==index&&String(other.Registration||'').trim().toLowerCase()===updated.Registration.toLowerCase()))throw Error('A vehicle with this registration number is already registered. Edit the existing vehicle instead.');
+  return updated;
+ }
+ if(detailsOnly){
+  $('modalroot').innerHTML=`<div class="modalbg"><div class="modal"><div class="modalhead"><h2>Edit vehicle</h2><button type="button" class="btn" id="closeModal">Close</button></div><form id="vehicleDetailsForm"><div class="fieldgrid">${fields.map(name=>field(name,vehicle[name]??'')).join('')}</div><div class="foot"><button type="button" class="btn" id="cancelModal">Cancel</button><button type="submit" class="btn primary">Save vehicle</button></div><p class="hint" id="vehicleDetailsError" role="alert" hidden></p></form></div></div>`;
+  const form=$('vehicleDetailsForm');
+  const close=()=>$('modalroot').innerHTML='';
+  $('closeModal').onclick=$('cancelModal').onclick=close;
+  form.elements.namedItem('Vehicle Name').focus();
+  form.onsubmit=event=>{
+   event.preventDefault();
+   let updated;
+   try{updated=readVehicleDetails(new FormData(form))}
+   catch(error){
+    const message=$('vehicleDetailsError');
+    message.textContent=error.message;
+    message.hidden=false;
+    return;
+   }
+   rows('Vehicles')[index]=updated;
+   markDirty();
+   close();
+   render();
+   alertUser('Vehicle saved. '+(cloudLoaded?'OneDrive auto-save queued.':'Download the workbook to keep the change.'));
+  };
+  return;
+ }
  const ownerOptions=rows('Owners').map(o=>`<option value="${esc(o['Owner ID'])}" ${o['Owner ID']===owner['Owner ID']?'selected':''}>${esc(o['Owner Name'])} · ${esc(o.Phone||'')}</option>`).join('');
  const ownerField=(label,name,value,type='text')=>`<div class="field"><label>${label}</label><input name="${name}" type="${type}" ${type==='number'?'min="0" step="any"':''} value="${esc(value||'')}"></div>`;
  const history=agreements.length?`<div class="callout"><b>Agreement history (${agreements.length}):</b> ${agreements.map(a=>esc(`${a['Start AD']} to ${a['End AD Exclusive']} · Rs. ${a['Monthly Amount NPR']}/month · ${a.Status}`)).join(' | ')}</div>`:'';
@@ -1980,13 +2017,12 @@ function editVehicle(index=-1){
  refreshAgreementBSDays();if(!current['Start AD']){const today=new Date();const todayISO=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');let chosen=null;for(let m=0;m<12&&!chosen;m++)for(let d=1;d<=BS_LENGTHS[2083][m];d++){if(bsToAd(2083,m,d)===todayISO){chosen=[m,d];break}}if(chosen){bsMonthSelect.value=String(chosen[0]);refreshAgreementBSDays();bsDaySelect.value=String(chosen[1])}selectAgreementBS()}else syncAgreementBSSelectors();duration.onchange();cal.onchange();
  const docInput=$('vehicleDocuments');docInput.onchange=()=>{const selected=[...docInput.files];$('vehicleFileSelection').textContent=selected.length+' selected (maximum 4, 10 MB per file)';if(selected.length>4){alertUser('Select no more than 4 vehicle files.',true);docInput.value=''}};
  if(vehicle['Vehicle ID'])refreshVehicleDocList(vehicle['Vehicle ID']);
- $('vehicleRegistration').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),v={...vehicle};for(const h of fields)v[h]=String(f.get(h)||'').trim();
+ $('vehicleRegistration').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);
  try{
+ const v=readVehicleDetails(f);
  const selectedDocs=[...docInput.files];if(selectedDocs.length>4)throw Error('Maximum four vehicle files.');
  if(selectedDocs.length){if(!token||!cloudLoaded)throw Error('Connect OneDrive before uploading vehicle documents.');const existingDocs=vehicle['Vehicle ID']?await vehicleDocs(vehicle['Vehicle ID']):[];if(existingDocs.length+selectedDocs.length>4)throw Error('Vehicle can store at most four files. Delete an existing document first.');}
  if(!v['Vehicle ID'])v['Vehicle ID']=crypto.randomUUID();if(!v.Status)v.Status='Active';if(!v['Added AD'])v['Added AD']=localDate();
- if(!v['Vehicle Name']||!v.Registration)throw Error('Vehicle name and registration number are required.');
- if(rows('Vehicles').some((x,i)=>i!==index&&String(x.Registration||'').trim().toLowerCase()===String(v.Registration||'').trim().toLowerCase()))throw Error('A vehicle with this registration number is already registered. Edit the existing vehicle instead.');
  const name=String(f.get('ownerName')||'').trim(),address=String(f.get('ownerAddress')||'').trim(),phone=String(f.get('ownerPhone')||'').trim();
  if(!name||!address)throw Error('Owner name and address are required.');
  const amount=String(f.get('monthlyAmount')||'').trim(),start=String(f.get('agreementStart')||'').trim(),end=String(f.get('agreementEnd')||'').trim();
