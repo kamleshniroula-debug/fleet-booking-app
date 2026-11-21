@@ -352,10 +352,13 @@ body{background:radial-gradient(ellipse 95% 60% at 95% 0%,#c9dce9 0%,transparent
 .pvr-fleet-card .pvr-fleet-upcoming{margin-top:10px}
 .pvr-fleet-nav{display:flex;align-items:center;gap:8px}
 .pvr-fleet-nav .btn{min-width:44px;min-height:44px;margin:0;font-size:20px;padding:0}
-.pvr-fleet-cards{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:14px;padding:8px 14px 25px;overscroll-behavior-inline:contain}
-.pvr-fleet-card{flex:0 0 min(88%,360px);scroll-snap-align:start;min-width:0;min-height:200px;padding:20px;border:1px solid var(--line,#dce5eb);border-radius:18px;background:var(--paper,#fff);box-shadow:0 10px 19px #173b5026,0 2px 4px #173b5012;overflow-wrap:anywhere}
-.pvr-fleet-card:only-child{flex-basis:min(100%,360px)}
-.pvr-fleet-card h3{font:clamp(23px,4vw,29px)/1.16 Georgia,serif;margin:10px 0 7px;letter-spacing:-.35px}
+.pvr-fleet-cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:14px 9% 30px;overscroll-behavior-inline:contain}
+.pvr-fleet-slot{flex:0 0 100%;min-width:0;display:flex;scroll-snap-align:center}
+.pvr-fleet-card{width:100%;min-height:54vh;min-height:54svh;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:clamp(20px,6vw,72px);border:1px solid var(--line,#dce5eb);border-radius:clamp(18px,4vw,36px);background:var(--paper,#fff);box-shadow:0 16px 32px #173b5033,0 3px 8px #173b501a;overflow-wrap:anywhere;
+ transform:perspective(850px) translateX(var(--fleet-shift,0px)) translateZ(var(--fleet-depth,0px)) rotateY(var(--fleet-angle,0deg)) scale(var(--fleet-scale,1));opacity:var(--fleet-opacity,1)}
+.pvr-fleet-card .pvr-fleet-progress{width:100%;max-width:480px}
+.pvr-fleet-card h3{font:clamp(30px,6vw,64px)/1.06 Georgia,serif;margin:12px 0 10px;letter-spacing:-.035em}
+@media(prefers-reduced-motion:reduce){.pvr-fleet-card{transform:none;opacity:1}}
 .pvr-fleet-card h3:first-child{margin-top:0}
 .pvr-fleet-card p{font-size:13px;margin:0;color:var(--muted,#64748b);letter-spacing:.3px}
 #adminFleet .pvr-fleet-tag{font-size:11px}
@@ -790,24 +793,38 @@ function bindAdminFleetActions(){
  const previous=fleet.querySelector('[data-fleet-scroll="-1"]');
  const next=fleet.querySelector('[data-fleet-scroll="1"]');
  if(previous&&next){
-  function updateArrows(){
+  const slots=[...track.querySelectorAll('.pvr-fleet-slot')];
+  let step=0;
+  function updateWheel(){
    previous.disabled=track.scrollLeft<=1;
    next.disabled=track.scrollLeft>=track.scrollWidth-track.clientWidth-1;
+   if(!step)return;
+   const position=track.scrollLeft/step;
+   slots.forEach((slot,index)=>{
+    const distance=Math.max(-1,Math.min(1,index-position));
+    const depth=Math.abs(distance);
+    slot.style.setProperty('--fleet-angle',`${-distance*56}deg`);
+    slot.style.setProperty('--fleet-depth',`${-depth*155}px`);
+    slot.style.setProperty('--fleet-shift',`${-distance*step*.23}px`);
+    slot.style.setProperty('--fleet-scale',1-depth*.12);
+    slot.style.setProperty('--fleet-opacity',1-depth*.30);
+   });
+  }
+  function measureWheel(){
+   step=slots[1].getBoundingClientRect().left-slots[0].getBoundingClientRect().left;
+   updateWheel();
   }
   function move(direction){
-   const card=track.querySelector('.pvr-fleet-card');
-   const step=card.getBoundingClientRect().width+parseFloat(getComputedStyle(track).columnGap);
+   if(!step)return;
    const index=Math.round(track.scrollLeft/step);
-   const end=track.scrollWidth-track.clientWidth;
-   const left=direction<0&&next.disabled?Math.ceil(end/step-0.01)*step-step:(index+direction)*step;
-   track.scrollTo({left,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+   track.scrollTo({left:(index+direction)*step,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
   }
   previous.onclick=()=>move(-1);
   next.onclick=()=>move(1);
-  track.onscroll=updateArrows;
-  adminFleetResizeObserver=new ResizeObserver(updateArrows);
+  track.onscroll=updateWheel;
+  adminFleetResizeObserver=new ResizeObserver(measureWheel);
   adminFleetResizeObserver.observe(track);
-  updateArrows();
+  measureWheel();
  }
  fleet.onclick=event=>{
   const button=event.target.closest('button');
@@ -893,7 +910,7 @@ function pvrAdminFleetCards(){
  const list=rows('Vehicles').filter(v=>v.Status==='Active'&&!retired.has(String(v['Vehicle Name']||'').trim().toLowerCase())).map(v=>({v,p:pvrAdminFleetProgress(v)})).sort((a,b)=>Number(!!b.p)-Number(!!a.p)||
   (a.p&&b.p?a.p.booking['End AD Exclusive'].localeCompare(b.p.booking['End AD Exclusive']):0)||
   String(a.v['Vehicle Name']).localeCompare(String(b.v['Vehicle Name'])));
- return `<section class="panel" id="adminFleet"><div class="panelhead"><h2>Vehicle availability</h2><div class="pvr-fleet-nav"><span class="hint">${list.length} active vehicles</span>${list.length>1?'<button type="button" class="btn" data-fleet-scroll="-1" aria-label="Previous vehicle" aria-controls="adminFleetCards">←</button><button type="button" class="btn" data-fleet-scroll="1" aria-label="Next vehicle" aria-controls="adminFleetCards">→</button>':''}</div></div><div class="pvr-fleet-cards" id="adminFleetCards"${list.length>1?' tabindex="0" role="region" aria-label="Vehicle cards"':''}>${list.map(({v,p})=>{const maintenance=pvrAdminFleetInMaintenance(v);const available=!p&&!maintenance&&pvrAdminFleetAvailable(v);return `<article class="pvr-fleet-card" style="${pvrAdminVehicleCardStyle(v)}">${p?'<span class="pvr-fleet-tag">'+(p.overdue?'Return overdue':'Booking in progress')+'</span>':available?'<span class="pvr-fleet-tag">Available</span>':''}${maintenance?'<span class="pvr-fleet-tag pvr-fleet-maintenance"><span aria-hidden="true">⚙</span> In maintenance</span>':''}<h3>${esc(v['Vehicle Name']||v['Vehicle ID'])}</h3><p>${esc(v.Registration||'Registration not recorded')}</p>${pvrAdminProgressMarkup(p)}${pvrAdminFleetActions(v,p,available)}</article>`}).join('')||'<p class="hint">Open your workbook to view vehicles.</p>'}</div></section>`;
+ return `<section class="panel" id="adminFleet"><div class="panelhead"><h2>Vehicle availability</h2><div class="pvr-fleet-nav"><span class="hint">${list.length} active vehicles</span>${list.length>1?'<button type="button" class="btn" data-fleet-scroll="-1" aria-label="Previous vehicle" aria-controls="adminFleetCards">←</button><button type="button" class="btn" data-fleet-scroll="1" aria-label="Next vehicle" aria-controls="adminFleetCards">→</button>':''}</div></div><div class="pvr-fleet-cards" id="adminFleetCards"${list.length>1?' tabindex="0" role="region" aria-label="Vehicle cards"':''}>${list.map(({v,p})=>{const maintenance=pvrAdminFleetInMaintenance(v);const available=!p&&!maintenance&&pvrAdminFleetAvailable(v);return `<div class="pvr-fleet-slot"><article class="pvr-fleet-card" style="${pvrAdminVehicleCardStyle(v)}">${p?'<span class="pvr-fleet-tag">'+(p.overdue?'Return overdue':'Booking in progress')+'</span>':available?'<span class="pvr-fleet-tag">Available</span>':''}${maintenance?'<span class="pvr-fleet-tag pvr-fleet-maintenance"><span aria-hidden="true">⚙</span> In maintenance</span>':''}<h3>${esc(v['Vehicle Name']||v['Vehicle ID'])}</h3><p>${esc(v.Registration||'Registration not recorded')}</p>${pvrAdminProgressMarkup(p)}${pvrAdminFleetActions(v,p,available)}</article></div>`}).join('')||'<p class="hint">Open your workbook to view vehicles.</p>'}</div></section>`;
 }
 
 const operationsPeriods=[['week','This week'],['month','This month'],['last-month','Last month']];
