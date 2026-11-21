@@ -30,15 +30,30 @@
  inherits:false;
 }
 :is(.pvr-fleet-carousel>article,#adminFleet .pvr-fleet-card)[data-carousel-active]{
- border-color:transparent;
- background:
-  linear-gradient(var(--paper,#fff),var(--paper,#fff)) padding-box,
-  conic-gradient(from var(--pvr-glow-angle),#4285f4,#9b72cb,#d96570,#f4b400,#0f9d58,#4285f4) border-box;
- box-shadow:0 16px 34px #19384a33,0 0 22px #6689ef55;
- animation:pvr-spin-glow 4s linear infinite;
+ position:relative;
+ box-shadow:0 16px 34px #19384a44,0 0 24px #6689ef77;
+}
+:is(.pvr-fleet-carousel>article,#adminFleet .pvr-fleet-card)[data-carousel-active]::after{
+ content:"";
+ position:absolute;
+ inset:0;
+ z-index:2;
+ border-radius:inherit;
+ border:3px solid #9b72cb;
+ pointer-events:none;
+}
+@supports (mask-composite: exclude){
+ :is(.pvr-fleet-carousel>article,#adminFleet .pvr-fleet-card)[data-carousel-active]::after{
+  border:0;
+  padding:3px;
+  background:conic-gradient(from var(--pvr-glow-angle),#4285f4,#9b72cb,#d96570,#f4b400,#0f9d58,#4285f4);
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask-composite:exclude;
+  animation:pvr-spin-glow 4s linear infinite;
+ }
 }
 @keyframes pvr-spin-glow{to{--pvr-glow-angle:360deg}}
-@media(prefers-reduced-motion:reduce){:is(.pvr-fleet-carousel>article,#adminFleet .pvr-fleet-card)[data-carousel-active]{animation:none}}
+@media(prefers-reduced-motion:reduce){:is(.pvr-fleet-carousel>article,#adminFleet .pvr-fleet-card)[data-carousel-active]::after{animation:none}}
 .pvr-fleet-carousel>article[data-carousel-wrap]{transition:none}
 .pvr-fleet-carousel>article[inert]{pointer-events:none}
 .pvr-fleet-carousel>.pvr-vehicle-card{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
