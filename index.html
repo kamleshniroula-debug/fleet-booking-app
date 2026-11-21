@@ -18,6 +18,35 @@
 </style>
 <style>
 .pvr-vehicle-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:13px;margin-bottom:20px}.pvr-vehicle-card{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #dde5ef;background:white;border-radius:15px}.pvr-vehicle-thumb{width:100px;height:90px;flex:0 0 100px;border-radius:11px;background:#e9f2f5;display:grid;place-items:center;object-fit:cover;color:#65788d;font-size:30px}.pvr-vehicle-info{min-width:0;flex:1}.pvr-vehicle-info strong{font-size:15px;color:#182a40}.pvr-vehicle-features{font-size:12px;color:#607188;line-height:1.65;margin:5px 0}.pvr-vehicle-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.pvr-vehicle-actions button{font-size:12px;color:#168b82;background:none;border:0;padding:0;font-weight:700}.pvr-gallery-note{font-size:12px;color:#617188;margin:0 0 13px}.pvr-vehicle-card .pvr-vehicle-status{font-size:11px;font-weight:700;color:#168b82}.pvr-vehicle-card .pvr-vehicle-status.inactive{color:#a45450}
+
+.pvr-carousel-controls{display:flex;align-items:center;justify-content:center;gap:14px;margin:8px 0}
+.pvr-carousel-controls button{min-width:44px;min-height:44px;border:1px solid #c8d7e6;border-radius:50%;background:#fff;color:#183c65;font-size:24px;cursor:pointer}
+.pvr-carousel-controls output{min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
+.pvr-fleet-carousel{display:grid;grid-template-columns:minmax(0,1fr);place-items:center;gap:0;isolation:isolate;overflow:hidden;padding:16px 4px 32px;touch-action:pan-y}
+.pvr-fleet-carousel>article{grid-area:1/1;width:min(74%,720px);min-width:0;margin:0;border-radius:20px;padding:clamp(16px,3vw,28px);box-shadow:0 15px 30px #19384a33;z-index:var(--vehicle-layer);opacity:var(--vehicle-opacity);transform:perspective(1000px) translateX(var(--vehicle-shift)) rotateY(var(--vehicle-angle)) scale(var(--vehicle-scale));transition:transform .42s cubic-bezier(.22,.68,.24,1),opacity .25s ease;backface-visibility:hidden}
+@property --pvr-glow-angle {
+ syntax:"<angle>";
+ initial-value:0deg;
+ inherits:false;
+}
+:is(.pvr-fleet-carousel>article,#adminFleet .pvr-fleet-card)[data-carousel-active]{
+ border-color:transparent;
+ background:
+  linear-gradient(var(--paper,#fff),var(--paper,#fff)) padding-box,
+  conic-gradient(from var(--pvr-glow-angle),#4285f4,#9b72cb,#d96570,#f4b400,#0f9d58,#4285f4) border-box;
+ box-shadow:0 16px 34px #19384a33,0 0 22px #6689ef55;
+ animation:pvr-spin-glow 4s linear infinite;
+}
+@keyframes pvr-spin-glow{to{--pvr-glow-angle:360deg}}
+@media(prefers-reduced-motion:reduce){:is(.pvr-fleet-carousel>article,#adminFleet .pvr-fleet-card)[data-carousel-active]{animation:none}}
+.pvr-fleet-carousel>article[data-carousel-wrap]{transition:none}
+.pvr-fleet-carousel>article[inert]{pointer-events:none}
+.pvr-fleet-carousel>.pvr-vehicle-card{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.pvr-fleet-carousel .pvr-vehicle-thumb{width:100%;height:clamp(175px,38vw,320px);object-fit:contain}
+.pvr-fleet-carousel .pvr-vehicle-info strong,.pvr-fleet-carousel .pvr-fleet-card h3{font-size:clamp(19px,3vw,28px)}
+.pvr-fleet-carousel .pvr-vehicle-actions button{min-height:36px}
+@media(max-width:600px){.pvr-fleet-carousel>article{width:88%}}
+@media(prefers-reduced-motion:reduce){.pvr-fleet-carousel>article{transition:none}}
 </style><style id="pvr-premium-dashboard">
 :root{--pvr-ink:#14263b;--pvr-teal:#0c9d91;--pvr-edge:#dfe8ef}
 body{background:linear-gradient(135deg,#edf4f7 0%,#f8fafc 52%,#eef6f4 100%);color:var(--pvr-ink)}
@@ -790,6 +819,7 @@ function bindAdminFleetActions(){
  const fleet=$('adminFleet');
  if(!fleet)return;
  const track=$('adminFleetCards');
+ track?.querySelector(".pvr-fleet-card")?.setAttribute("data-carousel-active","");
  const previous=fleet.querySelector('[data-fleet-scroll="-1"]');
  const next=fleet.querySelector('[data-fleet-scroll="1"]');
  if(previous&&next){
@@ -801,6 +831,7 @@ function bindAdminFleetActions(){
    if(!step)return;
    const position=track.scrollLeft/step;
    slots.forEach((slot,index)=>{
+    slot.querySelector('.pvr-fleet-card')?.toggleAttribute('data-carousel-active',index===Math.round(position));
     const distance=Math.max(-1,Math.min(1,index-position));
     const depth=Math.abs(distance);
     slot.style.setProperty('--fleet-angle',`${-distance*56}deg`);
@@ -1492,7 +1523,64 @@ function printVehicleGalleryPdf(){
  if(!win){URL.revokeObjectURL(url);alertUser('Allow pop-ups to save the vehicle list as PDF.',true);return}
  setTimeout(()=>URL.revokeObjectURL(url),120000);
 }
+function bindFleetCarousel(gallery, cardSelector){
+ if(!gallery)return;
+ const cards=[...gallery.querySelectorAll(cardSelector)];
+ if(!cards.length)return;
+ gallery.classList.add('pvr-fleet-carousel');
+ gallery.setAttribute('role','region');
+ gallery.setAttribute('aria-label','Vehicle carousel');
+ let index=0;
+ let gesture=null;
+ const controls=document.createElement('div');
+ controls.className='pvr-carousel-controls';
+ controls.innerHTML='<button type="button" aria-label="Previous vehicle">‹</button><output aria-live="polite"></output><button type="button" aria-label="Next vehicle">›</button>';
+ const [previous,count,next]=controls.children;
+ if(cards.length>1)gallery.before(controls);
+ function draw(){
+  cards.forEach((card,i)=>{
+   let slot=(i-index+cards.length)%cards.length;
+   if(slot>Math.floor(cards.length/2))slot-=cards.length;
+   const prior=Number(card.dataset.carouselSlot);
+   card.toggleAttribute('data-carousel-wrap',Number.isFinite(prior)&&Math.abs(prior-slot)>2);
+   card.dataset.carouselSlot=slot;
+   card.inert=slot!==0;
+   card.toggleAttribute('data-carousel-active',slot===0);
+   card.style.setProperty('--vehicle-layer',String(5-Math.abs(slot)));
+   card.style.setProperty('--vehicle-opacity',slot===0?'1':Math.abs(slot)===1?'.55':'0');
+   card.style.setProperty('--vehicle-shift',`calc(${slot} * clamp(115px, 27vw, 330px))`);
+   card.style.setProperty('--vehicle-angle',`${-slot*23}deg`);
+   card.style.setProperty('--vehicle-scale',slot===0?'1':'.80');
+  });
+  count.textContent=`${index+1} / ${cards.length}`;
+ }
+ function move(step){
+  index=(index+step+cards.length)%cards.length;
+  draw();
+ }
+ previous.onclick=()=>move(-1);
+ next.onclick=()=>move(1);
+ controls.onkeydown=event=>{
+  if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
+  event.preventDefault();
+  move(event.key==='ArrowLeft'?-1:1);
+ };
+ gallery.addEventListener('touchstart',event=>{
+  const point=event.touches[0];
+  gesture=event.touches.length===1&&!event.target.closest('button,a,input')?[point.clientX,point.clientY]:null;
+ },{passive:true});
+ gallery.addEventListener('touchend',event=>{
+  if(!gesture)return;
+  const point=event.changedTouches[0];
+  const dx=point.clientX-gesture[0],dy=point.clientY-gesture[1];
+  gesture=null;
+  if(Math.abs(dx)>36&&Math.abs(dx)>Math.abs(dy)*1.4)move(dx<0?1:-1);
+ },{passive:true});
+ gallery.addEventListener('touchcancel',()=>{gesture=null;},{passive:true});
+ draw();
+}
 function bindVehicleGallery(){
+ bindFleetCarousel(document.querySelector('.pvr-vehicle-gallery'), '.pvr-vehicle-card');
  const exportBtn=document.getElementById("pvrExportVehiclePdf");if(exportBtn)exportBtn.onclick=printVehicleGalleryPdf;
  document.querySelectorAll('[data-gallery-toggle]').forEach(b=>b.onclick=()=>toggleVehicle(Number(b.dataset.galleryToggle)));
  document.querySelectorAll('[data-gallery-delete]').forEach(b=>b.onclick=()=>deleteVehiclePermanently(Number(b.dataset.galleryDelete)));
