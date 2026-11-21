@@ -607,9 +607,9 @@ function bookingCalendar(){
  }}
  const vehicleNames=new Map(rows('Vehicles').map(v=>[v['Vehicle ID'],v['Vehicle Name']]));
  const monthBookings=first&&last?rows('Bookings').filter(b=>(calendarVehicle==='all'||b['Vehicle ID']===calendarVehicle)&&b.Status!=='Cancelled'&&b['Start AD']&&b['End AD Exclusive']&&b['Start AD']<=last&&b['End AD Exclusive']>first).sort((a,b)=>String(a['Start AD']).localeCompare(String(b['Start AD']))):[];
- const bookingList=first&&last?`<h3>Bookings for ${esc(title)}</h3>${monthBookings.length?`<div style="overflow-x:auto"><table><thead><tr><th>Vehicle</th><th>Start date (AD)</th><th>End date (AD)</th><th>Customer</th></tr></thead><tbody>${monthBookings.map(b=>`<tr><td>${esc(vehicleNames.get(b['Vehicle ID'])||b['Vehicle ID']||'Vehicle not recorded')}</td><td>${esc(b['Start AD'])}</td><td>${esc(addDaysAD(b['End AD Exclusive'],-1))}</td><td>${esc(b['Customer Name']||'Customer not recorded')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="hint">No bookings for this month.</p>'}`:'';
+ const bookingList=first&&last?`<h3>Bookings for ${esc(title)}</h3>${monthBookings.length?`<div style="overflow-x:auto"><table><thead><tr><th>Vehicle</th><th>Start date (AD)</th><th>End date (AD)</th><th>Customer</th><th>Booking actions</th></tr></thead><tbody>${monthBookings.map(b=>`<tr><td>${esc(vehicleNames.get(b['Vehicle ID'])||b['Vehicle ID']||'Vehicle not recorded')}</td><td>${esc(b['Start AD'])}</td><td>${esc(addDaysAD(b['End AD Exclusive'],-1))}</td><td>${esc(b['Customer Name']||'Customer not recorded')}</td><td>${bookingRecordActions(b)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="hint">No bookings for this month.</p>'}`:'';
  let yearOptions=Array.from({length:BS_MAX_YEAR-BS_MIN_YEAR+1},(_,i)=>BS_MIN_YEAR+i).map(y=>`<option value="${y}" ${y===calendarBSYear?'selected':''}>${y}${BS_LENGTHS[y]?'':' (pending)'}</option>`).join('');
- return `<div class="panel"><div class="panelhead"><div><h2>Booking calendar</h2><div class="hint">Booked dates are shown from the loaded workbook. Only records with valid AD dates can be displayed.</div></div></div><div class="calbar"><label>Calendar <select id="calMode"><option value="AD" ${!bs?'selected':''}>AD · English</option><option value="BS" ${bs?'selected':''}>BS · Nepali</option></select></label><label>Vehicle <select id="calVehicle">${calendarVehicleOptions()}</select></label>${bs?`<label>Year <select id="calBSYear">${yearOptions}</select></label><label>Month <select id="calBSMonth">${BS_MONTHS.map((m,i)=>`<option value="${i}" ${i===calendarBSMonth?'selected':''}>${m}</option>`).join('')}</select></label>`:`<label>Month <input type="month" id="calADMonth" value="${calendarAD}"></label>`}<button id="calPrev">← Previous</button><button id="calNext">Next →</button></div><h2>${esc(title||'BS dates unavailable')}</h2><div class="callegend"><span>Booked</span><span>Maintenance</span><span>Available</span></div>${bs&&!verified?`<div class="callout">BS ${calendarBSYear} conversion is not verified. Select BS a supported year or switch to AD to see booked dates. Dates will not be guessed.</div>`:`<div class="calgrid">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="hint" style="text-align:center;font-weight:700">${d}</div>`).join('')}${days.join('')}</div>`}${bookingList}<div class="calhint">Cancelled bookings are excluded. Imported bookings with missing AD dates cannot be plotted until corrected. The calendar is a read-only view; edit bookings in the Bookings tab.</div></div>`
+ return `<div class="panel"><div class="panelhead"><div><h2>Booking calendar</h2><div class="hint">Booked dates are shown from the loaded workbook. Only records with valid AD dates can be displayed.</div></div></div><div class="calbar"><label>Calendar <select id="calMode"><option value="AD" ${!bs?'selected':''}>AD · English</option><option value="BS" ${bs?'selected':''}>BS · Nepali</option></select></label><label>Vehicle <select id="calVehicle">${calendarVehicleOptions()}</select></label>${bs?`<label>Year <select id="calBSYear">${yearOptions}</select></label><label>Month <select id="calBSMonth">${BS_MONTHS.map((m,i)=>`<option value="${i}" ${i===calendarBSMonth?'selected':''}>${m}</option>`).join('')}</select></label>`:`<label>Month <input type="month" id="calADMonth" value="${calendarAD}"></label>`}<button id="calPrev">← Previous</button><button id="calNext">Next →</button>${calendarVehicle==='all'?'<button type="button" class="btn primary" data-booking-new="">New booking</button>':vehicleBookingActions(rows('Vehicles').find(v=>v['Vehicle ID']===calendarVehicle))}</div><h2>${esc(title||'BS dates unavailable')}</h2><div class="callegend"><span>Booked</span><span>Maintenance</span><span>Available</span></div>${bs&&!verified?`<div class="callout">BS ${calendarBSYear} conversion is not verified. Select BS a supported year or switch to AD to see booked dates. Dates will not be guessed.</div>`:`<div class="calgrid">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="hint" style="text-align:center;font-weight:700">${d}</div>`).join('')}${days.join('')}</div>`}${bookingList}<div class="calhint">Cancelled bookings are excluded. Imported bookings with missing AD dates cannot be plotted until corrected.</div></div>`
 }
 function bindBookingCalendar(){let mode=$('calMode');if(!mode)return;mode.onchange=()=>{calendarMode=mode.value;render()};$('calVehicle').onchange=e=>{calendarVehicle=e.target.value;render()};if($('calADMonth'))$('calADMonth').onchange=e=>{calendarAD=e.target.value;render()};if($('calBSYear'))$('calBSYear').onchange=e=>{calendarBSYear=Number(e.target.value);render()};if($('calBSMonth'))$('calBSMonth').onchange=e=>{calendarBSMonth=Number(e.target.value);render()};function move(delta){if(calendarMode==='AD'){let [y,m]=calendarAD.split('-').map(Number);let d=new Date(Date.UTC(y,m-1+delta,1));calendarAD=d.toISOString().slice(0,7)}else{let i=(calendarBSYear-BS_MIN_YEAR)*12+calendarBSMonth+delta;if(i<0||i>=(BS_MAX_YEAR-BS_MIN_YEAR+1)*12)return;calendarBSYear=BS_MIN_YEAR+Math.floor(i/12);calendarBSMonth=i%12}render()}$('calPrev').onclick=()=>move(-1);$('calNext').onclick=()=>move(1)}
 
@@ -617,12 +617,12 @@ function upcomingBookingAlerts(){
  const today=localDate();const now=new Date(today+'T12:00:00');
  return rows('Bookings').filter(b=>b['Start AD']&&b.Status!=='Cancelled'&&b.Status!=='Completed'&&b.Status!=='Returned').map(b=>{
   const start=new Date(b['Start AD']+'T12:00:00');const days=Math.round((start-now)/86400000);
-  return {...b,_daysUntil:days};
+  return {...b,_daysUntil:days,_bookingIndex:rows('Bookings').indexOf(b)};
  }).filter(b=>b._daysUntil>=0&&b._daysUntil<=3).sort((a,b)=>a._daysUntil-b._daysUntil);
 }
 function upcomingAlertsMarkup(){
  const list=upcomingBookingAlerts();const title=d=>d===0?'TODAY':d===1?'TOMORROW':`IN ${d} DAYS`;
- return `<div class="panel" id="bookingAlerts"><div class="panelhead"><div><h2>🔔 Upcoming booking alerts</h2><div class="hint">Bookings starting today or within the next 3 days · based on your device date</div></div><button type="button" class="btn" id="enableBookingNotifications">Enable browser alerts</button></div>${list.length?list.map(b=>`<div class="banner warn" style="margin:9px 0"><b>${title(b._daysUntil)}</b> · ${esc(b['Customer Name']||'Customer not entered')} · ${esc(b['Vehicle ID']||'Vehicle not entered')} · ${esc(b['Start AD'])} · ${esc(b.Status||'Booking')}</div>`).join(''):'<div class="hint">No bookings starting in the next 3 days.</div>'}<div class="hint" style="margin-top:10px">Alerts are shown on the dashboard when you open or refresh the website. Browser notifications work only while this page is open; they are not background reminders.</div></div>`;
+ return `<div class="panel" id="bookingAlerts"><div class="panelhead"><div><h2>🔔 Upcoming booking alerts</h2><div class="hint">Bookings starting today or within the next 3 days · based on your device date</div></div><button type="button" class="btn" id="enableBookingNotifications">Enable browser alerts</button></div>${list.length?list.map(b=>`<div class="banner warn" style="margin:9px 0"><b>${title(b._daysUntil)}</b> · ${esc(b['Customer Name']||'Customer not entered')} · ${esc(b['Vehicle ID']||'Vehicle not entered')} · ${esc(b['Start AD'])} · ${esc(b.Status||'Booking')}${bookingRecordActions(b,b._bookingIndex)}</div>`).join(''):'<div class="hint">No bookings starting in the next 3 days.</div>'}<div class="hint" style="margin-top:10px">Alerts are shown on the dashboard when you open or refresh the website. Browser notifications work only while this page is open; they are not background reminders.</div></div>`;
 }
 function bindBookingAlerts(){const btn=$('enableBookingNotifications');if(!btn)return;btn.onclick=async()=>{
  if(!('Notification' in window)){alert('Browser notifications are not supported here. Dashboard alerts still work.');return}
@@ -666,7 +666,7 @@ function rentalProgressPanel(){
    const bookingIndex=rows('Bookings').indexOf(b);
    const currentStatus=String(b.Status||'Active');
    const statusControl=`<div class="rental-status-controls"><label for="rental-status-${bookingIndex}">Booking status</label><select id="rental-status-${bookingIndex}" data-rental-status="${bookingIndex}" aria-label="Change booking status for ${esc(name)}">${['Active','Extended','Completed','Cancelled'].map(st=>`<option value="${st}" ${currentStatus===st?'selected':''}>${st}</option>`).join('')}</select><button type="button" class="btn" data-rental-extend="${bookingIndex}">+ Extend days / rate</button></div>`;
-  return `<div class="rental-progress-item ${overdue?'overdue':''}"><div class="rental-progress-top"><div><strong>${esc(name)}</strong><div class="mini">${esc(b['Customer Name']||'Customer not recorded')}</div></div><strong style="color:${color}">${esc(state)}</strong></div><div class="rental-progress-track" role="progressbar" aria-label="Rental elapsed" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="rental-progress-fill" style="width:${pct}%;background:${color}"></div></div><div class="rental-progress-meta"><span>${esc(b['Start AD'])} → ${esc(b['End AD Exclusive'])} (return boundary)</span><span>${elapsed} of ${total} days passed</span>${bookingDaysRemaining(elapsed,total)}</div>${statusControl}</div>`;
+  return `<div class="rental-progress-item ${overdue?'overdue':''}"><div class="rental-progress-top"><div><strong>${esc(name)}</strong><div class="mini">${esc(b['Customer Name']||'Customer not recorded')}</div></div><strong style="color:${color}">${esc(state)}</strong></div><div class="rental-progress-track" role="progressbar" aria-label="Rental elapsed" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="rental-progress-fill" style="width:${pct}%;background:${color}"></div></div><div class="rental-progress-meta"><span>${esc(b['Start AD'])} → ${esc(b['End AD Exclusive'])} (return boundary)</span><span>${elapsed} of ${total} days passed</span>${bookingDaysRemaining(elapsed,total)}</div>${statusControl}${bookingRecordActions(b)}${vehicleBookingActions(vehicle)}</div>`;
  }).join('');
  return `<div class="panel" id="rentalProgress"><div class="panelhead"><div><h2>🚗 Live booking progress</h2><div class="hint">Green below 80% · Orange from 80% · Red at 0 days remaining · Nepal time</div></div><span class="tag">${active.length} current</span></div><div class="rental-progress-list${visibleRentals.length>1?' is-compact':''}" style="${rentalProgressLayout(visibleRentals.length)}">${cards||'<div class="hint">No current vehicle rentals with verified booking dates.</div>'}</div>${active.length>visibleRentals.length?`<p class="hint">Showing ${visibleRentals.length} of ${active.length} current rentals. Open Bookings to see more.</p>`:''}<p class="hint" style="margin-top:12px">End AD Exclusive is the first day after the rental. The bar updates when the dashboard opens or refreshes; save booking changes to OneDrive.</p></div>`;
 }
@@ -765,7 +765,7 @@ function dashboardBookings(bookings){
   const dates=lastDay?b['Start AD']+' to '+lastDay:b['Start AD'];
   const status=dashboardBookingStatus(b,today,lastDay);
   const name=vehicleNames.get(b['Vehicle ID'])||b['Vehicle ID']||'Vehicle not recorded';
-  return `<li><strong>${esc(name)}</strong> · ${esc(b['Customer Name']||'Customer not recorded')} · ${esc(dates)} · ${esc(status)}${pvrBookingDayMarkup(b)}</li>`;
+  return `<li><strong>${esc(name)}</strong> · ${esc(b['Customer Name']||'Customer not recorded')} · ${esc(dates)} · ${esc(status)}${pvrBookingDayMarkup(b)}${bookingRecordActions(b)}</li>`;
  }).join('');
  return `<div class="panel"><div class="panelhead"><div><h2>Bookings</h2><div class="hint">By booking start date · Up to 10 shown</div></div><div class="toolbar"><label for="dashboardBookingRange">Show bookings</label><select id="dashboardBookingRange">${bookingRangeOptions(dashboardBookingRange)}</select><button type="button" class="btn primary" data-open-bookings="${dashboardBookingRange}">Open Bookings</button><button type="button" class="btn" data-open-bookings="upcoming">Upcoming bookings</button></div></div>${list?`<ul>${list}</ul>`:'<p class="hint">No bookings match this date range.</p>'}</div>`;
 }
@@ -809,7 +809,7 @@ function pvrAdminFleetInMaintenance(v,t=localDate()){
 function canCompleteFleetBooking(booking){
  return pvrFleetBookingOpen(booking)&&pvrFleetValidDate(booking['Start AD'])&&booking['Start AD']<=localDate();
 }
-function pvrAdminFleetActions(vehicle,progress,available){
+function pvrAdminFleetActions(vehicle,progress){
  if(!zip)return '';
  const vehicleId=vehicle['Vehicle ID'];
  const upcoming=progress?null:rows('Bookings')
@@ -821,11 +821,10 @@ function pvrAdminFleetActions(vehicle,progress,available){
  const id=booking?.['Booking ID'];
  return `${upcoming?'<p class="pvr-fleet-upcoming">Next booking · '+esc(upcoming['Start AD'])+'</p>':''}
   <div class="pvr-fleet-actions">
-   <button type="button" class="btn" data-fleet-edit="${esc(vehicleId)}">Edit vehicle</button>
-   ${available?'<button type="button" class="btn primary" data-fleet-new="'+esc(vehicleId)+'">New booking</button>':''}
+   ${vehicleBookingActions(vehicle)}
+   ${bookingRecordActions(booking)}
    ${id?'<button type="button" class="btn" data-fleet-extend="'+esc(id)+'">Extend</button>':''}
    ${id&&progress&&canCompleteFleetBooking(booking)?'<button type="button" class="btn pvr-fleet-complete" data-fleet-complete="'+esc(id)+'">Complete</button>':''}
-   ${id?'<button type="button" class="btn pvr-fleet-cancel" data-fleet-cancel="'+esc(id)+'">Cancel booking</button>':''}
   </div>`;
 }
 let adminFleetResizeObserver;
@@ -875,29 +874,7 @@ function bindAdminFleetActions(){
  fleet.onclick=event=>{
   const button=event.target.closest('button');
   if(!button||!zip)return;
-  if(button.dataset.fleetEdit!==undefined){
-   const index=rows('Vehicles').findIndex(v=>String(v['Vehicle ID']||'')===button.dataset.fleetEdit);
-   if(index<0||!button.dataset.fleetEdit){alertUser('Vehicle not found.',true);return}
-   editVehicle(index,true);
-   return;
-  }
-  if(button.dataset.fleetNew!==undefined){
-   const vehicle=rows('Vehicles').find(v=>v['Vehicle ID']===button.dataset.fleetNew);
-   if(!vehicle||vehicle.Status!=='Active'||!pvrAdminFleetAvailable(vehicle)){
-    alertUser('This vehicle is no longer available. Check its bookings and try again.',true);
-    render();
-    return;
-   }
-   try{
-    editBookingSimple(-1,true,vehicle['Vehicle ID']);
-    $('homeBooking').scrollIntoView({block:'start'});
-    $('homeBookingForm').querySelector('[name="Customer Name"]')?.focus({preventScroll:true});
-   }catch(error){
-    alertUser('Could not open the booking form: '+error.message,true);
-   }
-   return;
-  }
-  const id=button.dataset.fleetExtend||button.dataset.fleetComplete||button.dataset.fleetCancel;
+  const id=button.dataset.fleetExtend||button.dataset.fleetComplete;
   if(!id)return;
   const index=rows('Bookings').findIndex(b=>b['Booking ID']===id);
   const booking=rows('Bookings')[index];
@@ -923,33 +900,93 @@ function bindAdminFleetActions(){
    }
    return;
   }
-  const dialog=document.createElement('dialog');
-  dialog.className='modal';
-  dialog.setAttribute('aria-labelledby','fleetCancelTitle');
-  dialog.innerHTML=`<form method="dialog">
-   <h2 id="fleetCancelTitle">Cancel this booking?</h2>
-   <p>${esc(details)}</p>
-   <p>The booking and payment details will remain in history.</p>
-   <div class="foot">
-    <button class="btn" value="keep" autofocus>Keep booking</button>
-    <button class="btn primary" value="cancel">Cancel booking</button>
-   </div>
-  </form>`;
-  dialog.addEventListener('close',()=>{
-   const confirmed=dialog.returnValue==='cancel';
-   dialog.remove();
-   if(!confirmed)return;
-   const current=rows('Bookings').find(row=>row['Booking ID']===id);
-   if(current!==booking||!pvrFleetBookingOpen(current)){
-    alertUser('This booking has changed. Open it again to review its current status.',true);
-    return;
-   }
-   saveFleetBookingStatus(current,'Cancelled');
-  },{once:true});
-  document.body.append(dialog);
-  dialog.showModal();
  };
 }
+function bookingRecordActions(booking,index=rows('Bookings').indexOf(booking)){
+ if(!booking)return '';
+ if(index<0)return '';
+ return ` <button type="button" class="tablebtn" data-booking-edit="${index}">Edit booking</button>${pvrFleetBookingOpen(booking)?` <button type="button" class="tablebtn" data-booking-cancel="${index}">Cancel booking</button>`:''}`;
+}
+function vehicleBookingActions(vehicle){
+ const id=vehicle?.['Vehicle ID'];
+ if(!id)return '';
+ return ` ${vehicle.Status==='Active'?`<button type="button" class="btn primary" data-booking-new="${esc(id)}">New booking</button> `:''}<button type="button" class="btn" data-booking-manage="${esc(id)}">Manage bookings</button>`;
+}
+function bookingRentalDates(booking){
+ const start=booking['Start AD'],end=booking['End AD Exclusive'];
+ return pvrFleetValidDate(start)&&pvrFleetValidDate(end)&&end>start
+  ? start+' to '+addDaysAD(end,-1) : 'Dates need review';
+}
+function openVehicleBookings(vehicle){
+ const bookings=rows('Bookings').filter(b=>b['Vehicle ID']===vehicle['Vehicle ID'])
+  .sort((a,b)=>Number(pvrFleetBookingOpen(b))-Number(pvrFleetBookingOpen(a))||
+   String(b['Start AD']||'').localeCompare(String(a['Start AD']||'')));
+ const root=$('modalroot');
+ root.innerHTML=`<div class="modalbg"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="vehicleBookingsTitle">
+  <div class="modalhead"><h2 id="vehicleBookingsTitle">${esc(vehicle['Vehicle Name']||vehicle['Vehicle ID'])} bookings</h2>
+  <button type="button" class="btn" id="closeVehicleBookings">Close</button></div>
+  ${vehicle.Status==='Active'?`<button type="button" class="btn primary" data-booking-new="${esc(vehicle['Vehicle ID'])}">New booking</button>`:''}
+  ${bookings.length?`<ul>${bookings.map(b=>`<li><strong>${esc(b['Customer Name']||'Customer not recorded')}</strong>
+   · ${esc(bookingRentalDates(b))} · ${esc(b.Status||'Booking')}${bookingRecordActions(b)}</li>`).join('')}</ul>`:'<p>No bookings for this vehicle.</p>'}
+ </section></div>`;
+ const close=$('closeVehicleBookings');
+ close.onclick=()=>{root.innerHTML=''};
+ close.focus();
+}
+function confirmBookingCancellation(booking){
+ if(!pvrFleetBookingOpen(booking))return;
+ const vehicle=rows('Vehicles').find(v=>v['Vehicle ID']===booking['Vehicle ID']);
+ const name=vehicle?.['Vehicle Name']||booking['Vehicle ID']||'Vehicle not recorded';
+ const details=[name,booking['Customer Name']||'Customer not recorded',bookingRentalDates(booking)].join(' · ');
+ const dialog=document.createElement('dialog');
+ dialog.className='modal';
+ dialog.setAttribute('aria-labelledby','fleetCancelTitle');
+ dialog.innerHTML=`<form method="dialog">
+  <h2 id="fleetCancelTitle">Cancel this booking?</h2>
+  <p>${esc(details)}</p>
+  <p>The booking and payment details will remain in history.</p>
+  <div class="foot">
+   <button class="btn" value="keep" autofocus>Keep booking</button>
+   <button class="btn primary" value="cancel">Cancel booking</button>
+  </div>
+ </form>`;
+ dialog.addEventListener('close',()=>{
+  const confirmed=dialog.returnValue==='cancel';
+  dialog.remove();
+  if(!confirmed)return;
+  if(!rows('Bookings').includes(booking)||!pvrFleetBookingOpen(booking)){
+   alertUser('This booking has changed. Open it again to review its current status.',true);
+   return;
+  }
+  $('modalroot').innerHTML='';
+  saveFleetBookingStatus(booking,'Cancelled');
+ },{once:true});
+ document.body.append(dialog);
+ dialog.showModal();
+}
+document.addEventListener('click',event=>{
+ const button=event.target.closest('button[data-booking-new],button[data-booking-manage],button[data-booking-edit],button[data-booking-cancel]');
+ if(!button)return;
+ if(!zip){alertUser('Open the matching Excel workbook first.',true);return}
+ const {bookingNew,bookingManage,bookingEdit,bookingCancel}=button.dataset;
+ if(bookingNew!==undefined||bookingManage!==undefined){
+  const id=bookingNew??bookingManage;
+  const vehicle=rows('Vehicles').find(v=>String(v['Vehicle ID'])===id);
+  if(bookingManage!==undefined){
+   if(vehicle)openVehicleBookings(vehicle);
+   else alertUser('This vehicle could not be found.',true);
+   return;
+  }
+  if(id&&(vehicle?.Status!=='Active')){alertUser('Choose an active vehicle.',true);return}
+  editBookingSimple(-1,false,vehicle?.['Vehicle ID']||'');
+  return;
+ }
+ const index=Number(bookingEdit??bookingCancel);
+ const booking=rows('Bookings')[index];
+ if(!booking){alertUser('This booking could not be found.',true);return}
+ if(bookingEdit!==undefined)editBookingSimple(index);
+ else confirmBookingCancellation(booking);
+});
 function saveFleetBookingStatus(booking,status){
  booking.Status=status;
  markDirty();
@@ -962,7 +999,7 @@ function pvrAdminFleetCards(){
  const list=rows('Vehicles').filter(v=>v.Status==='Active'&&!retired.has(String(v['Vehicle Name']||'').trim().toLowerCase())).map(v=>({v,p:pvrAdminFleetProgress(v)})).sort((a,b)=>Number(!!b.p)-Number(!!a.p)||
   (a.p&&b.p?a.p.booking['End AD Exclusive'].localeCompare(b.p.booking['End AD Exclusive']):0)||
   String(a.v['Vehicle Name']).localeCompare(String(b.v['Vehicle Name'])));
- return `<section class="panel" id="adminFleet"><div class="panelhead"><h2>Vehicle availability</h2><div class="pvr-fleet-nav"><span class="hint">${list.length} active vehicles</span>${list.length>1?'<button type="button" class="btn" data-fleet-scroll="-1" aria-label="Previous vehicle" aria-controls="adminFleetCards">←</button><button type="button" class="btn" data-fleet-scroll="1" aria-label="Next vehicle" aria-controls="adminFleetCards">→</button>':''}</div></div><div class="pvr-fleet-cards" id="adminFleetCards"${list.length>1?' tabindex="0" role="region" aria-label="Vehicle cards"':''}>${list.map(({v,p})=>{const maintenance=pvrAdminFleetInMaintenance(v);const available=!p&&!maintenance&&pvrAdminFleetAvailable(v);return `<div class="pvr-fleet-slot"><article class="pvr-fleet-card" style="${pvrAdminVehicleCardStyle(v)}">${p?'<span class="pvr-fleet-tag">'+(p.overdue?'Return overdue':'Booking in progress')+'</span>':available?'<span class="pvr-fleet-tag">Available</span>':''}${maintenance?'<span class="pvr-fleet-tag pvr-fleet-maintenance"><span aria-hidden="true">⚙</span> In maintenance</span>':''}<h3>${esc(v['Vehicle Name']||v['Vehicle ID'])}</h3><p>${esc(v.Registration||'Registration not recorded')}</p>${pvrAdminProgressMarkup(p)}${pvrAdminFleetActions(v,p,available)}</article></div>`}).join('')||'<p class="hint">Open your workbook to view vehicles.</p>'}</div></section>`;
+ return `<section class="panel" id="adminFleet"><div class="panelhead"><h2>Vehicle availability</h2><div class="pvr-fleet-nav"><span class="hint">${list.length} active vehicles</span>${list.length>1?'<button type="button" class="btn" data-fleet-scroll="-1" aria-label="Previous vehicle" aria-controls="adminFleetCards">←</button><button type="button" class="btn" data-fleet-scroll="1" aria-label="Next vehicle" aria-controls="adminFleetCards">→</button>':''}</div></div><div class="pvr-fleet-cards" id="adminFleetCards"${list.length>1?' tabindex="0" role="region" aria-label="Vehicle cards"':''}>${list.map(({v,p})=>{const maintenance=pvrAdminFleetInMaintenance(v);const available=!p&&!maintenance&&pvrAdminFleetAvailable(v);return `<div class="pvr-fleet-slot"><article class="pvr-fleet-card" style="${pvrAdminVehicleCardStyle(v)}">${p?'<span class="pvr-fleet-tag">'+(p.overdue?'Return overdue':'Booking in progress')+'</span>':available?'<span class="pvr-fleet-tag">Available</span>':''}${maintenance?'<span class="pvr-fleet-tag pvr-fleet-maintenance"><span aria-hidden="true">⚙</span> In maintenance</span>':''}<h3>${esc(v['Vehicle Name']||v['Vehicle ID'])}</h3><p>${esc(v.Registration||'Registration not recorded')}</p>${pvrAdminProgressMarkup(p)}${pvrAdminFleetActions(v,p)}</article></div>`}).join('')||'<p class="hint">Open your workbook to view vehicles.</p>'}</div></section>`;
 }
 
 const operationsPeriods=[['week','This week'],['month','This month'],['last-month','Last month']];
@@ -985,7 +1022,7 @@ function operationsBreakdown(range){
  const bounds=operationsDateRange(range);
  const includes=date=>pvrFleetValidDate(date)&&date>=bounds.start&&date<bounds.end;
  const totals=[0,0,0,0];
- const vehicles=rows('Vehicles').map(v=>({id:v['Vehicle ID'],name:v['Vehicle Name']||v['Vehicle ID'],registration:v.Registration,totals:[0,0,0,0]}));
+ const vehicles=rows('Vehicles').map(v=>({id:v['Vehicle ID'],name:v['Vehicle Name']||v['Vehicle ID'],registration:v.Registration,vehicle:v,totals:[0,0,0,0]}));
  const byId=new Map(vehicles.map(vehicle=>[vehicle.id,vehicle]));
  function add(id,metric,amount){
   totals[metric]+=amount;
@@ -1024,7 +1061,7 @@ function operationsOverview(review){
  </dialog>
  <h3>Fleet totals</h3><p class="hint">${dateLabel} · Booking amounts use the start date. Expenses use their recorded dates.</p>
  <div class="kpirow">${labels.map((label,i)=>`<div class="panel"><div class="mini">${label}</div><h2>${money(totals[i])}</h2></div>`).join('')}</div>
- <div class="panelhead operations-vehicle-header"><div><h3>By vehicle</h3><p class="hint">${dateLabel}</p></div><div class="operations-period-buttons" role="group" aria-label="By vehicle report period">${operationsPeriods.map(([value,label])=>`<button type="button" class="btn" data-operations-period="${value}" aria-pressed="${operationsRange===value}">${label}</button>`).join('')}</div></div><div class="tablewrap"><table><thead><tr><th scope="col">Vehicle</th><th scope="col">Booking value</th><th scope="col">Advances</th><th scope="col">Charging bills</th><th scope="col">Tyre expenses</th></tr></thead><tbody>${vehicles.map(v=>`<tr><th scope="row">${esc(v.name)}${v.registration?`<br><span class="hint">${esc(v.registration)}</span>`:''}</th>${cells(v.totals)}</tr>`).join('')||'<tr><td colspan="5">No vehicles recorded.</td></tr>'}</tbody></table></div>
+ <div class="panelhead operations-vehicle-header"><div><h3>By vehicle</h3><p class="hint">${dateLabel}</p></div><div class="operations-period-buttons" role="group" aria-label="By vehicle report period">${operationsPeriods.map(([value,label])=>`<button type="button" class="btn" data-operations-period="${value}" aria-pressed="${operationsRange===value}">${label}</button>`).join('')}</div></div><div class="tablewrap"><table><thead><tr><th scope="col">Vehicle</th><th scope="col">Booking value</th><th scope="col">Advances</th><th scope="col">Charging bills</th><th scope="col">Tyre expenses</th></tr></thead><tbody>${vehicles.map(v=>`<tr><th scope="row">${esc(v.name)}${v.registration?`<br><span class="hint">${esc(v.registration)}</span>`:''}${vehicleBookingActions(v.vehicle)}</th>${cells(v.totals)}</tr>`).join('')||'<tr><td colspan="5">No vehicles recorded.</td></tr>'}</tbody></table></div>
  <p class="hint">Amounts are recorded totals. ${review?`${review} bookings have incomplete dates and may be excluded by date filters.`:''}</p></section>`;
 }
 function bindOperationsOverview(){
@@ -1270,7 +1307,7 @@ function bindCustomers(){
   const groups=customerGroups().filter(g=>g.bookings.some(({booking:b})=>[b['Customer Name'],b.Phone,b['Customer Address'],b['Citizenship / Passport']].some(v=>String(v||'').toLowerCase().includes(q))));
   $('customerList').innerHTML=groups.length?groups.map((g,i)=>{
    const b=g.latest,history=g.bookings.slice().reverse();
-   return `<details class="panel" style="margin:12px 0"><summary style="cursor:pointer"><b>${esc(b['Customer Name']||'Unnamed customer')}</b> · ${esc(b.Phone||'No phone')} · ${g.bookings.length} booking(s) · <strong>${esc(latestCustomerFlag(b).status)}</strong></summary><button type="button" class="tablebtn" data-customer-pdf="${i}">Download this customer PDF</button> · <button type="button" class="tablebtn" data-customer-flag="${i}">Warning / Clear</button><p class="mini">Current flag reason: ${esc(latestCustomerFlag(b).reason||'None')}</p><p class="mini">Address: ${esc(b['Customer Address']||'—')} · ID: ${esc(b['Citizenship / Passport']||'—')}</p><div class="tablewrap"><table><thead><tr><th>Booking</th><th>Vehicle</th><th>Start</th><th>Status</th><th>Stored ID document</th></tr></thead><tbody>${history.map(({booking:r,index})=>`<tr><td>${esc(r['Booking ID']||'—')}</td><td>${esc(r['Vehicle ID']||'—')}</td><td>${esc(r['Start AD']||'—')}</td><td>${esc(r.Status||'—')}</td><td><button type="button" class="tablebtn" data-customer-view="${index}">Show ID</button> · <button type="button" class="tablebtn" data-customer-upload="${index}">Upload / replace ID</button></td></tr>`).join('')}</tbody></table></div></details>`;
+   return `<details class="panel" style="margin:12px 0"><summary style="cursor:pointer"><b>${esc(b['Customer Name']||'Unnamed customer')}</b> · ${esc(b.Phone||'No phone')} · ${g.bookings.length} booking(s) · <strong>${esc(latestCustomerFlag(b).status)}</strong></summary><button type="button" class="tablebtn" data-customer-pdf="${i}">Download this customer PDF</button> · <button type="button" class="tablebtn" data-customer-flag="${i}">Warning / Clear</button><p class="mini">Current flag reason: ${esc(latestCustomerFlag(b).reason||'None')}</p><p class="mini">Address: ${esc(b['Customer Address']||'—')} · ID: ${esc(b['Citizenship / Passport']||'—')}</p><div class="tablewrap"><table><thead><tr><th>Booking</th><th>Vehicle</th><th>Start</th><th>Status</th><th>Stored ID document</th><th>Booking actions</th></tr></thead><tbody>${history.map(({booking:r,index})=>`<tr><td>${esc(r['Booking ID']||'—')}</td><td>${esc(r['Vehicle ID']||'—')}</td><td>${esc(r['Start AD']||'—')}</td><td>${esc(r.Status||'—')}</td><td><button type="button" class="tablebtn" data-customer-view="${index}">Show ID</button> · <button type="button" class="tablebtn" data-customer-upload="${index}">Upload / replace ID</button></td><td>${bookingRecordActions(r)}</td></tr>`).join('')}</tbody></table></div></details>`;
   }).join(''):'<div class="empty">No matching customer records.</div>';
   document.querySelectorAll('[data-customer-flag]').forEach(el=>el.onclick=()=>flagCustomer(groups[Number(el.dataset.customerFlag)]));
   document.querySelectorAll('[data-customer-pdf]').forEach(el=>el.onclick=()=>printCustomerRecords(groups.slice(Number(el.dataset.customerPdf),Number(el.dataset.customerPdf)+1)));
@@ -1510,7 +1547,7 @@ function vehicleGalleryMarkup(){
  };
  list.sort((a,b)=>Number(!!pvrAdminFleetProgress(b))-Number(!!pvrAdminFleetProgress(a))||String(a['Vehicle Name']).localeCompare(String(b['Vehicle Name'])));
  const feature=(label,val)=>val?`${label}: ${esc(val)}`:'';
- return `<div class="panel"><div class="panelhead"><div><h2>🚗 Vehicle gallery</h2><button type="button" class="btn" id="pvrExportVehiclePdf">Download vehicle list PDF</button><div class="hint">Active vehicles from your workbook · photos and features</div></div></div><p class="pvr-gallery-note">Upload a real vehicle photo to your connected OneDrive. Photos are separate from the Excel workbook and Supabase snapshot; sign in to OneDrive to view them on another device.</p><div class="pvr-vehicle-gallery">${list.map(v=>{const id=v['Vehicle ID']||'',avail=availability(v),progress=pvrAdminFleetProgress(v),details=[feature('Reg.',v.Registration),feature('Colour',v.Colour||v.Color),feature('Year',v['Manufacture Year']),feature('Seats',v.Seats),feature('Type',v['Vehicle Type']),feature('Model',v.Model)].filter(Boolean);return `<article class="pvr-vehicle-card" style="${pvrAdminVehicleCardStyle(v)}"><div class="pvr-vehicle-thumb" data-photo-id="${esc(id)}">🚙</div><div class="pvr-vehicle-info"><strong>${esc(v['Vehicle Name']||'Unnamed vehicle')}</strong><div class="pvr-vehicle-features">${details.join(' · ')||'Features not entered yet'}</div><div class="pvr-gallery-availability"><span class="pvr-avail-tag ${avail.cls}">${progress?'Booking in progress':esc(avail.label)}</span>${progress?'':`<small>${esc(avail.detail)}</small>`}</div>${pvrAdminProgressMarkup(progress)}<span class="pvr-vehicle-status ${v.Status==='Active'?'':'inactive'}">${esc(v.Status||'Status not set')}</span><div class="pvr-vehicle-actions"><button type="button" data-gallery-edit="${v.__idx}">Edit features</button><button type="button" data-gallery-upload="${v.__idx}">Upload photo</button><button type="button" data-gallery-toggle="${v.__idx}">Deactivate</button><button type="button" data-gallery-delete="${v.__idx}" style="color:#b2454d;font-weight:800">Delete permanently</button></div></div></article>`}).join('')||'<div class="hint">No active vehicles match this gallery view.</div>'}</div><input id="pvrVehiclePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden></div>`;
+ return `<div class="panel"><div class="panelhead"><div><h2>🚗 Vehicle gallery</h2><button type="button" class="btn" id="pvrExportVehiclePdf">Download vehicle list PDF</button><div class="hint">Active vehicles from your workbook · photos and features</div></div></div><p class="pvr-gallery-note">Upload a real vehicle photo to your connected OneDrive. Photos are separate from the Excel workbook and Supabase snapshot; sign in to OneDrive to view them on another device.</p><div class="pvr-vehicle-gallery">${list.map(v=>{const id=v['Vehicle ID']||'',avail=availability(v),progress=pvrAdminFleetProgress(v),details=[feature('Reg.',v.Registration),feature('Colour',v.Colour||v.Color),feature('Year',v['Manufacture Year']),feature('Seats',v.Seats),feature('Type',v['Vehicle Type']),feature('Model',v.Model)].filter(Boolean);return `<article class="pvr-vehicle-card" style="${pvrAdminVehicleCardStyle(v)}"><div class="pvr-vehicle-thumb" data-photo-id="${esc(id)}">🚙</div><div class="pvr-vehicle-info"><strong>${esc(v['Vehicle Name']||'Unnamed vehicle')}</strong><div class="pvr-vehicle-features">${details.join(' · ')||'Features not entered yet'}</div><div class="pvr-gallery-availability"><span class="pvr-avail-tag ${avail.cls}">${progress?'Booking in progress':esc(avail.label)}</span>${progress?'':`<small>${esc(avail.detail)}</small>`}</div>${pvrAdminProgressMarkup(progress)}<span class="pvr-vehicle-status ${v.Status==='Active'?'':'inactive'}">${esc(v.Status||'Status not set')}</span><div class="pvr-vehicle-actions">${vehicleBookingActions(v)}<button type="button" data-gallery-edit="${v.__idx}">Edit features</button><button type="button" data-gallery-upload="${v.__idx}">Upload photo</button><button type="button" data-gallery-toggle="${v.__idx}">Deactivate</button><button type="button" data-gallery-delete="${v.__idx}" style="color:#b2454d;font-weight:800">Delete permanently</button></div></div></article>`}).join('')||'<div class="hint">No active vehicles match this gallery view.</div>'}</div><input id="pvrVehiclePhotoInput" type="file" accept="image/jpeg,image/png,image/webp" hidden></div>`;
 }
 function printVehicleGalleryPdf(){
  const gallery=document.querySelector('.pvr-vehicle-gallery');
@@ -1675,7 +1712,7 @@ function addColumn(section){
  if(SCHEMAS[section].length>=150){alertUser('Maximum of 150 fields per sheet.',true);return}
  SCHEMAS[section].push(field);markDirty();render();alertUser('Field added. Download or save workbook to keep the new column.');
 }
-function renderTable(){const vehicleName=r=>{const v=rows('Vehicles').find(v=>v['Vehicle ID']===r['Vehicle ID']);return v?.['Vehicle Name']||r['Vehicle Name']||r['Vehicle ID']||'Unknown vehicle'};const query=filter.trim().toLowerCase();let heads=page==='Bookings'?['Rental Period','Customer Name','Vehicle Name']:page==='Vehicles'?SCHEMAS.Vehicles.filter(h=>h!=='Owner ID'):SCHEMAS[page]||[],arr=rows(page).map((x,i)=>({...x,__idx:i})).filter(x=>!query||JSON.stringify(x).toLowerCase().includes(query)||(page==='Bookings'&&vehicleName(x).toLowerCase().includes(query)));if(page==='Bookings'){const today=localDate();arr=arr.filter(booking=>bookingInListRange(booking,bookingListRange,today));const direction=bookingListRange==='upcoming'?1:-1;arr.sort((a,b)=>direction*String(a['Start AD']).localeCompare(String(b['Start AD']))||b.__idx-a.__idx);}const rentalPeriod=r=>{const start=String(r['Start AD']||'').slice(0,10),end=String(r['End AD Exclusive']||'').slice(0,10);const valid=/^\d{4}-\d{2}-\d{2}$/;if(!valid.test(start)||!valid.test(end))return '<span class="hint">Dates not recorded</span>';const day=s=>Date.parse(s+'T00:00:00Z')/86400000;const a=day(start),b=day(end),t=day(localDate()),duration=b-a;if(!Number.isFinite(duration)||duration<=0)return '<span class="hint">Check rental dates</span>';const pct=Math.max(0,Math.min(100,Math.round((t-a+1)/duration*100)));const status=String(r.Status||'').toLowerCase();const inactive=['cancelled','completed'].includes(status);const tone=inactive?'#94a3b8':t>=b?'#c52b31':pct>=75?'#e68b16':'#1caa83';const label=inactive?esc(r.Status):t<a?'Upcoming':t>=b?'Return due':Math.max(0,Math.min(duration,t-a+1))+' of '+duration+' days passed';return `<div class="booking-period-cell"><strong class="booking-dates">${esc(start)} → ${esc(addDaysAD(end,-1))}</strong><div class="booking-period-caption">First → last rental date (AD)</div><div class="booking-mini-track" role="progressbar" aria-label="Rental period elapsed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%;background:${tone}"></span></div><div class="booking-period-caption" style="color:${tone}">${label}</div></div>`};const display=(r,h)=>page==='Bookings'&&h==='Vehicle Name'?vehicleName(r):r[h];$('tablearea').innerHTML=arr.length?`<table><thead><tr>${heads.map(h=>`<th>${esc(page==='Bookings'&&h==='Rental Period'?'Start / End AD':h)}</th>`).join('')}<th>Actions</th></tr></thead><tbody>${arr.slice(0,500).map(r=>`<tr>${heads.map(h=>`<td>${page==='Bookings'&&h==='Rental Period'?rentalPeriod(r):h==='Status'||h==='Payment Status'?`<span class="tag ${esc(r[h])}">${esc(h==='Status'&&page==='Bookings'&&r[h]==='Active'&&r['End AD Exclusive']&&r['End AD Exclusive']<=localDate()?'Due for return':r[h])}</span>`:esc(display(r,h))}</td>`).join('')}<td><button class="tablebtn" data-edit="${r.__idx}">${page==='Vehicles'?'Edit vehicle & owner agreement':'Edit'}</button>${page==='Bookings'?` · <button type="button" class="tablebtn" data-delete-booking="${r.__idx}" style="color:#b2454d">Delete booking</button> · <button class="tablebtn" data-agreement="${r.__idx}">Print period invoice PDF</button> · <button class="tablebtn" data-idphoto="${r.__idx}">View ID photo</button> · <button class="tablebtn" data-extend="${r.__idx}">Extend</button> · <button class="tablebtn" data-settle="${r.__idx}">Return / settle</button>`:''}${page==='Owner Payments'&&n(r['Amount NPR'])>0&&r['Paid AD']?` · <button class="tablebtn" data-owner-receipt="${r.__idx}">Payment receipt PDF</button>`:''}${page==='Vehicles'?` · <button class="tablebtn" data-toggle="${r.__idx}">${r.Status==='Active'?'Deactivate':'Reactivate'}</button> · <button class="tablebtn" style="color:#b2454d" data-delete-vehicle="${r.__idx}">Delete permanently</button>${r.Status==='Active'&&isPartnerPublishId(r['Vehicle ID'])?` · <button type="button" class="tablebtn" data-publish-vehicle="${r.__idx}">Publish to partners</button>`:''}`:''}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">${page==='Bookings'?'No bookings match this date range and search.':'No matching records. Use “Add record” to begin.'}</div>`;document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>edit(page,Number(b.dataset.edit)));document.querySelectorAll('[data-agreement]').forEach(b=>b.onclick=()=>printBookingConfirmation(Number(b.dataset.agreement)));document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>toggleVehicle(Number(b.dataset.toggle)));document.querySelectorAll('[data-delete-vehicle]').forEach(b=>b.onclick=()=>deleteVehiclePermanently(Number(b.dataset.deleteVehicle)));document.querySelectorAll('[data-idphoto]').forEach(b=>b.onclick=()=>viewIdPhoto(Number(b.dataset.idphoto)));document.querySelectorAll('[data-extend]').forEach(b=>b.onclick=()=>extendBooking(Number(b.dataset.extend)));document.querySelectorAll('[data-settle]').forEach(b=>b.onclick=()=>settleBooking(Number(b.dataset.settle)));document.querySelectorAll('[data-delete-booking]').forEach(b=>b.onclick=()=>deleteBooking(Number(b.dataset.deleteBooking)));document.querySelectorAll('[data-publish-vehicle]').forEach(b=>b.onclick=()=>publishPartnerVehicle(Number(b.dataset.publishVehicle),b));document.querySelectorAll('[data-owner-receipt]').forEach(b=>b.onclick=()=>printOwnerPaymentReceipt(Number(b.dataset.ownerReceipt)));if(page==='Owner Payments')bindOwnerPaymentActions()}
+function renderTable(){const vehicleName=r=>{const v=rows('Vehicles').find(v=>v['Vehicle ID']===r['Vehicle ID']);return v?.['Vehicle Name']||r['Vehicle Name']||r['Vehicle ID']||'Unknown vehicle'};const query=filter.trim().toLowerCase();let heads=page==='Bookings'?['Rental Period','Customer Name','Vehicle Name']:page==='Vehicles'?SCHEMAS.Vehicles.filter(h=>h!=='Owner ID'):SCHEMAS[page]||[],arr=rows(page).map((x,i)=>({...x,__idx:i})).filter(x=>!query||JSON.stringify(x).toLowerCase().includes(query)||(page==='Bookings'&&vehicleName(x).toLowerCase().includes(query)));if(page==='Bookings'){const today=localDate();arr=arr.filter(booking=>bookingInListRange(booking,bookingListRange,today));const direction=bookingListRange==='upcoming'?1:-1;arr.sort((a,b)=>direction*String(a['Start AD']).localeCompare(String(b['Start AD']))||b.__idx-a.__idx);}const rentalPeriod=r=>{const start=String(r['Start AD']||'').slice(0,10),end=String(r['End AD Exclusive']||'').slice(0,10);const valid=/^\d{4}-\d{2}-\d{2}$/;if(!valid.test(start)||!valid.test(end))return '<span class="hint">Dates not recorded</span>';const day=s=>Date.parse(s+'T00:00:00Z')/86400000;const a=day(start),b=day(end),t=day(localDate()),duration=b-a;if(!Number.isFinite(duration)||duration<=0)return '<span class="hint">Check rental dates</span>';const pct=Math.max(0,Math.min(100,Math.round((t-a+1)/duration*100)));const status=String(r.Status||'').toLowerCase();const inactive=['cancelled','completed'].includes(status);const tone=inactive?'#94a3b8':t>=b?'#c52b31':pct>=75?'#e68b16':'#1caa83';const label=inactive?esc(r.Status):t<a?'Upcoming':t>=b?'Return due':Math.max(0,Math.min(duration,t-a+1))+' of '+duration+' days passed';return `<div class="booking-period-cell"><strong class="booking-dates">${esc(start)} → ${esc(addDaysAD(end,-1))}</strong><div class="booking-period-caption">First → last rental date (AD)</div><div class="booking-mini-track" role="progressbar" aria-label="Rental period elapsed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%;background:${tone}"></span></div><div class="booking-period-caption" style="color:${tone}">${label}</div></div>`};const display=(r,h)=>page==='Bookings'&&h==='Vehicle Name'?vehicleName(r):r[h];$('tablearea').innerHTML=arr.length?`<table><thead><tr>${heads.map(h=>`<th>${esc(page==='Bookings'&&h==='Rental Period'?'Start / End AD':h)}</th>`).join('')}<th>Actions</th></tr></thead><tbody>${arr.slice(0,500).map(r=>`<tr>${heads.map(h=>`<td>${page==='Bookings'&&h==='Rental Period'?rentalPeriod(r):h==='Status'||h==='Payment Status'?`<span class="tag ${esc(r[h])}">${esc(h==='Status'&&page==='Bookings'&&r[h]==='Active'&&r['End AD Exclusive']&&r['End AD Exclusive']<=localDate()?'Due for return':r[h])}</span>`:esc(display(r,h))}</td>`).join('')}<td><button class="tablebtn" data-edit="${r.__idx}">${page==='Vehicles'?'Edit vehicle & owner agreement':'Edit'}</button>${page==='Bookings'?` ${pvrFleetBookingOpen(r)?`<button type="button" class="tablebtn" data-booking-cancel="${r.__idx}">Cancel booking</button>`:''} · <button type="button" class="tablebtn" data-delete-booking="${r.__idx}" style="color:#b2454d">Delete booking</button> · <button class="tablebtn" data-agreement="${r.__idx}">Print period invoice PDF</button> · <button class="tablebtn" data-idphoto="${r.__idx}">View ID photo</button> · <button class="tablebtn" data-extend="${r.__idx}">Extend</button> · <button class="tablebtn" data-settle="${r.__idx}">Return / settle</button>`:''}${page==='Owner Payments'&&n(r['Amount NPR'])>0&&r['Paid AD']?` · <button class="tablebtn" data-owner-receipt="${r.__idx}">Payment receipt PDF</button>`:''}${page==='Vehicles'?` ${vehicleBookingActions(r)} · <button class="tablebtn" data-toggle="${r.__idx}">${r.Status==='Active'?'Deactivate':'Reactivate'}</button> · <button class="tablebtn" style="color:#b2454d" data-delete-vehicle="${r.__idx}">Delete permanently</button>${r.Status==='Active'&&isPartnerPublishId(r['Vehicle ID'])?` · <button type="button" class="tablebtn" data-publish-vehicle="${r.__idx}">Publish to partners</button>`:''}`:''}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">${page==='Bookings'?'No bookings match this date range and search.':'No matching records. Use “Add record” to begin.'}</div>`;document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>edit(page,Number(b.dataset.edit)));document.querySelectorAll('[data-agreement]').forEach(b=>b.onclick=()=>printBookingConfirmation(Number(b.dataset.agreement)));document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>toggleVehicle(Number(b.dataset.toggle)));document.querySelectorAll('[data-delete-vehicle]').forEach(b=>b.onclick=()=>deleteVehiclePermanently(Number(b.dataset.deleteVehicle)));document.querySelectorAll('[data-idphoto]').forEach(b=>b.onclick=()=>viewIdPhoto(Number(b.dataset.idphoto)));document.querySelectorAll('[data-extend]').forEach(b=>b.onclick=()=>extendBooking(Number(b.dataset.extend)));document.querySelectorAll('[data-settle]').forEach(b=>b.onclick=()=>settleBooking(Number(b.dataset.settle)));document.querySelectorAll('[data-delete-booking]').forEach(b=>b.onclick=()=>deleteBooking(Number(b.dataset.deleteBooking)));document.querySelectorAll('[data-publish-vehicle]').forEach(b=>b.onclick=()=>publishPartnerVehicle(Number(b.dataset.publishVehicle),b));document.querySelectorAll('[data-owner-receipt]').forEach(b=>b.onclick=()=>printOwnerPaymentReceipt(Number(b.dataset.ownerReceipt)));if(page==='Owner Payments')bindOwnerPaymentActions()}
 function isPartnerPublishId(id){
  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(String(id));
 }
@@ -1783,7 +1820,8 @@ function bookingLastDay(start, days){
  if(!Number.isFinite(date.getTime())||date.getUTCFullYear()>9999)return '';
  return date.toISOString().slice(0,10);
 }
-function attachBSCalendar(isNew=true){
+function attachBSCalendar(isNew=true,lookup=$){
+ const $=lookup;
  const form=$('recordForm'),y=$('bsYear'),m=$('bsMonth'),days=$('bsDays'),out=$('bsResult');
  if(!form||!y)return;
  const start=form.elements.namedItem('Start AD'),last=form.elements.namedItem('Booking End AD');
@@ -1947,10 +1985,10 @@ function editVehicle(index=-1,detailsOnly=false){
   return updated;
  }
  if(detailsOnly){
-  $('modalroot').innerHTML=`<div class="modalbg"><div class="modal"><div class="modalhead"><h2>Edit vehicle</h2><button type="button" class="btn" id="closeModal">Close</button></div><form id="vehicleDetailsForm"><div class="fieldgrid">${fields.map(name=>field(name,vehicle[name]??'')).join('')}</div><div class="foot"><button type="button" class="btn" id="cancelModal">Cancel</button><button type="submit" class="btn primary">Save vehicle</button></div><p class="hint" id="vehicleDetailsError" role="alert" hidden></p></form></div></div>`;
+  $('modalroot').innerHTML=`<div class="modalbg"><div class="modal"><div class="modalhead"><h2>Edit vehicle</h2><button type="button" class="btn" id="closeVehicleDetails">Close</button></div><form id="vehicleDetailsForm"><div class="fieldgrid">${fields.map(name=>field(name,vehicle[name]??'')).join('')}</div><div class="foot"><button type="button" class="btn" id="cancelVehicleDetails">Cancel</button><button type="submit" class="btn primary">Save vehicle</button></div><p class="hint" id="vehicleDetailsError" role="alert" hidden></p></form></div></div>`;
   const form=$('vehicleDetailsForm');
   const close=()=>$('modalroot').innerHTML='';
-  $('closeModal').onclick=$('cancelModal').onclick=close;
+  $('closeVehicleDetails').onclick=$('cancelVehicleDetails').onclick=close;
   form.elements.namedItem('Vehicle Name').focus();
   form.onsubmit=event=>{
    event.preventDefault();
@@ -1973,8 +2011,8 @@ function editVehicle(index=-1,detailsOnly=false){
  const ownerOptions=rows('Owners').map(o=>`<option value="${esc(o['Owner ID'])}" ${o['Owner ID']===owner['Owner ID']?'selected':''}>${esc(o['Owner Name'])} · ${esc(o.Phone||'')}</option>`).join('');
  const ownerField=(label,name,value,type='text')=>`<div class="field"><label>${label}</label><input name="${name}" type="${type}" ${type==='number'?'min="0" step="any"':''} value="${esc(value||'')}"></div>`;
  const history=agreements.length?`<div class="callout"><b>Agreement history (${agreements.length}):</b> ${agreements.map(a=>esc(`${a['Start AD']} to ${a['End AD Exclusive']} · Rs. ${a['Monthly Amount NPR']}/month · ${a.Status}`)).join(' | ')}</div>`:'';
- $('modalroot').innerHTML=`<div class="modalbg"><div class="modal"><div class="modalhead"><h2>${index<0?'Register vehicle & owner':'Edit listed vehicle & owner agreement'}</h2><button class="btn" id="closeModal">Close</button></div><form id="vehicleRegistration"><h3>Vehicle details</h3><p class="hint">Only the four required vehicle fields are shown. Vehicle ID and status are managed automatically; existing additional details are preserved.</p><div class="fieldgrid">${fields.map(h=>field(h,vehicle[h]??'')).join('')}</div><h3>Vehicle documents (up to 4)</h3><p class="hint">Upload registration papers, insurance, bluebook, or other vehicle documents (PDF/JPG/PNG/WebP, max 10 MB each). Documents are stored in OneDrive, not Excel.</p><div class="field"><label>Choose vehicle files</label><input type="file" id="vehicleDocuments" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" multiple><small id="vehicleFileSelection">Select up to 4 files. Save vehicle to upload.</small><div id="vehicleDocList" class="hint">Saved files appear here for existing vehicles.</div></div><h3>Private owner details</h3><p class="hint">Owner information stays in internal records and is never printed on customer invoices.</p><div class="fieldgrid"><div class="field"><label>Use existing owner (optional)</label><select id="existingOwner" name="existingOwner"><option value="">New owner / enter details below</option>${ownerOptions}</select></div>${ownerField('Owner full name','ownerName',owner['Owner Name'])}${ownerField('Owner address','ownerAddress',owner.Address)}${ownerField('Owner phone','ownerPhone',owner.Phone,'tel')}</div><h3>Owner agreement</h3><div class="fieldgrid">${ownerField('Fixed monthly owner payment (NPR)','monthlyAmount',current['Monthly Amount NPR'],'number')}<div class="field"><label>Agreement date calendar</label><select id="agreementCalendar"><option value="BS">BS · Nepali</option><option value="AD">AD · English</option></select></div><div class="field"><label>Agreement duration</label><select id="agreementDuration"><option value="1">1 year</option><option value="0.5">6 months</option><option value="2">2 years</option><option value="3">3 years</option><option value="custom">Custom end date</option></select></div><div class="field"><label>Select BS agreement date</label><div style="display:flex;gap:6px;flex-wrap:wrap"><select id="agreementBSYear" aria-label="BS year"></select><select id="agreementBSMonth" aria-label="BS month"></select><select id="agreementBSDay" aria-label="BS day"></select></div><small>Select Nepali year, month and day; AD dates update automatically.</small></div><div class="field"><label>Agreement start date (BS YYYY/MM/DD)</label><input id="agreementBSStart" placeholder="2083/08/01" inputmode="numeric"><small>BS 2081–2093 is supported after calendar data loads. Later years may be projected.</small></div>${ownerField('Agreement start date (AD)','agreementStart',current['Start AD'],'date')}${ownerField('Agreement end date (AD, exclusive)','agreementEnd',current['End AD Exclusive'],'date')}<div class="field"><label>Agreement end date (BS, exclusive · automatic)</label><input id="agreementBSEnd" type="text" readonly placeholder="Calculated automatically" aria-label="Agreement end date in Nepali BS"><small>Shows the BS equivalent of the calculated AD end date.</small></div><div class="field"><label>Converted agreement period</label><div id="agreementDatePreview" class="callout">Choose a start date and duration.</div></div><div class="field"><label>Agreement action</label><select name="agreementAction" id="agreementAction"><option value="keep">${current['Agreement ID']?'Keep / update current agreement':'Create agreement'}</option>${current['Agreement ID']?'<option value="renew">Renew agreement (preserve previous agreement)</option>':''}</select></div></div><p class="hint">Dates are stored in AD for reliable booking checks. The end date is exclusive; choose the day after the final covered day. Owner agreements must cover at least six months.</p>${history}<div class="foot"><button class="btn" type="button" id="cancelModal">Cancel</button><button class="btn primary" type="submit">Save vehicle & agreement</button></div></form></div></div>`;
- $('closeModal').onclick=$('cancelModal').onclick=()=>$('modalroot').innerHTML='';
+ $('modalroot').innerHTML=`<div class="modalbg"><div class="modal"><div class="modalhead"><h2>${index<0?'Register vehicle & owner':'Edit listed vehicle & owner agreement'}</h2><button class="btn" type="button" id="closeVehicleRegistration">Close</button></div><form id="vehicleRegistration"><h3>Vehicle details</h3><p class="hint">Only the four required vehicle fields are shown. Vehicle ID and status are managed automatically; existing additional details are preserved.</p><div class="fieldgrid">${fields.map(h=>field(h,vehicle[h]??'')).join('')}</div><h3>Vehicle documents (up to 4)</h3><p class="hint">Upload registration papers, insurance, bluebook, or other vehicle documents (PDF/JPG/PNG/WebP, max 10 MB each). Documents are stored in OneDrive, not Excel.</p><div class="field"><label>Choose vehicle files</label><input type="file" id="vehicleDocuments" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" multiple><small id="vehicleFileSelection">Select up to 4 files. Save vehicle to upload.</small><div id="vehicleDocList" class="hint">Saved files appear here for existing vehicles.</div></div><h3>Private owner details</h3><p class="hint">Owner information stays in internal records and is never printed on customer invoices.</p><div class="fieldgrid"><div class="field"><label>Use existing owner (optional)</label><select id="existingOwner" name="existingOwner"><option value="">New owner / enter details below</option>${ownerOptions}</select></div>${ownerField('Owner full name','ownerName',owner['Owner Name'])}${ownerField('Owner address','ownerAddress',owner.Address)}${ownerField('Owner phone','ownerPhone',owner.Phone,'tel')}</div><h3>Owner agreement</h3><div class="fieldgrid">${ownerField('Fixed monthly owner payment (NPR)','monthlyAmount',current['Monthly Amount NPR'],'number')}<div class="field"><label>Agreement date calendar</label><select id="agreementCalendar"><option value="BS">BS · Nepali</option><option value="AD">AD · English</option></select></div><div class="field"><label>Agreement duration</label><select id="agreementDuration"><option value="1">1 year</option><option value="0.5">6 months</option><option value="2">2 years</option><option value="3">3 years</option><option value="custom">Custom end date</option></select></div><div class="field"><label>Select BS agreement date</label><div style="display:flex;gap:6px;flex-wrap:wrap"><select id="agreementBSYear" aria-label="BS year"></select><select id="agreementBSMonth" aria-label="BS month"></select><select id="agreementBSDay" aria-label="BS day"></select></div><small>Select Nepali year, month and day; AD dates update automatically.</small></div><div class="field"><label>Agreement start date (BS YYYY/MM/DD)</label><input id="agreementBSStart" placeholder="2083/08/01" inputmode="numeric"><small>BS 2081–2093 is supported after calendar data loads. Later years may be projected.</small></div>${ownerField('Agreement start date (AD)','agreementStart',current['Start AD'],'date')}${ownerField('Agreement end date (AD, exclusive)','agreementEnd',current['End AD Exclusive'],'date')}<div class="field"><label>Agreement end date (BS, exclusive · automatic)</label><input id="agreementBSEnd" type="text" readonly placeholder="Calculated automatically" aria-label="Agreement end date in Nepali BS"><small>Shows the BS equivalent of the calculated AD end date.</small></div><div class="field"><label>Converted agreement period</label><div id="agreementDatePreview" class="callout">Choose a start date and duration.</div></div><div class="field"><label>Agreement action</label><select name="agreementAction" id="agreementAction"><option value="keep">${current['Agreement ID']?'Keep / update current agreement':'Create agreement'}</option>${current['Agreement ID']?'<option value="renew">Renew agreement (preserve previous agreement)</option>':''}</select></div></div><p class="hint">Dates are stored in AD for reliable booking checks. The end date is exclusive; choose the day after the final covered day. Owner agreements must cover at least six months.</p>${history}<div class="foot"><button class="btn" type="button" id="cancelVehicleRegistration">Cancel</button><button class="btn primary" type="submit">Save vehicle & agreement</button></div></form></div></div>`;
+ $('closeVehicleRegistration').onclick=$('cancelVehicleRegistration').onclick=()=>$('modalroot').replaceChildren();
  $('existingOwner').onchange=()=>{const o=rows('Owners').find(x=>x['Owner ID']===$('existingOwner').value);if(o){const f=$('vehicleRegistration').elements;f.namedItem('ownerName').value=o['Owner Name']||'';f.namedItem('ownerAddress').value=o.Address||'';f.namedItem('ownerPhone').value=o.Phone||''}};
  const af=$('vehicleRegistration').elements,bsStart=$('agreementBSStart'),cal=$('agreementCalendar'),duration=$('agreementDuration'),adStart=af.namedItem('agreementStart'),adEnd=af.namedItem('agreementEnd'),preview=$('agreementDatePreview');
  function addAgreementMonths(iso,months){const [y,m,d]=iso.split('-').map(Number);const target=new Date(Date.UTC(y,m-1+months,1));const last=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();target.setUTCDate(Math.min(d,last));return target.toISOString().slice(0,10)}
@@ -2114,7 +2152,9 @@ function bookingPaymentDetails(saved,values){
 }
 function editBookingSimple(index=-1,inline=false,vehicleId=''){
  if(!zip){alertUser('Open the matching Excel workbook first.',true);return}
- const existing=index>=0?rows('Bookings')[index]:{},r={...existing};if(index<0){r['Booking ID']=uid('BKG');r.Status='Reserved';r['Created AD']=today();r['Start AD']=localDate();r['Vehicle ID']=vehicleId}
+ const existing=index>=0?rows('Bookings')[index]:{};
+ if(!existing){alertUser('This booking could not be found.',true);return}
+ const r={...existing};if(index<0){r['Booking ID']=uid('BKG');r.Status='Reserved';r['Created AD']=today();r['Start AD']=localDate();r['Vehicle ID']=vehicleId}
  const mode=r.Status||'Active';
  // Overlaps are always rechecked in validate() before saving.
 
@@ -2137,9 +2177,15 @@ function editBookingSimple(index=-1,inline=false,vehicleId=''){
  return `<div class="field"><label>${esc(label)}</label>${control}</div>`};
  const advanceBox=`<div class="field" style="border:2px solid #0d9488;background:#edfaf7;border-radius:12px;padding:14px;grid-column:1/-1"><label style="font-size:15px;color:#075e56">Advance payment received (NPR)</label><input name="Advance NPR" type="number" min="0" step="any" inputmode="decimal" value="${esc(r['Advance NPR']??'0')}" placeholder="Enter advance received" style="font-size:18px;font-weight:700"><small>Advance is deducted from rental charges automatically. The refundable deposit is separate.</small></div>`;
  const form=`${bsCalendarMarkup()}<div class="field"><label>Reservation type</label><select id="bookingMode"><option value="Reserved" ${mode==='Reserved'?'selected':''}>Pre-Booking</option><option value="Active" ${mode==='Active'?'selected':''}>Booking (confirmed)</option>${['Reserved','Active'].includes(mode)?'':`<option value="${esc(mode)}" selected>${esc(mode)}</option>`}</select><small>Pre-bookings reserve vehicle dates. Convert later by editing and choosing Booking.</small></div><div class="fieldgrid">${advanceBox}${fields.map(field).join('')}</div><p class="callout" id="bookingBlacklistNotice" role="status" hidden></p><div class="callout" id="bookingTotalPreview">Enter rental details to calculate the balance.</div>`;
- const root=inline?$('homeBookingForm'):$('modalroot');root.innerHTML=`${inline?'':'<div class="modalbg"><div class="modal">'}<div class="modalhead"><h2>${index>=0?'Edit':'New'} Pre-Booking / Booking</h2><button class="btn" id="closeModal">Close</button></div><form id="recordForm">${form}<div class="foot"><button class="btn" type="button" id="cancelModal">Cancel</button>${index>=0?'<button class="btn" type="button" id="deleteBookingInEdit" style="color:#b2454d">Delete booking</button><button class="btn" type="button" id="saveBookingPayments" title="Saves pricing, advance, discount, deposit and evening charge using the original booking dates">Save payment details only</button>':''}<button class="btn primary" type="submit">Save ${index>=0?'changes':'reservation'}</button></div></form>${inline?'':'</div></div>'}`;
- $('closeModal').onclick=$('cancelModal').onclick=()=>{if(inline)editBookingSimple(-1,true);else $('modalroot').innerHTML=''};
- attachBSCalendar(index<0);
+ const root=document.getElementById(inline?'homeBookingForm':'modalroot');
+ const $=id=>root.querySelector('#'+id);
+ root.innerHTML=`${inline?'':'<div class="modalbg"><div class="modal">'}<div class="modalhead"><h2>${index>=0?'Edit':'New'} Pre-Booking / Booking</h2><button class="btn" type="button" data-close-booking-form>Close</button></div><form id="recordForm">${form}<div class="foot"><button class="btn" type="button" data-close-booking-form>Close form</button>${index>=0?'<button class="btn" type="button" id="deleteBookingInEdit" style="color:#b2454d">Delete booking</button><button class="btn" type="button" id="saveBookingPayments" title="Saves pricing, advance, discount, deposit and evening charge using the original booking dates">Save payment details only</button>':''}<button class="btn primary" type="submit">Save ${index>=0?'changes':'reservation'}</button></div></form>${inline?'':'</div></div>'}`;
+ const closeForm=()=>{
+  if(inline)editBookingSimple(-1,true);
+  else root.replaceChildren();
+ };
+ root.querySelectorAll('[data-close-booking-form]').forEach(button=>button.onclick=closeForm);
+ attachBSCalendar(index<0,$);
  const f=$('recordForm'),preset=$('ratePreset'),manual=$('dailyRateManual'),effective=$('effectiveRate');
  const blacklistFields=['Customer Name','Phone','Citizenship / Passport'];
  const blacklistNotice=$('bookingBlacklistNotice');
@@ -2178,7 +2224,7 @@ function editBookingSimple(index=-1,inline=false,vehicleId=''){
    alertUser('The booking list changed. Reopen this booking and try again.',true);
    return;
   }
-  if(deleteBooking(index))$('modalroot').innerHTML='';
+  if(deleteBooking(index))document.getElementById('modalroot').innerHTML='';
  };
  if(index>=0)$('saveBookingPayments').onclick=()=>{
   update();
@@ -2187,11 +2233,11 @@ function editBookingSimple(index=-1,inline=false,vehicleId=''){
    if(!saved||saved['Booking ID']!==r['Booking ID'])throw Error('The booking list changed. Reopen this booking and try again.');
    const values=new FormData(f);
    rows('Bookings')[index]=bookingPaymentDetails(saved,values);
-   markDirty();$('modalroot').innerHTML='';render();
+   markDirty();document.getElementById('modalroot').innerHTML='';render();
    alertUser('Payment details saved. The original vehicle, dates and booking status were kept.');
   }catch(error){alertUser(error.message,true);window.alert(error.message)}
  };
- f.onsubmit=async e=>{e.preventDefault();update();const fd=new FormData(f),out={...r};fields.filter(h=>h!=='Booking End AD').forEach(h=>out[h]=String(fd.get(h)??'').trim());out['Advance NPR']=String(fd.get('Advance NPR')??'0').trim();out['Daily Rate NPR']=pricingPlan.value==='Daily'?effective.value:'';out['Package Amount NPR']=pricingPlan.value==='Daily'?'':out['Package Amount NPR'];out.Status=$('bookingMode').value;out['Booking ID']=r['Booking ID'];out['Created AD']=r['Created AD'];try{validate('Bookings',out,index);if(!checkCustomerFlagBeforeBooking(out))return;if(index<0)rows('Bookings').push(out);else rows('Bookings')[index]=out;markDirty();$('modalroot').innerHTML='';render();alertUser('Reservation saved. Save to OneDrive to persist changes.')}catch(err){alertUser(err.message,true);window.alert(err.message)}};
+ f.onsubmit=async e=>{e.preventDefault();update();const fd=new FormData(f),out={...r};fields.filter(h=>h!=='Booking End AD').forEach(h=>out[h]=String(fd.get(h)??'').trim());out['Advance NPR']=String(fd.get('Advance NPR')??'0').trim();out['Daily Rate NPR']=pricingPlan.value==='Daily'?effective.value:'';out['Package Amount NPR']=pricingPlan.value==='Daily'?'':out['Package Amount NPR'];out.Status=$('bookingMode').value;out['Booking ID']=r['Booking ID'];out['Created AD']=r['Created AD'];try{if(index>=0&&rows('Bookings')[index]!==existing)throw Error('The booking list changed. Reopen this booking and try again.');validate('Bookings',out,index);if(!checkCustomerFlagBeforeBooking(out))return;if(index<0)rows('Bookings').push(out);else rows('Bookings')[index]=out;markDirty();document.getElementById('modalroot').innerHTML='';render();alertUser((index>=0?'Booking changes saved. ':'Reservation saved. ')+(cloudLoaded?'OneDrive auto-save queued.':'Download the workbook to keep the change.'))}catch(err){alertUser(err.message,true);window.alert(err.message)}};
 }
 function renderPartnerReview(request){
  const bookingId='BKG-PARTNER-'+request.request_id;
